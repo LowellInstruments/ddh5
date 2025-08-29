@@ -1,10 +1,11 @@
+import json
 import os
 import toml
 from ble.ble import *
 from ddh.lef import lef_create_file
 from ddh.notifications_v2 import (
     LoggerNotification, notify_logger_error_low_battery,
-    notify_logger_error_sensor_pressure
+    notify_logger_error_sensor_pressure, notify_logger_error_sensor_oxygen
 )
 from mat.utils import linux_is_rpi
 from utils.ddh_common import (
@@ -17,15 +18,15 @@ from utils.ddh_common import (
     ddh_does_do_not_rerun_file_flag_exist, EV_BLE_DL_ERROR,
     TESTMODE_FILENAME_PREFIX,
     calculate_path_to_folder_within_dl_files_from_mac_address,
-    ddh_config_does_flag_file_download_test_mode_exist,
+    ddh_config_does_flag_file_download_test_mode_exist, exp_get_conf_dox,
 )
 from ddh_log import lg_ble as lg
 
 
 
-
+MC_FILE = "MAT.cfg"
 g_debug_not_delete_files = False
-BAT_FACTOR_TDO = 0.5454
+BAT_FACTOR_DOT = 0.4545
 MIN_VERSION_HBW_CMD = "4.2.21"
 
 
@@ -50,64 +51,6 @@ def _une(rv, d, e, ce=0):
 
 
 
-async def _tdo_reconfigure_profiling(ver):
-    if ver <= '4.0.20':
-        lg.a('warning, not reconfiguring TDO profiling on loggers <= v4.0.20')
-        return
-    lg.a(f'firmware v{ver} supports TDO profiling reconfiguration')
-
-
-    # check we want to load a dynamic SCF file
-    d_prf_file = {}
-    fol_ddh = f'{ddh_get_path_to_folder_scripts()}/..'
-    for i in ('slow', 'mid', 'fast', 'fixed5min'):
-        pdf = f'{fol_ddh}/.decided_scf_{i}.toml'
-        if os.path.exists(pdf):
-            lg.a(f'loading SCF file {os.path.basename(pdf)}')
-            d_prf_file = toml.load(pdf)['profiling']
-            d_prf_file['mode'] = i
-            break
-
-    if not d_prf_file:
-        lg.a('no SCF dictionary from file, not configuring TDO on-the-fly')
-        return
-
-    rv, str_gcf = await cmd_gcf()
-    if rv:
-        lg.a('GCF failed, not configuring TDO on-the-fly')
-        return
-
-    # banner
-    lg.a(f"debug, TDO profiling reconfiguration to {d_prf_file['mode']}")
-
-    # str_gcf: 'GCF 2d000040000100001000600000200003000010719900030'
-    str_gcf = str_gcf[6:]
-    i_prf = 0
-    for tag, v in d_prf_file.items():
-        if tag == 'mode':
-            continue
-        if len(tag) != 3:
-            lg.a(f'error, bad SCF tag {tag}')
-            break
-        if tag == 'MAC':
-            continue
-        if len(v) != 5:
-            lg.a(f'error, bad SCF value {v} for tag {tag}')
-            break
-        v_prf = str_gcf[i_prf:i_prf+5]
-        i_prf += 5
-        if v_prf != v:
-            lg.a(f'warning, sent SCF {tag} {v}, old value was {v_prf}')
-            rv = await cmd_scf(tag, v)
-            bad_rv = rv == 1
-            _rae(bad_rv, f"scf {tag}")
-        else:
-            lg.a(f'debug, not sent SCF {tag} {v}, it\'s the same')
-
-
-
-
-
 async def ble_download_tdo(d):
 
     # d: {'battery_level': 65535,
@@ -116,12 +59,13 @@ async def ble_download_tdo(d):
     #     'dl_files': [],
     #     'rerun': False,
     #     'gfv': '',
-    #     'dev': BLEDevice(D0:2E:AB:D9:29:48, TDO_AAA),
+    #     'dev': BLEDevice(D0:2E:AB:D9:29:48, DO2_AAA),
     #     'gps_pos': ('+41.610100', '-70.609300', datetime.datetime(2025, 8, 8, 15, 12, 29), '0'),
     #     'antenna_idx': 0,
     #     'antenna_desc': 'internal',
     #     'uuid': '9d8f50cd-0b08-467e-ab98-c62bae39fc96'}
 
+    _is_a_lid_v2_logger = False
     dev = d['dev']
     mac = dev.address
     g = d['gps_pos']
@@ -174,21 +118,30 @@ async def ble_download_tdo(d):
     else:
         lg.a('logger NOT running, not considering HBW command')
 
+
+    # to know if this DO-X logger uses LID or LIX files
+    rv = await lc.cmd_xod()
+    _is_a_lid_v2_logger = rv == 0
+    lg.a(f"XOD | LIX {_is_a_lid_v2_logger}")
+
+
     rv = await cmd_sws(g)
     _rae(rv, "sws")
     lg.a("SWS | OK")
+
 
     rv, t = await cmd_utm()
     _rae(rv, "utm")
     lg.a(f"UTM | {t}")
 
+
     rv, b = await cmd_bat()
     _rae(rv, "bat")
     adc_b = b
-    b /= BAT_FACTOR_TDO
+    b /= BAT_FACTOR_DOT
     lg.a(f"BAT | ADC {adc_b} mV -> battery {int(b)} mV")
     d["battery_level"] = b
-    if adc_b < 982:
+    if adc_b < 1500:
         ln = LoggerNotification(mac, sn, 'TDO', adc_b)
         notify_logger_error_low_battery(g, ln)
         app_state_set(EV_BLE_LOW_BATTERY, t_str(STR_EV_BLE_LOW_BATTERY))
@@ -227,6 +180,8 @@ async def ble_download_tdo(d):
     rv, ls = await cmd_dir()
     _rae(rv, "dir error " + str(rv))
     lg.a(f"DIR | {ls}")
+    if MC_FILE not in ls.keys():
+        _rae(1, "error, no configuration file in logger")
 
 
 
@@ -249,9 +204,7 @@ async def ble_download_tdo(d):
         # download file
         rv, file_data = await cmd_dwl(int(size))
         _rae(rv, "dwl")
-        # todo: DWL or DWF
         lg.a(f"OK downloaded file {name}")
-
 
 
         # save file in our local disk
@@ -265,6 +218,11 @@ async def ble_download_tdo(d):
 
         # add to the output list
         d['dl_files'].append(path)
+
+
+        # no-deleting the logger configuration file
+        if name == MC_FILE:
+            continue
 
         # delete file in logger
         rv = await cmd_del(del_name)
@@ -285,35 +243,59 @@ async def ble_download_tdo(d):
     lg.a("FRM | OK")
 
 
-
-    # check sensor Temperature
-    rv = await cmd_gst()
-    # rv: (0, 46741)
-    bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
-    if bad_rv:
-        _une(bad_rv, d, "T_sensor_error", ce=1)
-        lg.a(f'GST | error {rv}')
-        d['error'] = 'sensor T'
-    _rae(bad_rv, "gst")
+    # read the local logger configuration file
+    path = str(calculate_path_to_folder_within_dl_files_from_mac_address(mac) / MC_FILE)
+    with open(path) as f:
+        j = json.load(f)
 
 
 
-    # check sensor Pressure
-    rv = await cmd_gsp()
-    # rv: (0, 1241)
-    bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
-    if bad_rv:
-        _une(bad_rv, d, "P_sensor_error", ce=1)
-        lg.a(f'GSP | error {rv}')
-        ln = LoggerNotification(mac, sn, 'TDO', b)
-        notify_logger_error_sensor_pressure(g, ln)
-        d['error'] = 'sensor P'
-    _rae(bad_rv, "gsp")
+    # check need to modify the DO interval in the logger config file
+    lg.a('debug, analyzing need for DOX interval reconfiguration')
+    i_dro = exp_get_conf_dox()
+    if i_dro:
+        # yes, we were asked to
+        if i_dro == int(j["DRI"]):
+            lg.a('not changing DRI because it\'s the same')
+        else:
+            lg.a(f'changing DRI for DOX logger from {j["DRI"]} to {i_dro}')
+            j["DRI"] = i_dro
+    else:
+        lg.a('no experimental conf_dox, keep DRI in DOX logger')
 
 
 
-    # reconfigure the logger settings
-    await _tdo_reconfigure_profiling(d['gfv'])
+    # all cases, modified or not, send configuration command
+    rv = await lc.cmd_cfg(j)
+    _rae(rv, "cfg")
+    lg.a("CFG | OK")
+
+
+
+    # see if the DO sensor works
+    for i_do in range(3):
+        rv = await lc.cmd_gdo()
+        bad_rv = not rv or (rv and rv[0] == "0000")
+        if not bad_rv:
+            # good!
+            lg.a(f"GDO | {rv}")
+            break
+        # GDO went south, check number of retries remaining
+        lg.a(f"GDO | error {rv}")
+        if i_do == 2:
+            # todo: re-do this
+            # notify this
+            lat, lon, _, __ = g
+            ln = LoggerNotification(mac, sn, 'DOX', b)
+            ln.uuid_interaction = u
+            notify_logger_error_sensor_oxygen(g, ln)
+            _une(bad_rv, notes, "ox_sensor_error", ce=1)
+            _rae(bad_rv, "gdo")
+        else:
+            # todo: send this to GUI in a redis manner
+            # _u(STATE_DDH_BLE_DOWNLOAD_ERROR_GDO)
+            _une(bad_rv, notes, "ox_sensor_error", ce=0)
+        await asyncio.sleep(5)
 
 
 

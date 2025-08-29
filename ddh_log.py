@@ -58,7 +58,7 @@ class LogDDHByModule:
         self.debug = False
 
     def set_debug(self, v: bool):
-        assert type(v) is bool
+        v = True if v == 1 else False
         self.debug = v
 
 

@@ -592,6 +592,7 @@ def _ddh_ble(ignore_gui):
 
         # see gps OK from redis
         g = ddh_gps_get()
+        lg.a(f'debug: g = {g}')
         if not g:
             app_state_set(EV_GPS_HW_ERROR, t_str(STR_EV_GPS_HW_ERROR))
             r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 3, 1)
@@ -599,6 +600,7 @@ def _ddh_ble(ignore_gui):
 
         lat, lon, tg, speed_knots = g
         ddh_log_tracking_add(lat, lon, tg)
+        # todo: prevent doing this so often
         ddh_gps_get_clock_sync_if_so()
 
 
