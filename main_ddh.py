@@ -5,11 +5,10 @@ import glob
 import pathlib
 import setproctitle
 import sys
-
-from PyQt6 import QtWidgets
 from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt
 from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie
-from PyQt6.QtWidgets import QApplication, QHeaderView, QTableWidgetItem, QTableWidget, QWidget, QMessageBox, QMainWindow
+from PyQt6.QtWidgets import (QApplication,
+                             QTableWidgetItem, QTableWidget, QWidget, QMessageBox, QMainWindow)
 
 import ddh.gui.gui as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
@@ -1236,15 +1235,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def keyPressEvent(self, ev):
         self.key_pressed = None
         known_keys = (
-            Qt.Key_1,
-            Qt.Key_2,
-            Qt.Key_3,
-            Qt.Key_B,
-            Qt.Key_M,
-            Qt.Key_W,
-            Qt.Key_E,
-            Qt.Key_Q,
-            Qt.Key_I,
+            Qt.Key.Key_1,
+            Qt.Key.Key_2,
+            Qt.Key.Key_3,
+            Qt.Key.Key_B,
+            Qt.Key.Key_M,
+            Qt.Key.Key_W,
+            Qt.Key.Key_E,
+            Qt.Key.Key_Q,
+            Qt.Key.Key_I,
         )
         if ev.key() not in known_keys:
             lg.a(f"warning, unknown keypress {ev.key()}")
@@ -1253,39 +1252,39 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # ------------------------------
         # identify keyboard key pressed
         # ------------------------------
-        if ev.key() == Qt.Key_1:
+        if ev.key() == Qt.Key.Key_1:
             lg.a("debug, main_gui detect pressed button 1")
             self.num_clicks_brightness = (self.num_clicks_brightness + 1) % 18
             gui_setup_brightness(self)
             return
 
-        elif ev.key() == Qt.Key_2:
+        elif ev.key() == Qt.Key.Key_2:
             lg.a("debug, main_gui detect pressed button 2")
             gui_show_note_tab_delete_black_macs(self)
             return
 
-        elif ev.key() == Qt.Key_3:
+        elif ev.key() == Qt.Key.Key_3:
             lg.a("debug, main_gui detect pressed button 3")
             # they decided 0 but minimum was 9
             gui_ddh_set_key3_brightness(self, 0)
             return
 
-        elif ev.key() == Qt.Key_M:
+        elif ev.key() == Qt.Key.Key_M:
             self.key_pressed = "m"
 
-        elif ev.key() == Qt.Key_B:
+        elif ev.key() == Qt.Key.Key_B:
             self.key_pressed = "b"
 
-        elif ev.key() == Qt.Key_E:
+        elif ev.key() == Qt.Key.Key_E:
             self.key_pressed = "e"
 
-        elif ev.key() == Qt.Key_Q:
+        elif ev.key() == Qt.Key.Key_Q:
             self.key_pressed = "q"
 
-        elif ev.key() == Qt.Key_I:
+        elif ev.key() == Qt.Key.Key_I:
             self.key_pressed = "i"
 
-        elif ev.key() == Qt.Key_W:
+        elif ev.key() == Qt.Key.Key_W:
             self.key_pressed = "w"
 
 
@@ -1790,13 +1789,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 #
 # elif f == STATE_DDH_PRESSED_BUTTON_1:
-#     a.keyPressEvent(ButtonPressEvent(Qt.Key_1))
+#     a.keyPressEvent(ButtonPressEvent(Qt.Key.Key_1))
 #
 # elif f == STATE_DDH_PRESSED_BUTTON_2:
-#     a.keyPressEvent(ButtonPressEvent(Qt.Key_2))
+#     a.keyPressEvent(ButtonPressEvent(Qt.Key.Key_2))
 #
 # elif f == STATE_DDH_PRESSED_BUTTON_3:
-#     a.keyPressEvent(ButtonPressEvent(Qt.Key_3))
+#     a.keyPressEvent(ButtonPressEvent(Qt.Key.Key_3))
 
 
 
