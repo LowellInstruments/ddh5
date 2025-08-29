@@ -1,0 +1,43 @@
+import glob
+import json
+from utils.ddh_common import ddh_get_path_to_folder_lef, ddh_config_get_vessel_name
+import os
+
+
+# ----------------------------------------------------------
+# LEF: lowell event file
+# upon a BLE download, a .LEF file is created
+# the UTILS/LOGS module finds it, reads it and cats its
+# content in current 'track_*.gps' file w/ a '***' marker
+# ----------------------------------------------------------
+
+
+def lef_create_file(g, name):
+    lat, lon, tg, speed = g
+    d = {
+        "dl_lat": lat,
+        "dl_lon": lon,
+        "dl_utc_tg": str(tg),
+        "dl_speed": speed,
+        "dl_filename": name,
+        "dl_vessel": ddh_config_get_vessel_name()
+    }
+    fol = str(ddh_get_path_to_folder_lef())
+    path = f"{fol}/dl_{name}.lef"
+    with open(path, "w") as fl:
+        # from dict to file
+        json.dump(d, fl)
+
+
+if __name__ == '__main__':
+    # how to grab json fields from track files
+    os.chdir("../dl_files/ddh#joaquim")
+    s = glob.glob('*.txt')[-1]
+    print('parsing track file', s)
+    with open(s, 'r') as f:
+        ll = f.readlines()
+    for each_line in ll:
+        if "***" in each_line:
+            # from string to dict
+            j = json.loads(each_line.split('***')[1])
+            print(j['reason'])
