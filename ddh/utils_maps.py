@@ -3,7 +3,7 @@ import glob
 import os
 import time
 import requests
-from PySide6.QtGui import QMovie
+from PyQt6.QtGui import QMovie
 
 from ddh.preferences import preferences_get_models_index
 from mat.utils import linux_is_rpi

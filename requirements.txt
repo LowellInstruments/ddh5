@@ -1,6 +1,5 @@
 psutil
 setproctitle
-pyside6
 redis
 numpy
 pyqtgraph
@@ -18,6 +17,9 @@ bleak
 humanize
 boto3
 h5py
+
+# on RPi, install via apt
+# apt install python3-pyqt6
 
 simplepyble~=0.7.3
 lsb@git+https://github.com/LowellInstruments/lsb.git

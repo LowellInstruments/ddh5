@@ -2,11 +2,12 @@ import redis
 import math
 import time
 from datetime import datetime
+
+from PyQt6 import QtCore
+from PyQt6.QtCore import QCoreApplication
 from math import ceil
 import numpy as np
 import pyqtgraph as pg
-from PySide6 import QtCore
-from PySide6.QtCore import QCoreApplication
 from pyqtgraph import LinearRegionItem
 from pyqtgraph.Qt import QtGui
 

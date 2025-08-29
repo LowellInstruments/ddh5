@@ -1,6 +1,5 @@
 psutil
 setproctitle
-pyside6
 redis
 numpy
 pyqtgraph
@@ -18,6 +17,7 @@ bleak
 humanize
 boto3
 h5py
+PyQt6
 
 
 # don't install during dev but "attach" in pycharm

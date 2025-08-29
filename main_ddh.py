@@ -6,12 +6,12 @@ import pathlib
 import setproctitle
 import sys
 
-from PySide6.QtCore import QTimer, QCoreApplication, QProcess, QSize
-from PySide6.QtGui import QMovie, QIcon, QPixmap, Qt, QScreen
-from PySide6.QtWidgets import QMainWindow, QApplication, QTableWidget, QTableWidgetItem, QHeaderView, QWidget, \
-    QMessageBox
+from PyQt6 import QtWidgets
+from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt
+from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie
+from PyQt6.QtWidgets import QApplication, QHeaderView, QTableWidgetItem, QTableWidget, QWidget, QMessageBox, QMainWindow
 
-import ddh.gui.designer_main as d_m
+import ddh.gui.gui as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
 from ddh.draw_graph import graph_request
 from ddh.preferences import preferences_set_models_index
@@ -28,7 +28,8 @@ from rd_ctt.ddh import (
     RD_DDH_AWS_SYNC_REQUEST, RD_DDH_BLE_SEMAPHORE, \
     RD_DDH_GPS_COUNTDOWN_FOR_GPS_FIX_AT_BOOT,
     RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_REFRESH_BLE_ICON_AUTO, \
-    RD_DDH_GUI_REFRESH_GPS_ICON_AUTO, RD_DDH_GUI_REFRESH_CELL_WIFI_ICON_AUTO, RD_DDH_GUI_PLOT_FOLDER,
+    RD_DDH_GUI_REFRESH_GPS_ICON_AUTO, RD_DDH_GUI_REFRESH_CELL_WIFI_ICON_AUTO,
+    RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_REFRESH_PROCESSES_PRESENT
 )
 from utils.ddh_common import (
@@ -458,7 +459,8 @@ def gui_tabs_populate_history(my_app):
 
     # redistribute columns with
     a.tbl_his.horizontalHeader().resizeSection(0, 120)
-    a.tbl_his.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+    # todo: this crashes
+    # a.tbl_his.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
     # columns' title labels
     labels = ["logger", "result", "rerun"]
