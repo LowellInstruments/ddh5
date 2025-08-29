@@ -430,10 +430,15 @@ def _graph_process_n_draw(a, plot_reason=''):
     lbl1 = lbl1 + ' ─'
     lbl2 = lbl2 + ' - -'
     lbl3 = lbl3 + ' ─'
-    pen1 = pg.mkPen(color=clr_1, width=2, style=QtCore.Qt.SolidLine)
-    pen2 = pg.mkPen(color=clr_2, width=2, style=QtCore.Qt.DashLine)
-    pen3 = pg.mkPen(color=clr_3, width=1, style=QtCore.Qt.SolidLine)
-    pen4 = pg.mkPen(color=clr_4, width=2, style=QtCore.Qt.SolidLine)
+    # todo: this seems to not work on PyqT6
+    # pen1 = pg.mkPen(color=clr_1, width=2, style=QtCore.Qt.SolidLine)
+    # pen2 = pg.mkPen(color=clr_2, width=2, style=QtCore.Qt.DashLine)
+    # pen3 = pg.mkPen(color=clr_3, width=1, style=QtCore.Qt.SolidLine)
+    # pen4 = pg.mkPen(color=clr_4, width=2, style=QtCore.Qt.SolidLine)
+    pen1 = pg.mkPen(color=clr_1, width=2)
+    pen2 = pg.mkPen(color=clr_2, width=2)
+    pen3 = pg.mkPen(color=clr_3, width=1)
+    pen4 = pg.mkPen(color=clr_4, width=2)
     p1.getAxis('left').setTextPen(clr_1)
     p1.getAxis('right').setTextPen(clr_2)
     p1.getAxis('bottom').setTextPen('black')
