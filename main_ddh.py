@@ -457,9 +457,9 @@ def gui_tabs_populate_history(my_app):
             lg.a(f"error, history frame {h} -> {ex}")
 
     # redistribute columns with
-    a.tbl_his.horizontalHeader().resizeSection(0, 120)
-    # todo: this crashes
-    # a.tbl_his.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+    a.tbl_his.horizontalHeader().resizeSection(0, 150)
+    a.tbl_his.horizontalHeader().resizeSection(1, 300)
+    a.tbl_his.horizontalHeader().setStretchLastSection(True)
 
     # columns' title labels
     labels = ["logger", "result", "rerun"]
