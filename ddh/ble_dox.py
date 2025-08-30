@@ -38,7 +38,7 @@ class BLEAppException(Exception):
 
 def _rae(rv, s):
     if rv:
-        raise BLEAppException("TDO interact " + s)
+        raise BLEAppException("DOX interact " + s)
 
 
 
@@ -51,7 +51,7 @@ def _une(rv, d, e, ce=0):
 
 
 
-async def ble_download_tdo(d):
+async def ble_download_dox(d):
 
     # d: {'battery_level': 65535,
     #     'error': 'error comm.',
@@ -66,6 +66,7 @@ async def ble_download_tdo(d):
     #     'uuid': '9d8f50cd-0b08-467e-ab98-c62bae39fc96'}
 
     _is_a_lid_v2_logger = False
+    logger_type = d['dev'].name.split('_')[0]
     dev = d['dev']
     mac = dev.address
     g = d['gps_pos']
@@ -83,7 +84,7 @@ async def ble_download_tdo(d):
         lg.a(f"debug, logger reset file {mac} found, deleting it")
         await cmd_rst()
         # out of here for sure
-        raise BLEAppException("TDO interact logger reset file")
+        raise BLEAppException("DOX interact logger reset file")
 
 
     rv, v = await cmd_gfv()
@@ -120,7 +121,7 @@ async def ble_download_tdo(d):
 
 
     # to know if this DO-X logger uses LID or LIX files
-    rv = await lc.cmd_xod()
+    rv = await cmd_xod()
     _is_a_lid_v2_logger = rv == 0
     lg.a(f"XOD | LIX {_is_a_lid_v2_logger}")
 
@@ -142,7 +143,7 @@ async def ble_download_tdo(d):
     lg.a(f"BAT | ADC {adc_b} mV -> battery {int(b)} mV")
     d["battery_level"] = b
     if adc_b < 1500:
-        ln = LoggerNotification(mac, sn, 'TDO', adc_b)
+        ln = LoggerNotification(mac, sn, logger_type, adc_b)
         notify_logger_error_low_battery(g, ln)
         app_state_set(EV_BLE_LOW_BATTERY, t_str(STR_EV_BLE_LOW_BATTERY))
         d['error'] = 'low battery'
@@ -254,7 +255,7 @@ async def ble_download_tdo(d):
     lg.a('debug, analyzing need for DOX interval reconfiguration')
     i_dro = exp_get_conf_dox()
     if i_dro:
-        # yes, we were asked to
+        # yes, we were asked to try to reconfigure DOX interval
         if i_dro == int(j["DRI"]):
             lg.a('not changing DRI because it\'s the same')
         else:
@@ -266,7 +267,7 @@ async def ble_download_tdo(d):
 
 
     # all cases, modified or not, send configuration command
-    rv = await lc.cmd_cfg(j)
+    rv = await cmd_cfg(j)
     _rae(rv, "cfg")
     lg.a("CFG | OK")
 
@@ -274,28 +275,25 @@ async def ble_download_tdo(d):
 
     # see if the DO sensor works
     for i_do in range(3):
-        rv = await lc.cmd_gdo()
+        rv = await cmd_gdo()
         bad_rv = not rv or (rv and rv[0] == "0000")
         if not bad_rv:
             # good!
             lg.a(f"GDO | {rv}")
             break
-        # GDO went south, check number of retries remaining
+
+        # GDO went south, check retries remaining
         lg.a(f"GDO | error {rv}")
         if i_do == 2:
-            # todo: re-do this
-            # notify this
-            lat, lon, _, __ = g
+            d['error'] = 'sensor OX'
             ln = LoggerNotification(mac, sn, 'DOX', b)
-            ln.uuid_interaction = u
             notify_logger_error_sensor_oxygen(g, ln)
-            _une(bad_rv, notes, "ox_sensor_error", ce=1)
+            _une(bad_rv, d, "ox_sensor_error", ce=1)
             _rae(bad_rv, "gdo")
         else:
             # todo: send this to GUI in a redis manner
-            # _u(STATE_DDH_BLE_DOWNLOAD_ERROR_GDO)
-            _une(bad_rv, notes, "ox_sensor_error", ce=0)
-        await asyncio.sleep(5)
+            _une(bad_rv, d, "ox_sensor_error", ce=0)
+        await asyncio.sleep(2)
 
 
 

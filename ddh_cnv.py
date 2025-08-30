@@ -229,13 +229,13 @@ def main_ddh_cnv(ignore_gui=False):
     signal.signal(signal.SIGINT, _cb_ctrl_c)
     signal.signal(signal.SIGTERM, _cb_kill)
 
-    lg.set_debug(exp_get_use_debug_print())
+    lg.set_debug(exp_get_use_debug_print() or not linux_is_rpi())
 
     while 1:
         try:
             _ddh_cnv(ignore_gui)
         except (Exception, ) as ex:
-            print(f"CNV: error, process '{p_name}' restarting after crash -> {ex}")
+            lg.a(f"CNV: error, process '{p_name}' restarting after crash -> {ex}")
 
 
 

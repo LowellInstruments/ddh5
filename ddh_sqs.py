@@ -124,7 +124,7 @@ def _sqs_serve():
             continue
 
 
-        # reads each local SQS file as JSON
+        # convert local SQS file to JSON dictionary
         try:
             f = open(i_f, "r")
             j = json.load(f)
@@ -141,8 +141,10 @@ def _sqs_serve():
 
 
         try:
-            # ENQUEUES the JSON as string to SQS service
+            # JSON dictionary to string
             m = json.dumps(j)
+
+            # ENQUEUES such string to SQS service
             rsp = sqs.send_message(
                 QueueUrl=ddh_config_get_one_aws_credential_value("cred_aws_sqs_queue_name"),
                 MessageGroupId=str(uuid.uuid4()),
@@ -152,7 +154,7 @@ def _sqs_serve():
 
             md = rsp["ResponseMetadata"]
             if md and int(md["HTTPStatusCode"]) == 200:
-                # delete SQS file
+                # delete local SQS file
                 os.unlink(i_f)
                 # tell status database for API all went fine
                 ddh_write_timestamp_aws_sqs('sqs', 'ok')
@@ -192,16 +194,17 @@ def _ddh_sqs(ignore_gui):
 
 
 def main_ddh_sqs(ignore_gui=False):
+
     signal.signal(signal.SIGINT, _cb_ctrl_c)
     signal.signal(signal.SIGTERM, _cb_kill)
 
-    lg.set_debug(exp_get_use_debug_print())
+    lg.set_debug(exp_get_use_debug_print() or not linux_is_rpi())
 
     while 1:
         try:
             _ddh_sqs(ignore_gui)
         except (Exception,) as ex:
-            print(f"AWS: error, process '{p_name}' restarting after crash -> {ex}")
+            lg.a(f"AWS: error, process '{p_name}' restarting after crash -> {ex}")
 
 
 

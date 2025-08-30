@@ -1811,7 +1811,7 @@ def main_ddh_gui():
 
     setproctitle.setproctitle(NAME_EXE_DDH)
 
-    lg.set_debug(exp_get_use_debug_print())
+    lg.set_debug(exp_get_use_debug_print() or not linux_is_rpi())
 
     app = QApplication(sys.argv)
     ex = DDH()

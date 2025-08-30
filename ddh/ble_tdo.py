@@ -253,7 +253,6 @@ async def ble_download_tdo(d):
         lg.a(f"OK downloaded file {name}")
 
 
-
         # save file in our local disk
         del_name = name
         if ddh_config_does_flag_file_download_test_mode_exist():

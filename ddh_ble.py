@@ -14,12 +14,13 @@ import redis
 from ble.ble import ble_scan_slow, disconnect
 from ble.ble_linux import (
     ble_linux_get_bluez_version,
-    ble_linux_check_antenna_up_n_running,
+    ble_linux_is_antenna_up_n_running,
     ble_linux_detect_devices_left_connected_ll,
     ble_linux_disconnect_all, ble_linux_find_best_interface,
     ble_linux_get_type_of_interface, ble_linux_reset_antenna,
-    ble_linux_disconnect_by_mac
+    ble_linux_disconnect_by_mac, ble_linux_is_mac_already_connected
 )
+from ddh.ble_dox import ble_download_dox
 from ddh_gps import (
     ddh_gps_get_fix_upon_cold_boot,
     ddh_gps_know_we_are_using_dummy,
@@ -109,25 +110,28 @@ def _check_bluez_version():
 
 
 def _ddh_ble_hardware_error_notify_via_email(g, antenna_idx):
+
+    # todo: get rid of this global var by passing via parameter
     global g_ble_system_error
     if g and g_ble_system_error:
         e = f"error, ble_check_antenna_up_n_running #{antenna_idx}"
-        time.sleep(3)
         if is_it_time_to(e, 600):
-            lg.a(e.format(e))
+            lg.a(e)
             notify_ddh_error_hw_ble(g)
         g_ble_system_error = 0
 
 
 
 
-def _ddh_ble_hardware_detect_antenna():
-    # save to file which BLE interface we use, API needs it
+def _ddh_ble_hardware_describe_antenna_type():
+
     antenna_idx = ble_linux_find_best_interface()
     if antenna_idx != -1:
         antenna_desc = ble_linux_get_type_of_interface(antenna_idx)
     else:
         antenna_desc = 'error'
+
+    # save to file which BLE interface we use, API needs it
     try:
         with open(TMP_PATH_BLE_IFACE, "w") as f:
             json.dump({"ble_iface_used": antenna_desc}, f)
@@ -140,8 +144,10 @@ def _ddh_ble_hardware_detect_antenna():
 
 def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
 
+    # todo: this HAS to return SOMETHING
+
     brr = r.get(RD_DDH_BLE_RESET_REQ)
-    aur = ble_linux_check_antenna_up_n_running(antenna_idx)
+    aur = ble_linux_is_antenna_up_n_running(antenna_idx)
     nlc = ble_linux_detect_devices_left_connected_ll()
     need_hw_reset = brr or aur
 
@@ -174,15 +180,16 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
 
 
         # linux BLE system health check: again
-        aur = ble_linux_check_antenna_up_n_running(antenna_idx)
+        aur = ble_linux_is_antenna_up_n_running(antenna_idx)
         if aur:
             lg.a('error, cannot get a good BLE antenna')
             global g_ble_system_error
             g_ble_system_error = 1
             r.set(RD_DDH_GUI_REFRESH_BLE_ANTENNA, 'error')
         else:
-            antenna_idx, antenna_description = _ddh_ble_hardware_detect_antenna()
+            antenna_idx, antenna_description = _ddh_ble_hardware_describe_antenna_type()
             r.set(RD_DDH_GUI_REFRESH_BLE_ANTENNA, antenna_description)
+
 
 
 
@@ -258,13 +265,14 @@ async def _ble_logger_id_and_download(d):
         shutil.rmtree(str(p), ignore_errors=True)
 
 
+    # first IDENTIFY, then DOWNLOAD
     try:
         if _ble_logger_is_tdo(name):
             lg.a(f'processing TDO logger SN {sn}')
             rv = await ble_download_tdo(d)
 
-        # elif _ble_logger_is_do1_or_do2(name):
-        #   _ble_download_dox(dev, d_state)
+        elif _ble_logger_is_do1_or_do2(name):
+            rv = await ble_download_dox(d)
 
         elif _ble_logger_is_moana(name):
             print('will do this someday, I am not in a hurry')
@@ -359,93 +367,6 @@ def _ddh_ble_scan_loggers(antenna_idx):
     ls_macs_nope = list(set(ls_macs_black + ls_macs_orange + ls_macs_slo))
     ls_devs = [d for d in ls_devs if d.address not in ls_macs_nope]
     return ls_devs
-
-
-
-
-
-def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
-
-    # know who we work with
-    mac = dev.address
-    sn = ddh_config_get_logger_sn_from_mac(mac)
-
-
-    # useful to get a summary to send notifications
-    d_interaction = {
-        'battery_level': 0xFFFF,
-        'error': 'error comm.',
-        'crit_error': 0,
-        'dl_files': [],
-        'rerun': False,
-        'gfv':  '',
-        'dev': dev,
-        'gps_pos': gps_pos,
-        'antenna_idx': antenna_idx,
-        'antenna_desc': antenna_desc,
-        'uuid': str(uuid4()),
-    }
-
-
-    # tell what we are doing to GUI
-    app_state_set(EV_BLE_CONNECTING, t_str(STR_EV_BLE_CONNECTING) + f' to {sn}')
-    lg.a(f'debug, connecting to {sn}')
-
-
-
-    # --------------------------------------------
-    # discover the type of logger and download it
-    # --------------------------------------------
-    try:
-        r.set(RD_DDH_BLE_SEMAPHORE, 1)
-        app_state_set(EV_BLE_DL_PROGRESS, t_str(STR_EV_BLE_DL_PROGRESS))
-        r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 1, 1)
-        rv = ael.run_until_complete(_ble_logger_id_and_download(d_interaction))
-    except (Exception, ) as ex:
-        lg.a(f"error, _ddh_ble_download_logger {mac} -> {ex}")
-        rv = 1
-    finally:
-        r.delete(RD_DDH_BLE_SEMAPHORE)
-
-
-    # some BLE dongles need a reset after download
-    if antenna_desc == 'external' and linux_is_rpi():
-        lg.a('warning, set planned BLE reset request on redis')
-        r.set(RD_DDH_BLE_RESET_REQ, 1)
-
-
-
-    # ----------------------
-    # parse download result
-    # ----------------------
-    _ddh_ble_analyze_logger_download_result(d_interaction, rv)
-
-
-
-    # ------------------------------------------------
-    # enqueue binary data files by converted by CNV
-    # ------------------------------------------------
-    for p_dl in d_interaction['dl_files']:
-        if p_dl.endswith('.lid'):
-            bn = os.path.basename(p_dl)
-            lg.a(f'debug, post BLE download push of {bn} to CNV queue')
-            r.rpush(RD_DDH_CNV_QUEUE, p_dl)
-
-
-    # ------------------------------------------------
-    # enqueue files to AWS to it can upload-copy them
-    # ------------------------------------------------
-    ptf = get_path_current_track_file()
-    bn = os.path.basename(ptf)
-    lg.a(f'debug, post BLE download push of track file {bn} to AWS COPY queue')
-    r.rpush(RD_DDH_AWS_COPY_QUEUE, ptf)
-    for p_dl in d_interaction['dl_files']:
-        bn = os.path.basename(p_dl)
-        lg.a(f'debug, post BLE download push of file {bn} to AWS COPY queue')
-        r.rpush(RD_DDH_AWS_COPY_QUEUE, p_dl)
-
-    return rv
-
 
 
 
@@ -554,23 +475,120 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
 
 
 
+
+
+def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
+
+    # know logger we work with
+    mac = dev.address
+    sn = ddh_config_get_logger_sn_from_mac(mac)
+
+
+    # useful to get a summary to send notifications
+    d_interaction = {
+        'battery_level': 0xFFFF,
+        'error': 'error comm.',
+        'crit_error': 0,
+        'dl_files': [],
+        'rerun': False,
+        'gfv':  '',
+        'dev': dev,
+        'gps_pos': gps_pos,
+        'antenna_idx': antenna_idx,
+        'antenna_desc': antenna_desc,
+        'uuid': str(uuid4()),
+    }
+
+
+    # tell what we are doing to GUI
+    app_state_set(EV_BLE_CONNECTING, t_str(STR_EV_BLE_CONNECTING) + f' to {sn}')
+    lg.a(f'debug, connecting to {sn}')
+
+
+
+    # --------------------------------------------
+    # discover the type of logger and download it
+    # --------------------------------------------
+    try:
+        r.setex(RD_DDH_BLE_SEMAPHORE, 120, 1)
+        app_state_set(EV_BLE_DL_PROGRESS, t_str(STR_EV_BLE_DL_PROGRESS))
+        r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 1, 1)
+        rv = ael.run_until_complete(_ble_logger_id_and_download(d_interaction))
+    except (Exception, ) as ex:
+        lg.a(f"error, _ddh_ble_download_logger {mac} -> {ex}")
+        rv = 1
+    finally:
+        r.delete(RD_DDH_BLE_SEMAPHORE)
+
+
+
+    # some BLE dongles need a reset after download
+    if antenna_desc == 'external' and linux_is_rpi():
+        lg.a('warning, set planned BLE reset request on redis')
+        r.set(RD_DDH_BLE_RESET_REQ, 1)
+
+
+
+    # ----------------------
+    # parse download result
+    # ----------------------
+    _ddh_ble_analyze_logger_download_result(d_interaction, rv)
+
+
+
+    # ------------------------------------------------
+    # enqueue binary data files by converted by CNV
+    # ------------------------------------------------
+    for p_dl in d_interaction['dl_files']:
+        if p_dl.endswith('.lid'):
+            bn = os.path.basename(p_dl)
+            lg.a(f'debug, post BLE download push of {bn} to CNV queue')
+            r.rpush(RD_DDH_CNV_QUEUE, p_dl)
+
+
+
+    # ------------------------------------------------
+    # enqueue files to AWS to it can upload-copy them
+    # ------------------------------------------------
+    ptf = get_path_current_track_file()
+    bn = os.path.basename(ptf)
+    lg.a(f'debug, post BLE download push of track file {bn} to AWS COPY queue')
+    r.rpush(RD_DDH_AWS_COPY_QUEUE, ptf)
+    for p_dl in d_interaction['dl_files']:
+        bn = os.path.basename(p_dl)
+        lg.a(f'debug, post BLE download push of file {bn} to AWS COPY queue')
+        r.rpush(RD_DDH_AWS_COPY_QUEUE, p_dl)
+
+    return rv
+
+
+
+
 def _ddh_ble(ignore_gui):
 
     setproctitle.setproctitle(p_name)
+    _check_bluez_version()
+    # todo: maybe delete this FINISH BOOT things
     r.set(RD_DDH_BLE_FINISH_BOOT, 1)
     rv_prev_run = 0
     ddh_create_needed_folders()
     macs_color_show_at_boot()
-    _check_bluez_version()
+    # todo: maybe get rid of these debug hooks
     ddh_config_apply_debug_hooks()
     if ddh_config_does_flag_file_download_test_mode_exist():
         lg.a('detected DDH download test mode')
-    antenna_idx, antenna_s = _ddh_ble_hardware_detect_antenna()
+
+
+    # know your BLE antenna
+    antenna_idx, antenna_s = _ddh_ble_hardware_describe_antenna_type()
     lg.a(f"using BLE antenna hci{antenna_idx}, type {antenna_s}")
     r.set(RD_DDH_GUI_REFRESH_BLE_ANTENNA, antenna_s)
 
+
+    # clock sync when not in development laptop
     if not ignore_gui:
         _ddh_ble_boot_gps_clock_sync()
+
 
 
     # forever loop downloading loggers
@@ -590,7 +608,7 @@ def _ddh_ble(ignore_gui):
             continue
 
 
-        # see gps OK from redis
+        # get a gps fix from redis
         g = ddh_gps_get()
         lg.a(f'debug: g = {g}')
         if not g:
@@ -598,14 +616,21 @@ def _ddh_ble(ignore_gui):
             r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 3, 1)
             continue
 
+
+        # populate your tracking file
         lat, lon, tg, speed_knots = g
         ddh_log_tracking_add(lat, lon, tg)
-        # todo: prevent doing this so often
-        ddh_gps_get_clock_sync_if_so()
 
 
 
-        # see other APP conditions are OK
+        # GPS clock sync from time to time
+        if is_it_time_to('ble_gps_periodic_clock_sync', 86400):
+            if not ignore_gui:
+                ddh_gps_get_clock_sync_if_so()
+
+
+
+        # see the rest non-GPSy APP conditions are OK
         if not ddh_app_check_operational_conditions(g):
             continue
 
@@ -618,6 +643,8 @@ def _ddh_ble(ignore_gui):
         # -------------
         # find loggers
         # -------------
+        # todo: GET RETURN VALUE of HEALTH CHECK, do not continue if bad
+
 
         try:
             app_state_set(EV_BLE_SCAN, t_str(STR_EV_BLE_SCAN))
@@ -645,13 +672,13 @@ def main_ddh_ble(ignore_gui=False):
     signal.signal(signal.SIGINT, _cb_ctrl_c)
     signal.signal(signal.SIGTERM, _cb_kill)
 
-    lg.set_debug(exp_get_use_debug_print())
+    lg.set_debug(exp_get_use_debug_print() or not linux_is_rpi())
 
     while 1:
         try:
             _ddh_ble(ignore_gui)
         except (Exception, ) as ex:
-            print(f"BLE: error, process '{p_name}' restarting after crash -> {ex}")
+            lg.a(f"BLE: error, process '{p_name}' restarting after crash -> {ex}")
 
 
 
