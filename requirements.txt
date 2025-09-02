@@ -17,11 +17,15 @@ bleak
 humanize
 boto3
 h5py
+# for BRT tool
+simplepyble~=0.7.3
+lsb@git+https://github.com/LowellInstruments/lsb.git
+
+
+gps@git+https://github.com/LowellInstruments/gps.git
+ble@git+https://github.com/LowellInstruments/ble.git
+rd_ctt@git+https://github.com/LowellInstruments/rd_ctt.git
+# mat is installed differently
 
 # on RPi, install via apt
 # apt install python3-pyqt6
-
-simplepyble~=0.7.3
-lsb@git+https://github.com/LowellInstruments/lsb.git
-gps@git+https://github.com/LowellInstruments/gps.git
-ble@git+https://github.com/LowellInstruments/ble.git

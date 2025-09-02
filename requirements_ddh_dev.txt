@@ -18,13 +18,18 @@ humanize
 boto3
 h5py
 PyQt6
-
-
-# don't install during dev but "attach" in pycharm
-# gps@git+https://github.com/LowellInstruments/gps.git
-# ble@git+https://github.com/LowellInstruments/ble.git
-
-
 # for BRT tool
 # simplepyble~=0.7.3
 # lsb@git+https://github.com/LowellInstruments/lsb.git
+
+
+
+# don't install during dev but "attach" in pycharm
+# ble@git+https://github.com/LowellInstruments/ble.git
+# gps@git+https://github.com/LowellInstruments/gps.git
+# mat@git+https://github.com/LowellInstruments/mat.git
+# rd_ctt@git+https://github.com/LowellInstruments/rd_ctt.git
+
+
+
+
