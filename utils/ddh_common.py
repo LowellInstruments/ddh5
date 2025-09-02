@@ -3,7 +3,6 @@ import asyncio
 import copy
 import glob
 import pathlib
-import shutil
 import redis
 import time
 import git
@@ -445,18 +444,6 @@ def ddh_create_needed_folders():
 
 
 
-def ddh_config_apply_debug_hooks():
-    if ddh_config_get_hook_purge_black_macs_on_boot():
-        print("debug, HOOK_PURGE_BLACK_MACS_ON_BOOT")
-        p = pathlib.Path(ddh_get_path_to_folder_macs_black())
-        shutil.rmtree(str(p), ignore_errors=True)
-        fol = ddh_get_path_to_folder_macs_black()
-        os.makedirs(fol, exist_ok=True)
-        fol = ddh_get_path_to_folder_macs_orange()
-        os.makedirs(fol, exist_ok=True)
-
-
-
 def ddh_config_get_monitored_pairs():
     return cfg['monitored_macs']
 
@@ -547,8 +534,6 @@ def ddh_config_check_file_is_ok():
             'sms_en',
             'skip_dl_in_port_en',
             'hook_gps_error_measurement_forced',
-            'hook_ble_purge_black_macs_on_boot',
-            'hook_ble_purge_this_mac_dl_files_folder'
         ]:
             aux = i
             del b['flags'][i]
@@ -579,16 +564,6 @@ def ddh_config_check_file_is_ok():
         print('********************************')
         os._exit(1)
 
-
-
-
-def ddh_config_get_hook_purge_black_macs_on_boot():
-    return cfg['flags']['hook_ble_purge_black_macs_on_boot']
-
-
-
-def ddh_config_get_hook_purge_this_mac_dl_files_folder():
-    return cfg['flags']['hook_ble_purge_this_mac_dl_files_folder']
 
 
 
@@ -650,10 +625,10 @@ def exp_get_conf_dox():
     rv = _get_exp_key_from_cfg('conf_dox')
     if rv == -1:
         # no such key in config.toml
-        return
+        return None
     if rv not in (60, 300, 900, "60", "300", "900"):
         print('rv NOT in expt_get_conf_dox() possible keys')
-        return
+        return None
     return int(rv)
 
 
@@ -913,30 +888,30 @@ def app_state_get():
 
 
 # ok or error
-p = 'ddh/gui/res'
-PATH_GPS_ANTENNA_ICON_OK = f"{p}/new_icon_gps_antenna_ok.png"
-PATH_GPS_ANTENNA_ICON_ERROR = f"{p}/new_icon_gps_antenna_error.png"
-PATH_GPS_ANTENNA_ICON_START = f"{p}/new_icon_gps_antenna_start.png"
-PATH_BLE_ANTENNA_ICON_OK = f"{p}/new_icon_ble_antenna_ok.png"
-PATH_BLE_ANTENNA_ICON_ERROR = f"{p}/new_icon_ble_antenna_error.png"
-PATH_BLE_ANTENNA_ICON_START = f"{p}/new_icon_ble_antenna_start.png"
-PATH_CELL_ICON_OK = f"{p}/new_icon_cell_wifi_ok.png"
-PATH_CELL_ICON_ERROR = f'{p}/new_icon_cell.png'
-PATH_TEMPLATE_MAIN_BLE_SCAN_IMG = p + '/blue{}.png'
-PATH_TEMPLATE_MAIN_GPS_BOOT_IMG = p + '/gps_boot{}.png'
-PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG = f'{p}/gps_clock.png'
-PATH_MAIN_BOOT = f'{p}/booting.png'
-PATH_MAIN_NO_LOGGERS_ASSIGNED = f'{p}/attention_old.png'
-PATH_MAIN_CONF_BAD = f'{p}/bad_conf.png'
-PATH_MAIN_IN_PORT = f'{p}/gps_in_port.png'
-PATH_MAIN_BLE_CONNECTING = f'{p}/ble_connecting.png'
-PATH_MAIN_BLE_DL_OK = f'{p}/ok.png'
-PATH_MAIN_BLE_DL_OK_NO_RERUN = f'{p}/attention.png'
-PATH_MAIN_BLE_DL_ERROR = f'{p}/error.png'
-PATH_MAIN_BLE_DL_NO_NEED = f'{p}/no_water_data_dl.png'
-PATH_MAIN_BLE_DL_LOW_BATTERY = f'{p}/low_battery.png'
-PATH_MAIN_BLE_DL_RETRY = f'{p}/sand_clock.png'
-PATH_MAIN_BLE_DL_PROGRESS = f'{p}/dl2.png'
+_p = 'ddh/gui/res'
+PATH_GPS_ANTENNA_ICON_OK = f"{_p}/new_icon_gps_antenna_ok.png"
+PATH_GPS_ANTENNA_ICON_ERROR = f"{_p}/new_icon_gps_antenna_error.png"
+PATH_GPS_ANTENNA_ICON_START = f"{_p}/new_icon_gps_antenna_start.png"
+PATH_BLE_ANTENNA_ICON_OK = f"{_p}/new_icon_ble_antenna_ok.png"
+PATH_BLE_ANTENNA_ICON_ERROR = f"{_p}/new_icon_ble_antenna_error.png"
+PATH_BLE_ANTENNA_ICON_START = f"{_p}/new_icon_ble_antenna_start.png"
+PATH_CELL_ICON_OK = f"{_p}/new_icon_cell_wifi_ok.png"
+PATH_CELL_ICON_ERROR = f'{_p}/new_icon_cell.png'
+PATH_TEMPLATE_MAIN_BLE_SCAN_IMG = _p + '/blue{}.png'
+PATH_TEMPLATE_MAIN_GPS_BOOT_IMG = _p + '/gps_boot{}.png'
+PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG = f'{_p}/gps_clock.png'
+PATH_MAIN_BOOT = f'{_p}/booting.png'
+PATH_MAIN_NO_LOGGERS_ASSIGNED = f'{_p}/attention_old.png'
+PATH_MAIN_CONF_BAD = f'{_p}/bad_conf.png'
+PATH_MAIN_IN_PORT = f'{_p}/gps_in_port.png'
+PATH_MAIN_BLE_CONNECTING = f'{_p}/ble_connecting.png'
+PATH_MAIN_BLE_DL_OK = f'{_p}/ok.png'
+PATH_MAIN_BLE_DL_OK_NO_RERUN = f'{_p}/attention.png'
+PATH_MAIN_BLE_DL_ERROR = f'{_p}/error.png'
+PATH_MAIN_BLE_DL_NO_NEED = f'{_p}/no_water_data_dl.png'
+PATH_MAIN_BLE_DL_LOW_BATTERY = f'{_p}/low_battery.png'
+PATH_MAIN_BLE_DL_RETRY = f'{_p}/sand_clock.png'
+PATH_MAIN_BLE_DL_PROGRESS = f'{_p}/dl2.png'
 
 
 
@@ -952,8 +927,6 @@ if __name__ == '__main__':
     print('monitored_macs', ddh_config_get_list_of_monitored_macs())
     print('mac_from_sn_json_file', ddh_config_get_logger_mac_from_sn('1234567'))
     print('gear_type', ddh_config_get_gear_type())
-    print('purge_black_macs_on_boot', ddh_config_get_hook_purge_black_macs_on_boot())
-    print('purge_mac_dl_files_folder', ddh_config_get_hook_purge_this_mac_dl_files_folder())
     print('get_moving_speed', ddh_config_get_speed_considered_as_trawling())
     print('ddh_config_is_sqs_enabled', ddh_config_is_sqs_enabled())
     print('ddh_flag_maps_en', ddh_config_are_maps_enabled())

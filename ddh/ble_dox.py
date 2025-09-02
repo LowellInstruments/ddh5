@@ -101,7 +101,6 @@ async def ble_download_dox(d):
     # feature has-logger-been-in-water
     flag_ignore_hbw = ddh_get_template_of_path_of_hbw_flag_file().format(mac)
     if state == 'running':
-        # todo: try this
         if v >= MIN_VERSION_HBW_CMD:
             lg.a('sending command Has-Been-in-Water')
             rv, v = await cmd_hbw()
@@ -291,10 +290,7 @@ async def ble_download_dox(d):
             _une(bad_rv, d, "ox_sensor_error", ce=1)
             _rae(bad_rv, "gdo")
         else:
-            # todo: send this to GUI in a redis manner
             _une(bad_rv, d, "ox_sensor_error", ce=0)
-        await asyncio.sleep(2)
-
 
 
     # wake mode

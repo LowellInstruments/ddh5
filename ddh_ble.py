@@ -47,7 +47,6 @@ from rd_ctt.ddh import *
 from utils.ddh_common import (
     NAME_EXE_BLE,
     ddh_create_needed_folders,
-    ddh_config_apply_debug_hooks,
     ddh_config_does_flag_file_download_test_mode_exist,
     ddh_config_get_list_of_monitored_macs,
     TMP_PATH_BLE_IFACE, app_state_set, EV_BLE_SCAN, STR_EV_BLE_SCAN, t_str, ael,
@@ -58,7 +57,6 @@ from utils.ddh_common import (
     EV_GPS_SYNC_CLOCK, STR_EV_GPS_SYNC_CLOCK,
     EV_BLE_DL_PROGRESS, STR_EV_BLE_DL_PROGRESS,
     STR_EV_BLE_DL_RETRY, EV_GPS_HW_ERROR, STR_EV_GPS_HW_ERROR,
-    ddh_config_get_hook_purge_this_mac_dl_files_folder,
     calculate_path_to_folder_within_dl_files_from_mac_address, EV_NO_ASSIGNED_LOGGERS,
     STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit, exp_get_use_debug_print
 )
@@ -81,7 +79,6 @@ skip_1st_gps_notif = 1
 using_dummy_gps = ddh_gps_know_we_are_using_dummy()
 g_prev_ble = 0
 g_ls_macs_mon = [i.upper() for i in ddh_config_get_list_of_monitored_macs()]
-g_ble_system_error = 0
 _g_logger_errors = {}
 g_killed = False
 
@@ -109,16 +106,13 @@ def _check_bluez_version():
 
 
 
-def _ddh_ble_hardware_error_notify_via_email(g, antenna_idx):
+def _ddh_ble_hardware_error_notify_via_email(g, antenna_idx, rv_error_ble_hw):
 
-    # todo: get rid of this global var by passing via parameter
-    global g_ble_system_error
-    if g and g_ble_system_error:
+    if g and rv_error_ble_hw:
         e = f"error, ble_check_antenna_up_n_running #{antenna_idx}"
         if is_it_time_to(e, 600):
             lg.a(e)
             notify_ddh_error_hw_ble(g)
-        g_ble_system_error = 0
 
 
 
@@ -144,12 +138,11 @@ def _ddh_ble_hardware_describe_antenna_type():
 
 def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
 
-    # todo: this HAS to return SOMETHING
-
     brr = r.get(RD_DDH_BLE_RESET_REQ)
     aur = ble_linux_is_antenna_up_n_running(antenna_idx)
     nlc = ble_linux_detect_devices_left_connected_ll()
     need_hw_reset = brr or aur
+    rv = 0
 
     if rv_previous_run or brr or nlc or aur:
         if rv_previous_run:
@@ -183,13 +176,13 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
         aur = ble_linux_is_antenna_up_n_running(antenna_idx)
         if aur:
             lg.a('error, cannot get a good BLE antenna')
-            global g_ble_system_error
-            g_ble_system_error = 1
+            rv = 1
             r.set(RD_DDH_GUI_REFRESH_BLE_ANTENNA, 'error')
         else:
             antenna_idx, antenna_description = _ddh_ble_hardware_describe_antenna_type()
             r.set(RD_DDH_GUI_REFRESH_BLE_ANTENNA, antenna_description)
 
+    return rv
 
 
 
@@ -256,13 +249,6 @@ async def _ble_logger_id_and_download(d):
     name = d['dev'].name
     sn = ddh_config_get_logger_sn_from_mac(mac)
     rv = 0
-
-
-    # debug, delete THIS logger's existing downloaded files
-    if ddh_config_get_hook_purge_this_mac_dl_files_folder():
-        lg.a(f"debug, HOOK_PURGE_THIS_MAC_DL_FILES_FOLDER {mac}")
-        p = pathlib.Path(calculate_path_to_folder_within_dl_files_from_mac_address(mac))
-        shutil.rmtree(str(p), ignore_errors=True)
 
 
     # first IDENTIFY, then DOWNLOAD
@@ -568,11 +554,8 @@ def _ddh_ble(ignore_gui):
 
     setproctitle.setproctitle(p_name)
     _check_bluez_version()
-    rv_prev_run = 0
     ddh_create_needed_folders()
     macs_color_show_at_boot()
-    # todo: maybe get rid of these debug hooks
-    ddh_config_apply_debug_hooks()
     if ddh_config_does_flag_file_download_test_mode_exist():
         lg.a('detected DDH download test mode')
 
@@ -590,6 +573,7 @@ def _ddh_ble(ignore_gui):
 
 
     # forever loop downloading loggers
+    rv_prev_run = 0
     while 1:
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name, g_killed):
@@ -634,16 +618,15 @@ def _ddh_ble(ignore_gui):
 
 
         # see BLE system OK
-        _ddh_ble_hardware_health_check(antenna_idx, rv_prev_run)
-        _ddh_ble_hardware_error_notify_via_email(g, antenna_idx)
+        rv_ble_hw = _ddh_ble_hardware_health_check(antenna_idx, rv_prev_run)
+        _ddh_ble_hardware_error_notify_via_email(g, antenna_idx, rv_ble_hw)
+        if rv_ble_hw:
+            continue
 
 
         # -------------
         # find loggers
         # -------------
-        # todo: GET RETURN VALUE of HEALTH CHECK, do not continue if bad
-
-
         try:
             app_state_set(EV_BLE_SCAN, t_str(STR_EV_BLE_SCAN))
             ls = _ddh_ble_scan_loggers(antenna_idx)

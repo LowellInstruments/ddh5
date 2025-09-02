@@ -13,11 +13,6 @@ fi
 
 
 
-# todo: put these post DDU
-sudo apt-get remove -y modemmanager
-
-
-
 # start with a clean BLE sheet
 _pb "BLE disabling cache from /etc/bluetooth/main.conf"
 sudo sed -i '/#Cache = always/c\Cache = no' /etc/bluetooth/main.conf

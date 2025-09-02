@@ -1,17 +1,19 @@
 import signal
+import sys
 from pathlib import Path
 import psutil
 import glob
 import pathlib
 import setproctitle
-import sys
-
-from PyQt6 import QtGui, QtCore
+from PyQt6 import QtCore
 from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt, QPoint
 from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie
-from PyQt6.QtWidgets import (QApplication,
-                             QTableWidgetItem, QTableWidget, QWidget, QMessageBox, QMainWindow, QMenu)
-
+from PyQt6.QtWidgets import (
+    QApplication,
+    QTableWidgetItem, QTableWidget,
+    QWidget, QMessageBox,
+    QMainWindow, QMenu
+)
 import ddh.gui.gui as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
 from ddh.draw_graph import graph_request
@@ -996,8 +998,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
         # bye, bye DDH
-        sys.stderr.close()
-        os._exit(0)
+        self.close_my_ddh()
+
 
 
 
@@ -1172,27 +1174,29 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-    def closeEvent(self, ev):
-        ev.accept()
-        # normally when developing on laptop
-        lg.a("closing by clicking upper-right X in the OS window")
+    @staticmethod
+    def close_my_ddh():
+        lg.a("closed by upper-right X in OS window or context_menu")
         sys.stderr.close()
+        gui_kill_all_processes()
+        # so DDH GUI is the last to be in OS
+        time.sleep(1)
         os._exit(0)
 
 
 
+    def closeEvent(self, ev):
+        ev.accept()
+        self.close_my_ddh()
+
+
+
+
     def keyPressEvent(self, ev):
-        self.key_pressed = None
         known_keys = (
             Qt.Key.Key_1,
             Qt.Key.Key_2,
             Qt.Key.Key_3,
-            Qt.Key.Key_B,
-            Qt.Key.Key_M,
-            Qt.Key.Key_W,
-            Qt.Key.Key_E,
-            Qt.Key.Key_Q,
-            Qt.Key.Key_I,
         )
         if ev.key() not in known_keys:
             lg.a(f"warning, unknown keypress {ev.key()}")
@@ -1217,24 +1221,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             # they decided 0 but minimum was 9
             gui_ddh_set_key3_brightness(self, 0)
             return
-
-        elif ev.key() == Qt.Key.Key_M:
-            self.key_pressed = "m"
-
-        elif ev.key() == Qt.Key.Key_B:
-            self.key_pressed = "b"
-
-        elif ev.key() == Qt.Key.Key_E:
-            self.key_pressed = "e"
-
-        elif ev.key() == Qt.Key.Key_Q:
-            self.key_pressed = "q"
-
-        elif ev.key() == Qt.Key.Key_I:
-            self.key_pressed = "i"
-
-        elif ev.key() == Qt.Key.Key_W:
-            self.key_pressed = "w"
 
 
 
@@ -1297,6 +1283,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         p = QPoint(x, y)
         self.context_menu.exec(p)
 
+
+    def gui_show_edit_tab(self, _):
+        gui_show_edit_tab(self)
+
+
+    def gui_show_advanced_tab(self, _):
+        gui_show_advanced_tab(self)
 
 
     def click_chk_b_maps(self, _):
@@ -1645,7 +1638,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.tab_note_wgt_ref = None
         self.tab_recipe_wgt_ref = None
         self.tab_graph_wgt_ref = None
-        self.key_pressed = None
         # brightness 9 is index for 100%
         self.num_clicks_brightness = preferences_get_brightness_clicks()
         self.i_good_maps = preferences_get_models_index()
@@ -1684,15 +1676,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.context_menu = QMenu(self)
         cm_action_minimize = self.context_menu.addAction("minimize")
         cm_action_quit = self.context_menu.addAction("quit")
-        cm_action_edit_tab = self.context_menu.addAction("open edit tab")
+        cm_action_edit_tab = self.context_menu.addAction("edit tab")
         cm_action_advanced_tab = self.context_menu.addAction("advanced tab")
 
 
         # Connect the actions to methods
         cm_action_minimize.triggered.connect(self.showMinimized)
-        cm_action_quit.triggered.connect(self.close)
-        # cm_action_edit_tab.triggered.connect(self.tab_edit.show)
-        cm_action_advanced_tab.triggered.connect(self.tab_advanced.show)
+        cm_action_quit.triggered.connect(self.close_my_ddh)
+        cm_action_edit_tab.triggered.connect(self.gui_show_edit_tab)
+        cm_action_advanced_tab.triggered.connect(self.gui_show_advanced_tab)
 
         lg.a("OK, finished booting graphical user interface")
 

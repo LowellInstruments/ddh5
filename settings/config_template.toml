@@ -38,8 +38,6 @@ sms_en = 0
 skip_dl_in_port_en = 0
 # debug flags
 hook_gps_error_measurement_forced = 0
-hook_ble_purge_black_macs_on_boot = 0
-hook_ble_purge_this_mac_dl_files_folder = 0
 
 
 
