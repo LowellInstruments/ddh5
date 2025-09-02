@@ -3,6 +3,7 @@ fastapi
 python-multipart
 setproctitle
 pyserial
+gpiozero
 toml
 GitPython
 strip.pysondb~=1.5.1
