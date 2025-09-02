@@ -8,7 +8,6 @@ import time
 
 from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
-    RD_DDH_NET_FINISH_BOOT,
     RD_DDH_GUI_PROCESS_NET_OUTPUT
 )
 from utils.ddh_common import (
@@ -97,10 +96,7 @@ def _net():
 
 def _ddh_net(ignore_gui):
 
-    # prepare the NET process
     setproctitle.setproctitle(p_name)
-    r.set(RD_DDH_NET_FINISH_BOOT, 1)
-
 
     # forever loop set internet via to redis, do not hog CPU
     while 1:
@@ -119,6 +115,7 @@ def _ddh_net(ignore_gui):
 
 
 def main_ddh_net(ignore_gui=False):
+
     signal.signal(signal.SIGINT, _cb_ctrl_c)
     signal.signal(signal.SIGTERM, _cb_kill)
 

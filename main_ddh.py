@@ -5,10 +5,12 @@ import glob
 import pathlib
 import setproctitle
 import sys
-from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt
+
+from PyQt6 import QtGui, QtCore
+from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt, QPoint
 from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie
 from PyQt6.QtWidgets import (QApplication,
-                             QTableWidgetItem, QTableWidget, QWidget, QMessageBox, QMainWindow)
+                             QTableWidgetItem, QTableWidget, QWidget, QMessageBox, QMainWindow, QMenu)
 
 import ddh.gui.gui as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
@@ -25,11 +27,12 @@ from rd_ctt.ddh import (
     RD_DDH_GUI_REFRESH_GPS_ANTENNA, RD_DDH_GUI_PROCESS_AWS_OUTPUT,
     RD_DDH_GUI_PROCESS_NET_OUTPUT, RD_DDH_GUI_REFRESH_BLE_LAST_DL, \
     RD_DDH_AWS_SYNC_REQUEST, RD_DDH_BLE_SEMAPHORE, \
-    RD_DDH_GPS_COUNTDOWN_FOR_GPS_FIX_AT_BOOT,
+    RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT,
     RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_REFRESH_BLE_ICON_AUTO, \
     RD_DDH_GUI_REFRESH_GPS_ICON_AUTO, RD_DDH_GUI_REFRESH_CELL_WIFI_ICON_AUTO,
     RD_DDH_GUI_PLOT_FOLDER,
-    RD_DDH_GUI_REFRESH_PROCESSES_PRESENT
+    RD_DDH_GUI_REFRESH_PROCESSES_PRESENT, RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
+    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -234,34 +237,8 @@ def gui_tabs_setup_graph(a):
 
 
 
-def gui_setup_create_variables(a):
-    a.bright_idx = 2
-    a.tab_edit_hide = True
-    a.tab_advanced_hide = True
-    a.tab_graph_hide = True
-    a.tab_edit_wgt_ref = None
-    a.tab_map_wgt_ref = None
-    a.tab_note_wgt_ref = None
-    a.tab_recipe_wgt_ref = None
-    a.tab_graph_wgt_ref = None
-    a.key_pressed = None
-    # brightness 9 is index for 100%
-    a.num_clicks_brightness = preferences_get_brightness_clicks()
-    a.i_good_maps = preferences_get_models_index()
-    a.boat_pressed = 0
-    a.commit_pressed = 0
-    a.datetime_pressed = 0
-    a.lbl_net_pressed = 0
-    a.lbl_uptime_pressed = 0
-    a.gif_map = None
-    a.n_good_maps = 0
-    a.map_filename = None
-
-
-
-
 def gui_setup_view(my_win):
-    """fills window with titles and default contents"""
+
     a = my_win
     a.setupUi(a)
     a.setWindowTitle("Lowell Instruments' Deck Data Hub")
@@ -275,39 +252,29 @@ def gui_setup_view(my_win):
     a.setWindowIcon(QIcon("ddh/gui/res/icon_lowell.ico"))
 
     # new icons
-    a.lbl_boat_txt.setText(ddh_config_get_vessel_name())
     a.lbl_boat_img.setPixmap(QPixmap("ddh/gui/res/new_icon_boat.png"))
+    a.lbl_date_img.setPixmap(QPixmap("ddh/gui/res/calendar.png"))
     a.lbl_brightness_img.setPixmap(QPixmap("ddh/gui/res/new_icon_brightness.png"))
     a.lbl_gps_antenna_img.setPixmap(QPixmap(PATH_GPS_ANTENNA_ICON_START))
     a.lbl_ble_antenna_img.setPixmap(QPixmap(PATH_BLE_ANTENNA_ICON_START))
     a.lbl_cell_wifi_img.setPixmap(QPixmap("ddh/gui/res/new_icon_cell_wifi.png"))
     a.lbl_cloud_img.setPixmap(QPixmap("ddh/gui/res/new_icon_cloud.png"))
     a.lbl_last_dl_img.setPixmap(QPixmap("ddh/gui/res/new_icon_dl_ok.png"))
+    a.lbl_boat_txt.setText(ddh_config_get_vessel_name())
+    a.lbl_gps.setText('-\n-')
+    a.lbl_box_sn.setText('DDH ' + ddh_config_get_box_sn())
+    a.lbl_cloud_txt.setText("-")
+    a.bar_dl.setVisible(False)
+    a.btn_load_current.animateClick()
 
 
 
-    # a.lbl_boat_img.setPixmap(QPixmap("ddh/gui/res/img_boat_blue.png"))
-    # a.lbl_cell_wifi_img.setPixmap(QPixmap("ddh/gui/res/img_wireless_color.png"))
-    # a.lbl_cloud_img.setPixmap(QPixmap("ddh/gui/res/upcloud.png"))
     a.setCentralWidget(a.tabs)
     a.tabs.setCurrentIndex(0)
     a.bar_dl.setValue(0)
     if os.path.exists(DEV_SHM_DL_PROGRESS):
         os.unlink(DEV_SHM_DL_PROGRESS)
 
-
-    # info: lat, lon, time
-    a.lbl_gps.setText('-\n-')
-
-    # info: box SN in "Details" tab
-    a.lbl_box_sn.setText('DDH ' + ddh_config_get_box_sn())
-
-    # cloud: aws, cell
-    a.lbl_cloud_txt.setText("-")
-    a.bar_dl.setVisible(False)
-
-    # load default values for edit tab
-    a.btn_load_current.animateClick()
 
     # load git commit display or version
     # dc = "version: {}".format(get_ddh_commit())
@@ -359,11 +326,6 @@ def gui_setup_view(my_win):
 
 
 
-def gui_setup_boot_splash():
-    app_state_set(EV_GUI_BOOT, t_str(STR_EV_GUI_BOOT))
-
-
-
 def gui_setup_center_window(my_app):
     """on RPi, DDH app uses full screen"""
     a = my_app
@@ -383,6 +345,11 @@ def gui_setup_center_window(my_app):
     # a.move(300, 200)
     # a.setFixedWidth(1024)
     # a.setFixedHeight(768)
+
+    # maximum sizes
+    _w = geo.width()
+    a.left_frame.setMinimumWidth(int(_w * .3))
+    a.left_frame.setMaximumWidth(int(_w * .3))
 
 
 
@@ -528,24 +495,15 @@ def gui_setup_buttons(my_app):
     if not linux_is_rpi():
         a.btn_sms.setEnabled(True)
 
-    # clicks in BLE text, boat image, brightness...
-    a.lbl_ble_txt.mousePressEvent = a.click_lbl_ble
+    # LABEL clicks
     a.lbl_cloud_img.mousePressEvent = a.click_lbl_cloud_img
     a.lbl_brightness_img.mousePressEvent = a.click_lbl_brightness
     a.lbl_brightness_txt.mousePressEvent = a.click_lbl_brightness
-    a.lbl_boat_img.mousePressEvent = a.click_lbl_boat_pressed
-    a.lbl_boat_img.mouseReleaseEvent = a.click_lbl_boat_released
-    a.lbl_commit.mousePressEvent = a.click_lbl_commit_pressed
-    a.lbl_commit.mouseReleaseEvent = a.click_lbl_commit_released
-    a.lbl_date_txt.mousePressEvent = a.click_lbl_datetime_pressed
-    a.lbl_date_txt.mouseReleaseEvent = a.click_lbl_datetime_released
-    a.lbl_cell_wifi_img.mousePressEvent = a.click_lbl_net_pressed
-    a.lbl_cell_wifi_img.mouseReleaseEvent = a.click_lbl_net_released
-    a.lbl_uptime.mousePressEvent = a.click_lbl_uptime_pressed
-    a.lbl_uptime.mouseReleaseEvent = a.click_lbl_uptime_released
     a.lbl_map.mousePressEvent = a.click_lbl_map_pressed
 
-    # buttons' connections
+
+    # BUTTON clicks
+    a.btn_expand.clicked.connect(a.click_btn_expand)
     a.btn_known_clear.clicked.connect(a.click_btn_clear_known_mac_list)
     a.btn_see_all.clicked.connect(a.click_btn_see_all_macs)
     # see current macs
@@ -568,6 +526,8 @@ def gui_setup_buttons(my_app):
     a.btn_sms.clicked.connect(a.click_btn_sms)
     a.btn_map_next.clicked.connect(a.click_btn_map_next)
     a.chk_ow.toggled.connect(a.click_chk_ow)
+    a.btn_shortcuts.clicked.connect(a.click_btn_shortcuts)
+
 
     # graph stuff
     a.btn_g_reset.clicked.connect(a.click_graph_btn_reset)
@@ -576,6 +536,7 @@ def gui_setup_buttons(my_app):
     a.cb_g_cycle_haul.activated.connect(a.click_graph_lbl_haul_types)
     a.cb_g_paint_zones.activated.connect(a.click_graph_btn_paint_zones)
     a.cb_g_switch_tp.activated.connect(a.click_graph_cb_switch_tp)
+
 
     # advanced stuff
     a.cbox_scf.activated.connect(a.click_chk_scf)
@@ -908,6 +869,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.lst_mac_dst.clear()
 
 
+    def click_btn_expand(self):
+        self.frame_expanded = not self.frame_expanded
+        self.frame_expand.setVisible(self.frame_expanded)
+        s = '↓' if self.frame_expanded else '↑'
+        self.btn_expand.setText(s)
+
+
+
 
     def click_btn_see_all_macs(self):
         """ loads (mac, name) pairs from all macs config section """
@@ -1029,26 +998,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # bye, bye DDH
         sys.stderr.close()
         os._exit(0)
-
-
-
-    def click_lbl_ble(self, _):
-        # sequence: press key, depress, click
-        k = self.key_pressed
-        self.key_pressed = None
-        # lg.a('key pressed is {}'.format(k))
-
-        if k == "m":
-            self.showMinimized()
-
-        elif k == "e":
-            teh = self.tab_edit_hide = not self.tab_edit_hide
-            gui_tabs_hide_settings(self) if teh else gui_show_edit_tab(self)
-
-        elif k == "q":
-            lg.a("closing GUI by keypress 'q'")
-            sys.stderr.close()
-            os._exit(0)
 
 
 
@@ -1289,65 +1238,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-    def click_lbl_boat_pressed(self, _):
-        self.boat_pressed = 1
-
-
-
-    def click_lbl_boat_released(self, _):
-        if self.boat_pressed >= 2:
-            teh = self.tab_edit_hide = not self.tab_edit_hide
-            gui_tabs_hide_settings(self) if teh else gui_show_edit_tab(self)
-        self.boat_pressed = 0
-
-
-
-    def click_lbl_commit_pressed(self, _):
-        self.commit_pressed = 1
-
-
-
-    def click_lbl_commit_released(self, _):
-        if self.commit_pressed >= 2:
-            trh = self.tab_advanced_hide = not self.tab_advanced_hide
-            gui_tabs_hide_advanced(self) if trh else gui_show_advanced_tab(self)
-        self.commit_pressed = 0
-
-
-
-    def click_lbl_uptime_pressed(self, _):
-        self.lbl_uptime_pressed = 1
-
-
-
-    def click_lbl_uptime_released(self, _):
-        if self.lbl_uptime_pressed >= 2:
-            lg.a("closing GUI by lbl_uptime clicked")
-            sys.stderr.close()
-            os._exit(0)
-        self.lbl_uptime_pressed = 0
-
-
-
-    def click_lbl_datetime_pressed(self, _):
-        self.datetime_pressed = 1
-
-
-
-    def click_lbl_datetime_released(self, _):
-        if self.datetime_pressed >= 2:
-            self.showMinimized()
-        self.datetime_pressed = 0
-
-
-
-    def click_lbl_net_pressed(self, _):
-        # lbl_cell_wifi_img is the NET icon
-        # lbl_cell_wifi_txt is the text
-        self.lbl_net_pressed = 1
-
-
-
     def click_lbl_map_pressed(self, ev):
         h = self.lbl_map.height()
         w = self.lbl_map.width()
@@ -1360,14 +1250,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if (.3 * w <= x <= .6 * w and
                     .3 * h <= y <= .6 * h):
                 print('click dtm central area')
-
-
-
-    def click_lbl_net_released(self, _):
-        if self.lbl_net_pressed >= 2:
-            tgh = self.tab_graph_hide = not self.tab_graph_hide
-            gui_hide_graph_tab(self) if tgh else gui_show_graph_tab(self)
-        self.lbl_net_pressed = 0
 
 
 
@@ -1406,6 +1288,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         else:
             lg.a('user selected graphs SKIP out-of-water data')
             pathlib.Path(path).touch()
+
+
+    def click_btn_shortcuts(self, event):
+        bp = self.btn_shortcuts.mapToGlobal(QtCore.QPoint(0, 0))
+        x = bp.x() - 50
+        y = bp.y()
+        p = QPoint(x, y)
+        self.context_menu.exec(p)
 
 
 
@@ -1543,6 +1433,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             gui_populate_maps_tab(self)
 
 
+
         # show if any process is not there
         k = RD_DDH_GUI_REFRESH_PROCESSES_PRESENT
         if not r.exists(k):
@@ -1627,54 +1518,62 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             r.setex(k, 10, 1)
 
 
+        # refresh DDH side box buttons
+        if r.exists(RD_DDH_GUI_BOX_SIDE_BUTTON_TOP):
+            self.keyPressEvent(ButtonPressEvent(Qt.Key.Key_1))
+        if r.exists(RD_DDH_GUI_BOX_SIDE_BUTTON_MID):
+            self.keyPressEvent(ButtonPressEvent(Qt.Key.Key_2))
+        if r.exists(RD_DDH_GUI_BOX_SIDE_BUTTON_LOW):
+            self.keyPressEvent(ButtonPressEvent(Qt.Key.Key_3))
 
 
         # update MAIN icon
         code, text = app_state_get()
         code = code.decode() if code else ''
         text = text.decode() if text else ''
-        self.lbl_ble_txt.setText(text)
+        self.lbl_main_txt.setText(text)
         self.bar_dl.setVisible(False)
         k = RD_DDH_GUI_STATE_EVENT_ICON_LOCK
         lock_icon = 0 if not r.exists(k) else r.ttl(k)
+
 
         # debug
         # print(f'code {code} \n text {text}')
 
         if code in (EV_GUI_BOOT, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_BOOT))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BOOT))
         elif code in (EV_CONF_BAD, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_CONF_BAD))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_CONF_BAD))
         elif code in (EV_NO_ASSIGNED_LOGGERS,):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_NO_LOGGERS_ASSIGNED))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_NO_LOGGERS_ASSIGNED))
         elif code in (EV_GPS_IN_PORT, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_IN_PORT))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_IN_PORT))
         elif code in (EV_BLE_SCAN, ):
             if not lock_icon:
-                self.lbl_ble_img.setPixmap(QPixmap(PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)))
+                self.lbl_main_img.setPixmap(QPixmap(PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)))
         elif code in (EV_GPS_WAITING_BOOT, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_TEMPLATE_MAIN_GPS_BOOT_IMG.format(i)))
-            t = r.ttl(RD_DDH_GPS_COUNTDOWN_FOR_GPS_FIX_AT_BOOT) or 0
+            self.lbl_main_img.setPixmap(QPixmap(PATH_TEMPLATE_MAIN_GPS_BOOT_IMG.format(i)))
+            t = r.ttl(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT) or 0
             s = f'{t_str(STR_EV_GPS_WAITING_BOOT)} {t} secs'
-            self.lbl_ble_txt.setText(s)
+            self.lbl_main_txt.setText(s)
         elif code in (EV_GPS_SYNC_CLOCK, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG))
         elif code in (EV_BLE_CONNECTING, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_BLE_CONNECTING))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_CONNECTING))
         elif code in (EV_BLE_DL_OK, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_OK))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_OK))
         elif code in (EV_BLE_DL_OK_NO_RERUN,):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_OK_NO_RERUN))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_OK_NO_RERUN))
         elif code in (EV_BLE_DL_ERROR,):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_ERROR))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_ERROR))
         elif code in (EV_BLE_DL_NO_NEED,):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_NO_NEED))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_NO_NEED))
         elif code in (EV_BLE_LOW_BATTERY, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_LOW_BATTERY))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_LOW_BATTERY))
         elif code in (EV_BLE_DL_RETRY, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_RETRY))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_RETRY))
         elif code in (EV_BLE_DL_PROGRESS, ):
-            self.lbl_ble_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_PROGRESS))
+            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_PROGRESS))
             self.bar_dl.setVisible(True)
             try:
                 with open(DEV_SHM_DL_PROGRESS, 'r') as f:
@@ -1691,23 +1590,12 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # show or not the summary box
         if code in (EV_BLE_DL_OK, EV_BLE_DL_OK_NO_RERUN):
+            s = self.lbl_summary_dl.text()
+            s = s.replace('mg_l', 'mg/l')
+            self.lbl_summary_dl.setText(s)
             self.lbl_summary_dl.setVisible(True)
         else:
             self.lbl_summary_dl.setVisible(False)
-
-
-        # GUI BUTTON holds
-        if self.boat_pressed > 0:
-            self.boat_pressed += 1
-        if self.commit_pressed > 0:
-            self.commit_pressed += 1
-        if self.datetime_pressed > 0:
-            self.datetime_pressed += 1
-        if self.lbl_net_pressed > 0:
-            self.lbl_net_pressed += 1
-        if self.lbl_uptime_pressed > 0:
-            self.lbl_uptime_pressed += 1
-
 
 
 
@@ -1719,11 +1607,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def __init__(self):
         super(DDH, self).__init__()
 
-        self.process_state_ble = ''
-
         gui_init_redis()
         gui_check_config_file_is_ok()
-        gui_setup_boot_splash()
+        app_state_set(EV_GUI_BOOT, t_str(STR_EV_GUI_BOOT))
 
         # we want new processes
         gui_kill_all_processes()
@@ -1748,12 +1634,31 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.process_sqs.start('python3', [f'{NAME_EXE_SQS}.py'])
 
 
+        # create variables
+        self.process_state_ble = ''
+        self.frame_expanded = True
+        self.bright_idx = 2
+        self.tab_edit_hide = True
+        self.tab_advanced_hide = True
+        self.tab_edit_wgt_ref = None
+        self.tab_map_wgt_ref = None
+        self.tab_note_wgt_ref = None
+        self.tab_recipe_wgt_ref = None
+        self.tab_graph_wgt_ref = None
+        self.key_pressed = None
+        # brightness 9 is index for 100%
+        self.num_clicks_brightness = preferences_get_brightness_clicks()
+        self.i_good_maps = preferences_get_models_index()
+        self.gif_map = None
+        self.n_good_maps = 0
+        self.map_filename = None
 
-        gui_setup_create_variables(self)
+
         gui_setup_view(self)
-        gui_setup_buttons(self)
         gui_setup_center_window(self)
+        gui_setup_buttons(self)
         gui_setup_brightness(self)
+
 
         # tabs
         gui_tabs_hide_settings(self)
@@ -1774,28 +1679,23 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_setup_timers(self)
         gui_setup_side_buttons_box()
 
+
+        # build context menu shortcuts
+        self.context_menu = QMenu(self)
+        cm_action_minimize = self.context_menu.addAction("minimize")
+        cm_action_quit = self.context_menu.addAction("quit")
+        cm_action_edit_tab = self.context_menu.addAction("open edit tab")
+        cm_action_advanced_tab = self.context_menu.addAction("advanced tab")
+
+
+        # Connect the actions to methods
+        cm_action_minimize.triggered.connect(self.showMinimized)
+        cm_action_quit.triggered.connect(self.close)
+        # cm_action_edit_tab.triggered.connect(self.tab_edit.show)
+        cm_action_advanced_tab.triggered.connect(self.tab_advanced.show)
+
         lg.a("OK, finished booting graphical user interface")
 
-
-
-
-
-# elif f == STATE_DDH_BLE_DOWNLOAD_STATISTICS:
-#     # v: can be filled or empty, also it needs a small patch
-#     v = v.replace('mg_l', 'mg/l')
-#     a.lbl_summary_dl.setText(v)
-#     a.lbl_summary_dl.setVisible(bool(v))
-#
-
-#
-# elif f == STATE_DDH_PRESSED_BUTTON_1:
-#     a.keyPressEvent(ButtonPressEvent(Qt.Key.Key_1))
-#
-# elif f == STATE_DDH_PRESSED_BUTTON_2:
-#     a.keyPressEvent(ButtonPressEvent(Qt.Key.Key_2))
-#
-# elif f == STATE_DDH_PRESSED_BUTTON_3:
-#     a.keyPressEvent(ButtonPressEvent(Qt.Key.Key_3))
 
 
 
@@ -1809,9 +1709,10 @@ def main_ddh_gui():
         print('error: DDH myself already running, leaving')
         return
 
-    setproctitle.setproctitle(NAME_EXE_DDH)
 
+    setproctitle.setproctitle(NAME_EXE_DDH)
     lg.set_debug(exp_get_use_debug_print() or not linux_is_rpi())
+
 
     app = QApplication(sys.argv)
     ex = DDH()

@@ -5,7 +5,6 @@ import setproctitle
 import time
 import redis
 from mat.utils import linux_is_rpi
-from rd_ctt.ddh import RD_DDH_SQS_FINISH_BOOT
 from utils.ddh_common import (
     ddh_config_get_vessel_name,
     NAME_EXE_SQS, ddh_config_is_sqs_enabled,
@@ -177,7 +176,6 @@ def _ddh_sqs(ignore_gui):
 
     # prepare SQS process
     setproctitle.setproctitle(p_name)
-    r.set(RD_DDH_SQS_FINISH_BOOT, 1)
 
 
     # forever loop serving local SQS files, do not hog CPU

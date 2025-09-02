@@ -568,8 +568,6 @@ def _ddh_ble(ignore_gui):
 
     setproctitle.setproctitle(p_name)
     _check_bluez_version()
-    # todo: maybe delete this FINISH BOOT things
-    r.set(RD_DDH_BLE_FINISH_BOOT, 1)
     rv_prev_run = 0
     ddh_create_needed_folders()
     macs_color_show_at_boot()

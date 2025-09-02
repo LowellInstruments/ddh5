@@ -2,12 +2,15 @@ import threading
 import time
 from signal import pause
 from mat.utils import linux_is_rpi
+from rd_ctt.ddh import RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_BOX_SIDE_BUTTON_MID, RD_DDH_GUI_BOX_SIDE_BUTTON_LOW
 from utils.ddh_common import (
     exp_get_custom_side_buttons_debounce_time,
 )
+import redis
 
 
 
+r = redis.Redis('localhost')
 TIME_DB_S = .001
 TIME_LO_S = .5
 g_last_t = 0
@@ -41,13 +44,15 @@ def _th_gpio_box_buttons():
 
     def b1_cb_v1():
         time.sleep(MS_10)
-        # if b1.is_pressed:
-        # _u(STATE_DDH_PRESSED_BUTTON_1)
+        if b1.is_pressed:
+            r.set(RD_DDH_GUI_BOX_SIDE_BUTTON_TOP,1)
+
 
     def b2_cb_v1():
         time.sleep(MS_10)
-        # if b2.is_pressed:
-        # _u(STATE_DDH_PRESSED_BUTTON_2)
+        if b2.is_pressed:
+            r.set(RD_DDH_GUI_BOX_SIDE_BUTTON_MID,1)
+
 
     def b3_cb_v1():
         for i in range(50):
@@ -55,7 +60,8 @@ def _th_gpio_box_buttons():
             time.sleep(MS_10)
             if not b3.is_pressed:
                 return
-        # _u(STATE_DDH_PRESSED_BUTTON_3)
+        r.set(RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, 1)
+
 
     b1.when_pressed = b1_cb_v1
     b2.when_pressed = b2_cb_v1

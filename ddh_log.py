@@ -3,7 +3,7 @@ import sys
 import setproctitle
 import time
 import redis
-from rd_ctt.ddh import RD_DDH_LOG_QUEUE, RD_DDH_LOG_FINISH_BOOT
+from rd_ctt.ddh import RD_DDH_LOG_QUEUE
 from datetime import datetime, timezone
 from utils.ddh_common import (
     ddh_get_path_to_folder_logs,
@@ -140,13 +140,11 @@ def _dequeue_n_log():
 
 def _ddh_log(ignore_gui):
 
-    # prepare LOG process
     r.delete(q)
     setproctitle.setproctitle(p_name)
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     _write_to_log_file(f'\n\n\n\n\n\n=== DDH log for vessel {vn} starts on local time {now} ===\n')
     print(f"LOG: process '{p_name}' is running")
-    r.set(RD_DDH_LOG_FINISH_BOOT, 1)
 
 
     # forever loop collecting messages to print

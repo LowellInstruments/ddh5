@@ -15,7 +15,6 @@ from ddh_net import ddh_net_calculate_via
 from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
     RD_DDH_AWS_COPY_QUEUE,
-    RD_DDH_AWS_FINISH_BOOT,
     RD_DDH_BLE_SEMAPHORE,
     RD_DDH_AWS_SYNC_REQUEST, RD_DDH_GUI_PROCESS_AWS_OUTPUT
 )
@@ -293,7 +292,6 @@ def _ddh_aws(ignore_gui):
     r.delete(RD_DDH_GUI_PROCESS_AWS_OUTPUT)
     setproctitle.setproctitle(p_name)
     _ddh_aws_set_state('boot')
-    r.set(RD_DDH_AWS_FINISH_BOOT, 1)
 
 
     # first, do the past year one

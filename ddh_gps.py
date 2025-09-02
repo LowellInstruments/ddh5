@@ -262,8 +262,8 @@ def ddh_gps_get_fix_upon_cold_boot():
     # Wikipedia: GPS-Time-To-First-Fix for cold start is typ.
     # 2 to 5 minutes, warm <= 45 secs, hot <= 22 secs
 
-    r.set(RD_DDH_GPS_COUNTDOWN_FOR_GPS_FIX_AT_BOOT, 1)
-    r.expire(RD_DDH_GPS_COUNTDOWN_FOR_GPS_FIX_AT_BOOT, PERIOD_GPS_AT_BOOT_SECS)
+    r.set(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT, 1)
+    r.expire(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT, PERIOD_GPS_AT_BOOT_SECS)
     app_state_set(EV_GPS_WAITING_BOOT, 'GPS boot')
     lg.a(f"boot, wait up to {PERIOD_GPS_AT_BOOT_SECS} seconds")
     till = time.perf_counter() + PERIOD_GPS_AT_BOOT_SECS
@@ -362,10 +362,6 @@ def _ddh_gps(ignore_gui):
         # not hat, can still be puck or adafruit
         if port_type == 'adafruit':
             gps_adafruit_init(port_nmea)
-
-
-    # set redis variables
-    r.set(RD_DDH_GPS_FINISH_BOOT, 1)
 
 
     # GPS infinite loop

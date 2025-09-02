@@ -22,7 +22,6 @@ from mat.lix_pr import convert_lix_file
 from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
     RD_DDH_CNV_QUEUE,
-    RD_DDH_CNV_FINISH_BOOT,
     RD_DDH_AWS_COPY_QUEUE, RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER
 )
 from utils.ddh_common import (
@@ -177,7 +176,6 @@ def _ddh_cnv(ignore_gui):
     r.delete(RD_DDH_CNV_QUEUE)
     setproctitle.setproctitle(p_name)
     _boot_cnv()
-    r.set(RD_DDH_CNV_FINISH_BOOT, 1)
 
 
     # forever loop collecting CNV requests
