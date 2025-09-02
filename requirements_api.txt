@@ -8,3 +8,4 @@ GitPython
 strip.pysondb~=1.5.1
 requests
 tzlocal
+gps@git+https://github.com/LowellInstruments/gps.git
