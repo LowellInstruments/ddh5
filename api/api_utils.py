@@ -6,7 +6,6 @@ import platform
 import shutil
 import socket
 import subprocess as sp
-
 import boto3
 import sys
 import time
@@ -14,12 +13,17 @@ from requests.exceptions import HTTPError
 import requests
 import re
 import os
-from ddh_gps import ddh_gps_know_we_have_external_puck_connected
-from utils.ddh_common import ddh_config_get_box_project, ddh_config_get_box_sn, ddh_config_get_vessel_name, \
-    ddh_config_get_one_aws_credential_value, ddh_get_path_to_root_application_folder, LI_PATH_API_VERSION, \
-    LI_PATH_CELL_FW, LI_PATH_DDH_VERSION, TMP_PATH_INET_VIA, TMP_PATH_GPS_LAST_JSON, TMP_PATH_BLE_IFACE, \
-    LI_PATH_GROUPED_S3_FILE_FLAG, NAME_EXE_DDH
 
+from gps.gps import gps_find_any_usb_port
+from utils.ddh_common import (
+    ddh_config_get_box_project, ddh_config_get_box_sn,
+    ddh_config_get_vessel_name, \
+    ddh_config_get_one_aws_credential_value,
+    ddh_get_path_to_root_application_folder, LI_PATH_API_VERSION, \
+    LI_PATH_CELL_FW, LI_PATH_DDH_VERSION,
+    TMP_PATH_INET_VIA, TMP_PATH_GPS_LAST_JSON, TMP_PATH_BLE_IFACE, \
+    LI_PATH_GROUPED_S3_FILE_FLAG, NAME_EXE_DDH
+)
 CTT_API_OK = 'ok'
 CTT_API_ER = 'error'
 
@@ -388,9 +392,8 @@ def api_get_ble_iface():
 
 def api_get_gps_iface():
     try:
-        if ddh_gps_know_we_have_external_puck_connected():
-            return "puck"
-        return "internal"
+        port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
+        return port_type
     except (Exception, ) as ex:
         print(f'{CTT_API_ER}: cannot api_get_gps_iface -> {ex}')
         return None
