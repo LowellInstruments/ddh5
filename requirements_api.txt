@@ -8,6 +8,8 @@ toml
 GitPython
 strip.pysondb~=1.5.1
 requests
+pytz
 tzlocal
+ble@git+https://github.com/LowellInstruments/ble.git
 gps@git+https://github.com/LowellInstruments/gps.git
 rd_ctt@git+https://github.com/LowellInstruments/rd_ctt.git
