@@ -339,7 +339,7 @@ async def ep_update_mat():
 
 @app.get('/kill_ddh')
 async def ep_kill_ddh():
-    # todo: test this
+    # todo: test this API kill DDH answer
     d = dict()
     rv = _sh(f'killall {NAME_EXE_DDH}')
     s = rv.stderr.decode().replace('\n', '')

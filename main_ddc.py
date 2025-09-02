@@ -4,6 +4,8 @@ import sys
 import time
 from os.path import exists
 import serial
+
+from gps.gps_quectel import gps_hat_detect_list_of_usb_ports
 from mat.linux import linux_is_process_running_strict
 from scripts.script_nadv import main_nadv
 from utils.ddh_common import (
@@ -13,7 +15,6 @@ from utils.ddh_common import (
     TMP_PATH_GRAPH_TEST_MODE_JSON, LI_PATH_TEST_MODE, NAME_EXE_DDH, DDH_USES_SHIELD_JUICE4HALT, DDH_USES_SHIELD_SAILOR,
     ddh_get_local_software_version
 )
-from utils.find_usb_port_auto import find_n_list_all_usb_port_automatically
 import subprocess as sp
 from mat.utils import PrintColors as PC
 
@@ -642,33 +643,34 @@ def _ddc_run_check():
         return 1
 
     def _ddc_run_check_fw_cell():
-        ls = find_n_list_all_usb_port_automatically(VP_QUECTEL)
-        # ls: ['/dev/ttyUSB3', '/dev/ttyUSB2', '/dev/ttyUSB1, '/dev/ttyUSB0']
+
+        ls = gps_hat_detect_list_of_usb_ports()
         if not ls:
             _e('no cell USB shield detected')
             return 0
-        if len(ls) != 4:
-            _e('no cell USB shield all 4 entries detected')
-            return 0
+
+        port_nmea = ls[1]
+        port_ctrl = ls[-2]
+        print(f'\nQUS -> port_GPS {port_nmea}, port_CTL: {port_ctrl}')
+
 
         version = ''
-        for p in ls:
-            till = time.perf_counter() + .3
-            b = bytes()
-            ser = None
-            try:
-                ser = serial.Serial(p, 115200, timeout=.1, rtscts=True, dsrdtr=True)
-                ser.write(b'AT+CVERSION \rAT+CVERSION \r')
-                while time.perf_counter() < till:
-                    b += ser.read()
+        p = port_ctrl
+        till = time.perf_counter() + .3
+        b = bytes()
+        ser = None
+        try:
+            ser = serial.Serial(p, 115200, timeout=.1, rtscts=True, dsrdtr=True)
+            ser.write(b'AT+CVERSION \rAT+CVERSION \r')
+            while time.perf_counter() < till:
+                b += ser.read()
+            ser.close()
+            if b'VERSION' in b:
+                version = b.decode()
+        except (Exception,):
+            if ser and ser.isOpen():
                 ser.close()
-                if b'VERSION' in b:
-                    version = b.decode()
-                    break
-            except (Exception,):
-                if ser and ser.isOpen():
-                    ser.close()
-                # print(f'error {p} -> {ex}')
+            # print(f'error {p} -> {ex}')
 
         # check
         return '2022' in version

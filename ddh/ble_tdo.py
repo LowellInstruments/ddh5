@@ -156,7 +156,7 @@ async def ble_download_tdo(d):
     # feature has-logger-been-in-water
     flag_ignore_hbw = ddh_get_template_of_path_of_hbw_flag_file().format(mac)
     if state == 'running':
-        # todo: try this
+        # todo: try this HBW command
         if v >= MIN_VERSION_HBW_CMD:
             lg.a('sending command Has-Been-in-Water')
             rv, v = await cmd_hbw()

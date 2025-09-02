@@ -321,7 +321,6 @@ def _ddh_ble_boot_gps_clock_sync():
 def _ddh_ble_scan_loggers(antenna_idx):
 
     adapter = f'hci{antenna_idx}'
-    # todo: do this or scan fast
     ls_devs_all = ael.run_until_complete(ble_scan_slow(adapter, timeout=5))
 
 

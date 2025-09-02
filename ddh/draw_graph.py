@@ -633,7 +633,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     lg.a(f'graphed {len(x)} {met} points, took {el_ts} ms')
 
 
-    # todo: do the statistics thing
+    # todo: do the statistics
 
     # ------------------------------------
     # statistics: summary box in main tab
