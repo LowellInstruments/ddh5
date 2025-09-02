@@ -126,4 +126,4 @@ _pb "-------------"
 echo
 sudo chown -R pi:pi "$FOL_LI"
 source "$FOL_VEN"/bin/activate
-cd "$FOL_DDH" && "$FOL_VEN"/bin/python ddh_gui.py
+cd "$FOL_DDH" && "$FOL_VEN"/bin/python main_ddh.py
