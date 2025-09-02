@@ -9,9 +9,6 @@ import git
 import socket
 from pathlib import Path
 from git import InvalidGitRepositoryError
-
-from mat.linux import linux_is_process_running_strict
-from mat.utils import linux_is_rpi, linux_is_rpi3, linux_is_rpi4
 import toml
 import subprocess as sp
 from rd_ctt.ddh import (
@@ -54,7 +51,10 @@ ael = asyncio.get_event_loop()
 
 
 def ddh_is_gui_running():
-    return linux_is_process_running_strict(NAME_EXE_DDH)
+    # we DONT import MAT library in ddh_common
+    cmd = f'ps -aux | grep -w {NAME_EXE_DDH} | grep -v grep'
+    rv = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    return rv.returncode == 0
 
 
 
@@ -243,9 +243,29 @@ def get_total_number_of_hauls(path):
 
 
 
+def _linux_is_rpi(i=None):
+    # we DONT import MAT library in ddh_common
+    cmd = f'cat /proc/cpuinfo | grep aspberry'
+    if i:
+        cmd = cmd + f' Pi {i}'
+    rv = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    return rv.returncode == 0
+
+
+
+def linux_is_rpi3():
+    return _linux_is_rpi(3)
+
+
+
+def linux_is_rpi4():
+    return _linux_is_rpi(4)
+
+
+
 
 def ddh_get_path_to_root_application_folder() -> Path:
-    if linux_is_rpi():
+    if _linux_is_rpi():
         return Path(str(pathlib.Path.home()) + '/li/ddh')
     return Path(str(pathlib.Path.home()) + '/PycharmProjects/ddh')
 
@@ -257,7 +277,7 @@ def get_ddh_platform():
         return "rpi3"
     elif linux_is_rpi4():
         return "rpi4"
-    elif linux_is_rpi():
+    elif _linux_is_rpi():
         return "rpi"
     return "unk"
 
@@ -677,7 +697,7 @@ TMP_PATH_DDH_HBW = '/tmp/ddh_hbw_{}.flag'
 # files stored in /li folder so permanent even removing DDH folder
 # -----------------------------------------------------------------
 
-d = '/home/pi/li/' if linux_is_rpi() else '/tmp'
+d = '/home/pi/li/' if _linux_is_rpi() else '/tmp'
 LI_PATH_DDH_GPS_EXTERNAL = f'{d}/.ddt_gps_external.flag'
 LI_PATH_GROUPED_S3_FILE_FLAG = f'{d}/.ddt_this_box_has_grouped_s3_uplink.flag'
 LI_PATH_CELL_FW = f'{d}/.fw_cell_ver'
@@ -698,7 +718,7 @@ LI_PATH_GPS_DUMMY = f'{d}/.gps_dummy_mode.json'
 # ------------------------------
 
 h = str(pathlib.Path.home())
-h_ddh = f'{h}/li/ddh' if linux_is_rpi() else f'{h}/PycharmProjects/ddh'
+h_ddh = f'{h}/li/ddh' if _linux_is_rpi() else f'{h}/PycharmProjects/ddh'
 LI_PATH_DDH_VERSION = f'{h_ddh}/.ddh_version'
 LI_PATH_API_VERSION = f'{h_ddh}/.api_version'
 LI_PATH_LAST_YEAR_AWS_TEMPLATE = f'{h_ddh}/.ddh_aws_last_year_'
