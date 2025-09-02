@@ -4,7 +4,6 @@ import json
 import pathlib
 import platform
 import shutil
-import socket
 import subprocess as sp
 import boto3
 import sys
