@@ -1170,25 +1170,20 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a(f"warning, unknown keypress {ev.key()}")
             return
 
-        # ------------------------------
-        # identify keyboard key pressed
-        # ------------------------------
+        # identify KEYBOARD key pressed, although we simulate side box keys
         if ev.key() == Qt.Key.Key_1:
-            lg.a("debug, main_gui detect pressed button 1")
+            lg.a("debug, pressed box side button 1")
             self.num_clicks_brightness = (self.num_clicks_brightness + 1) % 18
             gui_setup_brightness(self)
-            return
 
         elif ev.key() == Qt.Key.Key_2:
-            lg.a("debug, main_gui detect pressed button 2")
+            lg.a("debug, pressed box side button 2")
             gui_show_note_tab_delete_black_macs(self)
-            return
 
         elif ev.key() == Qt.Key.Key_3:
-            lg.a("debug, main_gui detect pressed button 3")
-            # they decided 0 but minimum was 9
+            lg.a("debug, pressed box side button 3")
+            # they decided 0 but, long ago, minimum was 12
             gui_ddh_set_key3_brightness(self, 0)
-            return
 
 
 
@@ -1566,11 +1561,12 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     # =============
 
     def __init__(self):
-        super(DDH, self).__init__()
 
+        super(DDH, self).__init__()
         gui_init_redis()
         gui_check_config_file_is_ok()
         app_state_set(EV_GUI_BOOT, t_str(STR_EV_GUI_BOOT))
+
 
         # we want new processes
         gui_kill_all_processes()
@@ -1668,9 +1664,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         cm_action_quit = self.context_menu.addAction("quit")
         cm_action_edit_tab = self.context_menu.addAction("edit tab")
         cm_action_advanced_tab = self.context_menu.addAction("advanced tab")
-
-
-        # Connect the actions to methods
         cm_action_minimize.triggered.connect(self.showMinimized)
         cm_action_quit.triggered.connect(self.close_my_ddh)
         cm_action_edit_tab.triggered.connect(self.gui_show_edit_tab)
