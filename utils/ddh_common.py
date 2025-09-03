@@ -927,6 +927,7 @@ PATH_MAIN_BLE_DL_NO_NEED = f'{_p}/no_water_data_dl.png'
 PATH_MAIN_BLE_DL_LOW_BATTERY = f'{_p}/low_battery.png'
 PATH_MAIN_BLE_DL_RETRY = f'{_p}/sand_clock.png'
 PATH_MAIN_BLE_DL_PROGRESS = f'{_p}/dl2.png'
+PATH_MAIN_GPS_HW_ERROR = f'{_p}/gps_err.png'
 
 
 

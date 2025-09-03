@@ -289,10 +289,14 @@ async def _ble_logger_id_and_download(d):
 
 def _ddh_ble_boot_gps_clock_sync():
 
-    # GPS boot stage, can take from seconds to minutes
     if using_dummy_gps:
         lg.a("warning, dummy GPS, not syncing clock via GPS at boot")
         return
+
+    if not linux_is_rpi():
+        lg.a("warning, development, not syncing clock via GPS at boot")
+        return
+
 
     ddh_gps_get_fix_upon_cold_boot()
     app_state_set(EV_GPS_SYNC_CLOCK, t_str(STR_EV_GPS_SYNC_CLOCK))
@@ -565,9 +569,7 @@ def _ddh_ble(ignore_gui):
     r.set(RD_DDH_BLE_ANTENNA, antenna_s)
 
 
-    # clock sync when not in development laptop
-    if not ignore_gui:
-        _ddh_ble_boot_gps_clock_sync()
+    _ddh_ble_boot_gps_clock_sync()
 
 
 

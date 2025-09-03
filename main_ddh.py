@@ -75,7 +75,8 @@ from utils.ddh_common import (
     PATH_MAIN_CONF_BAD, EV_GPS_IN_PORT, PATH_MAIN_IN_PORT, EV_BLE_CONNECTING, EV_BLE_DL_ERROR, EV_BLE_DL_NO_NEED,
     EV_BLE_LOW_BATTERY, EV_BLE_DL_RETRY, PATH_MAIN_BLE_CONNECTING, PATH_MAIN_BLE_DL_OK, PATH_MAIN_BLE_DL_ERROR,
     PATH_MAIN_BLE_DL_OK_NO_RERUN, PATH_MAIN_BLE_DL_NO_NEED, PATH_MAIN_BLE_DL_LOW_BATTERY, PATH_MAIN_BLE_DL_RETRY,
-    PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, exp_get_use_debug_print,
+    PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, exp_get_use_debug_print, EV_GPS_HW_ERROR,
+    PATH_MAIN_GPS_HW_ERROR,
 )
 import datetime
 import os
@@ -143,7 +144,7 @@ def gui_kill_all_processes():
 
 
 
-def gui_check_all_processes(self):
+def gui_check_all_processes():
     for p_name in ls_processes:
         if not linux_is_process_running_strict(p_name):
             lg.a(f'warning, error {p_name} not present')
@@ -151,7 +152,7 @@ def gui_check_all_processes(self):
 
 
 def cb_when_ddh_receives_ctrl_c(signal_num, _):
-    lg.a('captured signal ctrl + c')
+    lg.a(f'captured signal ctrl + c ({signal_num})')
     gui_kill_all_processes()
     # so DDH GUI is the last to be in OS
     time.sleep(1)
@@ -160,7 +161,7 @@ def cb_when_ddh_receives_ctrl_c(signal_num, _):
 
 
 def cb_when_ddh_receives_kill_signal(signal_num, _):
-    lg.a('captured kill signal')
+    lg.a(f'captured kill signal ({signal_num})')
     gui_kill_all_processes()
     # so DDH GUI is the last to be in OS
     time.sleep(1)
@@ -314,11 +315,6 @@ def gui_setup_center_window(my_app):
     # a.move(300, 200)
     # a.setFixedWidth(1024)
     # a.setFixedHeight(768)
-
-    # maximum sizes
-    _w = geo.width()
-    a.left_frame.setMinimumWidth(int(_w * .3))
-    a.left_frame.setMaximumWidth(int(_w * .3))
 
 
 
@@ -716,27 +712,6 @@ def gui_setup_brightness(a):
 
 
 
-def gui_dim_screen_depending_on_hour(a):
-    global dim_done_day
-    global dim_done_night
-    h = int(datetime.datetime.now().strftime("%H"))
-    if 7 < h < 19 and not dim_done_day:
-        lg.a('display: setting higher brightness during day')
-        dim_done_day = 1
-        dim_done_night = 0
-        # a bit ugly but meh
-        a.num_clicks_brightness = 9
-        gui_setup_brightness(a)
-    if 19 < h < 7 and not dim_done_night:
-        lg.a('display: dimmed during night')
-        dim_done_night = 1
-        dim_done_day = 0
-        a.num_clicks_brightness = 0
-        gui_setup_brightness(a)
-
-
-
-
 def gui_get_my_current_wlan_ssid() -> str:
     """gets connected wi-fi network name, if any"""
 
@@ -817,7 +792,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         try:
             ans = rv.stdout
             if ans:
-                # ans: b"temp=30.1'C"
+                # ans: b'temp=30.1'C'
                 ans = ans.replace(b"\n", b"")
                 ans = ans.replace(b"'C", b"")
                 ans = ans.replace(b"temp=", b"")
@@ -839,9 +814,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_btn_expand(self):
-        self.frame_expanded = not self.frame_expanded
-        self.frame_expand.setVisible(self.frame_expanded)
-        s = '↓' if self.frame_expanded else '↑'
+        self.frame_2of2_expanded = not self.frame_2of2_expanded
+        self.left_frame_2of2.setVisible(self.frame_2of2_expanded)
+        s = '↑' if self.frame_2of2_expanded else '↓'
         self.btn_expand.setText(s)
 
 
@@ -1238,10 +1213,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             pathlib.Path(path).touch()
 
 
-    def click_btn_shortcuts(self, event):
+    def click_btn_shortcuts(self, _):
         bp = self.btn_shortcuts.mapToGlobal(QtCore.QPoint(0, 0))
         x = bp.x() - 50
-        y = bp.y()
+        y = bp.y() - 50
         p = QPoint(x, y)
         self.context_menu.exec(p)
 
@@ -1392,7 +1367,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # show if any process is not there
         k = RD_DDH_GUI_REFRESH_PROCESSES_PRESENT
         if not r.exists(k):
-            gui_check_all_processes(self)
+            gui_check_all_processes()
             r.setex(k, 10, 1)
 
 
@@ -1497,41 +1472,41 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # debug
         # print(f'code {code} \n text {text}')
-
+        pi = ''
         if code in (EV_GUI_BOOT, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BOOT))
+            pi = PATH_MAIN_BOOT
         elif code in (EV_CONF_BAD, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_CONF_BAD))
+            pi = PATH_MAIN_CONF_BAD
         elif code in (EV_NO_ASSIGNED_LOGGERS,):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_NO_LOGGERS_ASSIGNED))
+            pi = PATH_MAIN_NO_LOGGERS_ASSIGNED
         elif code in (EV_GPS_IN_PORT, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_IN_PORT))
+            pi = PATH_MAIN_IN_PORT
         elif code in (EV_BLE_SCAN, ):
             if not lock_icon:
-                self.lbl_main_img.setPixmap(QPixmap(PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)))
+                pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
         elif code in (EV_GPS_WAITING_BOOT, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_TEMPLATE_MAIN_GPS_BOOT_IMG.format(i)))
+            pi = PATH_TEMPLATE_MAIN_GPS_BOOT_IMG.format(i)
             t = r.ttl(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT) or 0
             s = f'{t_str(STR_EV_GPS_WAITING_BOOT)} {t} secs'
             self.lbl_main_txt.setText(s)
         elif code in (EV_GPS_SYNC_CLOCK, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG))
+            pi = PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG
         elif code in (EV_BLE_CONNECTING, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_CONNECTING))
+            pi = PATH_MAIN_BLE_CONNECTING
         elif code in (EV_BLE_DL_OK, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_OK))
+            pi = PATH_MAIN_BLE_DL_OK
         elif code in (EV_BLE_DL_OK_NO_RERUN,):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_OK_NO_RERUN))
+            pi = PATH_MAIN_BLE_DL_OK_NO_RERUN
         elif code in (EV_BLE_DL_ERROR,):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_ERROR))
+            pi = PATH_MAIN_BLE_DL_ERROR
         elif code in (EV_BLE_DL_NO_NEED,):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_NO_NEED))
+            pi = PATH_MAIN_BLE_DL_NO_NEED
         elif code in (EV_BLE_LOW_BATTERY, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_LOW_BATTERY))
+            pi = PATH_MAIN_BLE_DL_LOW_BATTERY
         elif code in (EV_BLE_DL_RETRY, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_RETRY))
+            pi = PATH_MAIN_BLE_DL_RETRY
         elif code in (EV_BLE_DL_PROGRESS, ):
-            self.lbl_main_img.setPixmap(QPixmap(PATH_MAIN_BLE_DL_PROGRESS))
+            pi = PATH_MAIN_BLE_DL_PROGRESS
             self.bar_dl.setVisible(True)
             try:
                 with open(DEV_SHM_DL_PROGRESS, 'r') as f:
@@ -1540,9 +1515,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                     self.bar_dl.setValue(v)
             except (Exception,):
                 pass
+        elif code in (EV_GPS_HW_ERROR, ):
+            pi = PATH_MAIN_GPS_HW_ERROR
         else:
             print('**** unknown state code', code)
             print('**** unknown state text', text)
+
+        if pi:
+            self.lbl_main_img.setPixmap(QPixmap(pi))
+
 
 
 
@@ -1596,7 +1577,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # create variables
         self.process_state_ble = ''
-        self.frame_expanded = True
         self.bright_idx = 2
         self.tab_edit_hide = True
         self.tab_advanced_hide = True
@@ -1670,6 +1650,16 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         cm_action_quit.triggered.connect(self.close_my_ddh)
         cm_action_edit_tab.triggered.connect(self.gui_show_edit_tab)
         cm_action_advanced_tab.triggered.connect(self.gui_show_advanced_tab)
+
+
+        # left panel
+        geo = self.frameGeometry()
+        _w = geo.width()
+        self.left_frame_1of2.setMinimumWidth(int(_w * .25))
+        self.left_frame_1of2.setMaximumWidth(int(_w * .25))
+        self.frame_2of2_expanded = False
+        self.left_frame_2of2.setVisible(self.frame_2of2_expanded)
+
 
         lg.a("OK, finished booting graphical user interface")
 
