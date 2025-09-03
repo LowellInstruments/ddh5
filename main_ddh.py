@@ -1581,6 +1581,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.process_gps = QProcess()
         self.process_net = QProcess()
         self.process_sqs = QProcess()
+        # todo: check all these work as expected and also lg.set_debugq
         self.process_log.readyReadStandardOutput.connect(self.handle_stdout)
         self.process_ble.readyReadStandardOutput.connect(self.handle_stdout)
         self.process_log.readyReadStandardError.connect(self.handle_stderr)
