@@ -349,14 +349,13 @@ def _ddh_gps(ignore_gui):
         lg.a(f'hat firmware version is {gfv}')
         r.set(RD_DDH_GPS_HAT_GFV, gfv)
 
-        lg.a(f'activating hat\'s NMEA output on port {port_nmea} by write to {port_ctrl}')
-        rv, bb = gps_hat_init(port_ctrl)
+        lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
+        rv = gps_hat_init(port_ctrl)
         if rv:
             lg.a('OK activate hat NMEA stream')
             r.set(RD_DDH_GPS_ANTENNA, 'internal')
         else:
             lg.a('error activate hat NMEA stream ')
-            lg.a(f'bb is {bb}')
 
     else:
         # not hat, can still be puck or adafruit
@@ -411,7 +410,7 @@ def main_ddh_gps(ignore_gui=False):
         try:
             _ddh_gps(ignore_gui)
         except (Exception, ) as ex:
-            lg.a(f'GPS: error, process {p_name} restarting after crash -> {ex}')
+            lg.a(f'error, process {p_name} restarting after crash -> {ex}')
 
 
 

@@ -33,7 +33,8 @@ from rd_ctt.ddh import (
     RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_REFRESH_BLE_ICON_AUTO, \
     RD_DDH_GUI_REFRESH_GPS_ICON_AUTO, RD_DDH_GUI_REFRESH_CELL_WIFI_ICON_AUTO,
     RD_DDH_GUI_PLOT_FOLDER,
-    RD_DDH_GUI_REFRESH_PROCESSES_PRESENT, RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
+    RD_DDH_GUI_REFRESH_PROCESSES_PRESENT,
+    RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
     RD_DDH_GUI_BOX_SIDE_BUTTON_TOP
 )
 from utils.ddh_common import (
@@ -200,41 +201,8 @@ def gui_check_config_file_is_ok():
 
 
 
-def gui_setup_timers(a):
-    a.timer_gui_one_second = QTimer()
-    a.timer_gui_one_second.timeout.connect(a._cb_timer_gui_one_second)
-    a.timer_gui_one_second.start(1000)
-
-    a.timer_six_hours = QTimer()
-    a.timer_six_hours.timeout.connect(a._cb_timer_six_hours)
-    a.timer_six_hours.start(3600 * 6)
-
-    a.timer_cpu_temperature = QTimer()
-    a.timer_cpu_temperature.timeout.connect(a._cb_timer_cpu_temperature)
-    if linux_is_rpi():
-        a.timer_cpu_temperature.start(1000)
-
-    a.timer_plot = QTimer()
-    a.timer_plot.timeout.connect(a._cb_timer_plot)
-    a.timer_plot.start(1000)
-
-
-
 def gui_setup_side_buttons_box():
     ddh_create_thread_buttons()
-
-
-
-
-def gui_tabs_setup_graph(a):
-    a.g = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
-    a.lay_g_h2.addWidget(a.g)
-    a.g.setBackground('w')
-    a.btn_g_next_haul.setEnabled(False)
-    a.btn_g_next_haul.setVisible(False)
-    a.lbl_graph_busy.setVisible(False)
-    a.cb_g_switch_tp.setVisible(False)
-    gui_setup_manage_graph_test_demo_files()
 
 
 
@@ -842,7 +810,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a(s.format(m.percent, ma))
 
         # measure temperature of DDH box, tell when too high
-        self.tt.stop()
+        self.timer_cpu_hot.stop()
         c = "/usr/bin/vcgencmd measure_temp"
         rv = sp.run(c, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
 
@@ -861,7 +829,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a(f"error, getting vcgencmd -> {ex}")
 
         # 600 seconds = 10 minutes
-        self.tt.start(600000)
+        self.timer_cpu_hot.start(600000)
 
 
 
@@ -1201,25 +1169,20 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a(f"warning, unknown keypress {ev.key()}")
             return
 
-        # ------------------------------
-        # identify keyboard key pressed
-        # ------------------------------
+        # identify KEYBOARD key pressed, although we simulate side box keys
         if ev.key() == Qt.Key.Key_1:
-            lg.a("debug, main_gui detect pressed button 1")
+            lg.a("debug, pressed box side button 1")
             self.num_clicks_brightness = (self.num_clicks_brightness + 1) % 18
             gui_setup_brightness(self)
-            return
 
         elif ev.key() == Qt.Key.Key_2:
-            lg.a("debug, main_gui detect pressed button 2")
+            lg.a("debug, pressed box side button 2")
             gui_show_note_tab_delete_black_macs(self)
-            return
 
         elif ev.key() == Qt.Key.Key_3:
-            lg.a("debug, main_gui detect pressed button 3")
-            # they decided 0 but minimum was 9
+            lg.a("debug, pressed box side button 3")
+            # they decided 0 but, long ago, minimum was 12
             gui_ddh_set_key3_brightness(self, 0)
-            return
 
 
 
@@ -1600,11 +1563,12 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     # =============
 
     def __init__(self):
-        super(DDH, self).__init__()
 
+        super(DDH, self).__init__()
         gui_init_redis()
         gui_check_config_file_is_ok()
         app_state_set(EV_GUI_BOOT, t_str(STR_EV_GUI_BOOT))
+
 
         # we want new processes
         gui_kill_all_processes()
@@ -1615,6 +1579,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.process_gps = QProcess()
         self.process_net = QProcess()
         self.process_sqs = QProcess()
+        # todo: check all these work as expected and also lg.set_debugq
         self.process_log.readyReadStandardOutput.connect(self.handle_stdout)
         self.process_ble.readyReadStandardOutput.connect(self.handle_stdout)
         self.process_log.readyReadStandardError.connect(self.handle_stderr)
@@ -1652,6 +1617,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_setup_center_window(self)
         gui_setup_buttons(self)
         gui_setup_brightness(self)
+        gui_setup_side_buttons_box()
 
 
         # tabs
@@ -1664,14 +1630,34 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             gui_tabs_hide_map(self)
         gui_tabs_populate_note_dropdown(self)
         gui_tabs_populate_graph_dropdown_sn(self)
-        gui_tabs_setup_graph(self)
 
 
-        # ------------
+
+        # graphing tab
+        self.g = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
+        self.lay_g_h2.addWidget(self.g)
+        self.g.setBackground('w')
+        self.btn_g_next_haul.setEnabled(False)
+        self.btn_g_next_haul.setVisible(False)
+        self.lbl_graph_busy.setVisible(False)
+        self.cb_g_switch_tp.setVisible(False)
+        gui_setup_manage_graph_test_demo_files()
+
+
         # GUI timers
-        # ------------
-        gui_setup_timers(self)
-        gui_setup_side_buttons_box()
+        self.timer_gui_one_second = QTimer()
+        self.timer_six_hours = QTimer()
+        self.timer_cpu_hot = QTimer()
+        self.timer_plot = QTimer()
+        self.timer_gui_one_second.timeout.connect(self._cb_timer_gui_one_second)
+        self.timer_gui_one_second.start(1000)
+        self.timer_six_hours.timeout.connect(self._cb_timer_six_hours)
+        self.timer_six_hours.start(3600 * 6)
+        self.timer_cpu_hot.timeout.connect(self._cb_timer_cpu_temperature)
+        if linux_is_rpi():
+            self.timer_cpu_hot.start(1000)
+        self.timer_plot.timeout.connect(self._cb_timer_plot)
+        self.timer_plot.start(1000)
 
 
         # build context menu shortcuts
