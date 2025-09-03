@@ -33,7 +33,8 @@ from rd_ctt.ddh import (
     RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_REFRESH_BLE_ICON_AUTO, \
     RD_DDH_GUI_REFRESH_GPS_ICON_AUTO, RD_DDH_GUI_REFRESH_CELL_WIFI_ICON_AUTO,
     RD_DDH_GUI_PLOT_FOLDER,
-    RD_DDH_GUI_REFRESH_PROCESSES_PRESENT, RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
+    RD_DDH_GUI_REFRESH_PROCESSES_PRESENT,
+    RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
     RD_DDH_GUI_BOX_SIDE_BUTTON_TOP
 )
 from utils.ddh_common import (
@@ -197,26 +198,6 @@ def gui_check_config_file_is_ok():
         app_state_set(EV_CONF_BAD, t_str(STR_EV_CONF_BAD))
         while 1:
             time.sleep(1)
-
-
-
-def gui_setup_timers(a):
-    a.timer_gui_one_second = QTimer()
-    a.timer_gui_one_second.timeout.connect(a._cb_timer_gui_one_second)
-    a.timer_gui_one_second.start(1000)
-
-    a.timer_six_hours = QTimer()
-    a.timer_six_hours.timeout.connect(a._cb_timer_six_hours)
-    a.timer_six_hours.start(3600 * 6)
-
-    a.timer_cpu_temperature = QTimer()
-    a.timer_cpu_temperature.timeout.connect(a._cb_timer_cpu_temperature)
-    if linux_is_rpi():
-        a.timer_cpu_temperature.start(1000)
-
-    a.timer_plot = QTimer()
-    a.timer_plot.timeout.connect(a._cb_timer_plot)
-    a.timer_plot.start(1000)
 
 
 
@@ -843,7 +824,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a(s.format(m.percent, ma))
 
         # measure temperature of DDH box, tell when too high
-        self.tt.stop()
+        self.timer_cpu_hot.stop()
         c = "/usr/bin/vcgencmd measure_temp"
         rv = sp.run(c, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
 
@@ -862,7 +843,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a(f"error, getting vcgencmd -> {ex}")
 
         # 600 seconds = 10 minutes
-        self.tt.start(600000)
+        self.timer_cpu_hot.start(600000)
 
 
 
@@ -1663,13 +1644,23 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_tabs_populate_note_dropdown(self)
         gui_tabs_populate_graph_dropdown_sn(self)
         gui_tabs_setup_graph(self)
-
-
-        # ------------
-        # GUI timers
-        # ------------
-        gui_setup_timers(self)
         gui_setup_side_buttons_box()
+
+
+        # GUI timers
+        self.timer_gui_one_second = QTimer()
+        self.timer_six_hours = QTimer()
+        self.timer_cpu_hot = QTimer()
+        self.timer_plot = QTimer()
+        self.timer_gui_one_second.timeout.connect(self._cb_timer_gui_one_second)
+        self.timer_gui_one_second.start(1000)
+        self.timer_six_hours.timeout.connect(self._cb_timer_six_hours)
+        self.timer_six_hours.start(3600 * 6)
+        self.timer_cpu_hot.timeout.connect(self._cb_timer_cpu_temperature)
+        if linux_is_rpi():
+            self.timer_cpu_hot.start(1000)
+        self.timer_plot.timeout.connect(self._cb_timer_plot)
+        self.timer_plot.start(1000)
 
 
         # build context menu shortcuts
