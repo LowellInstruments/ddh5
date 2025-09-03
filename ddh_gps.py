@@ -323,7 +323,7 @@ def _set_redis_gps_speed(d: dict):
 def _ddh_gps(ignore_gui):
 
     # prepare GPS process
-    r.delete(RD_DDH_GUI_REFRESH_GPS_ANTENNA)
+    r.delete(RD_DDH_GPS_ANTENNA)
     setproctitle.setproctitle(p_name)
 
 
@@ -336,10 +336,10 @@ def _ddh_gps(ignore_gui):
     # set to redis the type of GPS antenna
     if using_dummy_gps:
         lg.a(f'using dummy')
-        r.set(RD_DDH_GUI_REFRESH_GPS_ANTENNA, 'dummy')
+        r.set(RD_DDH_GPS_ANTENNA, 'dummy')
     else:
         lg.a(f'using NMEA port {port_nmea}')
-        r.set(RD_DDH_GUI_REFRESH_GPS_ANTENNA, ant_type)
+        r.set(RD_DDH_GPS_ANTENNA, ant_type)
 
 
     # additional initialization of GPS
@@ -353,7 +353,7 @@ def _ddh_gps(ignore_gui):
         rv, bb = gps_hat_init(port_ctrl)
         if rv:
             lg.a('OK activate hat NMEA stream')
-            r.set(RD_DDH_GUI_REFRESH_GPS_ANTENNA, 'internal')
+            r.set(RD_DDH_GPS_ANTENNA, 'internal')
         else:
             lg.a('error activate hat NMEA stream ')
             lg.a(f'bb is {bb}')

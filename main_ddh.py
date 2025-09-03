@@ -25,9 +25,9 @@ from ddh.slo import slo_delete, slo_delete_all
 from mat.linux import linux_is_process_running_strict
 from rd_ctt.ddh import (
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_REFRESH_HISTORY_TABLE,
-    RD_DDH_GUI_REFRESH_BLE_ANTENNA, \
-    RD_DDH_GUI_REFRESH_GPS_ANTENNA, RD_DDH_GUI_PROCESS_AWS_OUTPUT,
-    RD_DDH_GUI_PROCESS_NET_OUTPUT, RD_DDH_GUI_REFRESH_BLE_LAST_DL, \
+    RD_DDH_BLE_ANTENNA, \
+    RD_DDH_GPS_ANTENNA, RD_DDH_GUI_PROCESS_AWS_OUTPUT,
+    RD_DDH_GUI_PROCESS_NET_OUTPUT, \
     RD_DDH_AWS_SYNC_REQUEST, RD_DDH_BLE_SEMAPHORE, \
     RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT,
     RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_REFRESH_BLE_ICON_AUTO, \
@@ -261,7 +261,6 @@ def gui_setup_view(my_win):
     a.lbl_ble_antenna_img.setPixmap(QPixmap(PATH_BLE_ANTENNA_ICON_START))
     a.lbl_cell_wifi_img.setPixmap(QPixmap("ddh/gui/res/new_icon_cell_wifi.png"))
     a.lbl_cloud_img.setPixmap(QPixmap("ddh/gui/res/new_icon_cloud.png"))
-    a.lbl_last_dl_img.setPixmap(QPixmap("ddh/gui/res/new_icon_dl_ok.png"))
     a.lbl_boat_txt.setText(ddh_config_get_vessel_name())
     a.lbl_gps.setText('-\n-')
     a.lbl_box_sn.setText('DDH ' + ddh_config_get_box_sn())
@@ -1438,11 +1437,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # refresh TEXT in main tab left column
         ls_fields_to_refresh = {
             RD_DDH_GUI_REFRESH_HISTORY_TABLE: None,
-            RD_DDH_GUI_REFRESH_BLE_ANTENNA: self.lbl_ble_antenna_txt,
-            RD_DDH_GUI_REFRESH_GPS_ANTENNA: self.lbl_gps_antenna_txt,
+            RD_DDH_BLE_ANTENNA: self.lbl_ble_antenna_txt,
+            RD_DDH_GPS_ANTENNA: self.lbl_gps_antenna_txt,
             RD_DDH_GUI_PROCESS_AWS_OUTPUT: self.lbl_cloud_txt,
             RD_DDH_GUI_PROCESS_NET_OUTPUT: self.lbl_cell_wifi_txt,
-            RD_DDH_GUI_REFRESH_BLE_LAST_DL: self.lbl_last_dl_txt,
         }
         for rd_key, field in ls_fields_to_refresh.items():
             v = r.get(rd_key)
@@ -1514,10 +1512,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # refresh DDH side box buttons
         if r.exists(RD_DDH_GUI_BOX_SIDE_BUTTON_TOP):
             self.keyPressEvent(ButtonPressEvent(Qt.Key.Key_1))
+            r.delete(RD_DDH_GUI_BOX_SIDE_BUTTON_TOP)
         if r.exists(RD_DDH_GUI_BOX_SIDE_BUTTON_MID):
             self.keyPressEvent(ButtonPressEvent(Qt.Key.Key_2))
+            r.delete(RD_DDH_GUI_BOX_SIDE_BUTTON_MID)
         if r.exists(RD_DDH_GUI_BOX_SIDE_BUTTON_LOW):
             self.keyPressEvent(ButtonPressEvent(Qt.Key.Key_3))
+            r.delete(RD_DDH_GUI_BOX_SIDE_BUTTON_LOW)
+
 
 
         # update MAIN icon
@@ -1678,9 +1680,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         cm_action_quit = self.context_menu.addAction("quit")
         cm_action_edit_tab = self.context_menu.addAction("edit tab")
         cm_action_advanced_tab = self.context_menu.addAction("advanced tab")
-
-
-        # Connect the actions to methods
         cm_action_minimize.triggered.connect(self.showMinimized)
         cm_action_quit.triggered.connect(self.close_my_ddh)
         cm_action_edit_tab.triggered.connect(self.gui_show_edit_tab)

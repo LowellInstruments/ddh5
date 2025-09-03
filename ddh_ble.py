@@ -177,10 +177,10 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
         if aur:
             lg.a('error, cannot get a good BLE antenna')
             rv = 1
-            r.set(RD_DDH_GUI_REFRESH_BLE_ANTENNA, 'error')
+            r.set(RD_DDH_BLE_ANTENNA, 'error')
         else:
             antenna_idx, antenna_description = _ddh_ble_hardware_describe_antenna_type()
-            r.set(RD_DDH_GUI_REFRESH_BLE_ANTENNA, antenna_description)
+            r.set(RD_DDH_BLE_ANTENNA, antenna_description)
 
     return rv
 
@@ -562,7 +562,7 @@ def _ddh_ble(ignore_gui):
     # know your BLE antenna
     antenna_idx, antenna_s = _ddh_ble_hardware_describe_antenna_type()
     lg.a(f"using BLE antenna hci{antenna_idx}, type {antenna_s}")
-    r.set(RD_DDH_GUI_REFRESH_BLE_ANTENNA, antenna_s)
+    r.set(RD_DDH_BLE_ANTENNA, antenna_s)
 
 
     # clock sync when not in development laptop
