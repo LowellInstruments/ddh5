@@ -28,4 +28,4 @@ rd_ctt@git+https://github.com/LowellInstruments/rd_ctt.git
 # mat is installed differently
 
 # on RPi, install via apt
-# apt install python3-pyqt6
+# apt install python3-pyqt6 pyqt6-dev-tools

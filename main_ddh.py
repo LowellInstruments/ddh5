@@ -207,19 +207,6 @@ def gui_setup_side_buttons_box():
 
 
 
-def gui_tabs_setup_graph(a):
-    a.g = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
-    a.lay_g_h2.addWidget(a.g)
-    a.g.setBackground('w')
-    a.btn_g_next_haul.setEnabled(False)
-    a.btn_g_next_haul.setVisible(False)
-    a.lbl_graph_busy.setVisible(False)
-    a.cb_g_switch_tp.setVisible(False)
-    gui_setup_manage_graph_test_demo_files()
-
-
-
-
 def gui_setup_view(my_win):
 
     a = my_win
@@ -1631,6 +1618,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_setup_center_window(self)
         gui_setup_buttons(self)
         gui_setup_brightness(self)
+        gui_setup_side_buttons_box()
 
 
         # tabs
@@ -1643,8 +1631,18 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             gui_tabs_hide_map(self)
         gui_tabs_populate_note_dropdown(self)
         gui_tabs_populate_graph_dropdown_sn(self)
-        gui_tabs_setup_graph(self)
-        gui_setup_side_buttons_box()
+
+
+
+        # graphing tab
+        self.g = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
+        self.lay_g_h2.addWidget(self.g)
+        self.g.setBackground('w')
+        self.btn_g_next_haul.setEnabled(False)
+        self.btn_g_next_haul.setVisible(False)
+        self.lbl_graph_busy.setVisible(False)
+        self.cb_g_switch_tp.setVisible(False)
+        gui_setup_manage_graph_test_demo_files()
 
 
         # GUI timers
