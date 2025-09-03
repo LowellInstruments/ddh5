@@ -815,7 +815,16 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def click_btn_expand(self):
         self.frame_2of2_expanded = not self.frame_2of2_expanded
-        self.left_frame_2of2.setVisible(self.frame_2of2_expanded)
+        ls_controls_disappear = (
+            self.lbl_gps_antenna_img,
+            self.lbl_gps_antenna_txt,
+            self.lbl_ble_antenna_img,
+            self.lbl_ble_antenna_txt,
+            self.lbl_cell_wifi_img,
+            self.lbl_cell_wifi_txt
+        )
+        for i in ls_controls_disappear:
+            i.setVisible(self.frame_2of2_expanded)
         s = '↑' if self.frame_2of2_expanded else '↓'
         self.btn_expand.setText(s)
 
@@ -1655,10 +1664,20 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # left panel
         geo = self.frameGeometry()
         _w = geo.width()
-        self.left_frame_1of2.setMinimumWidth(int(_w * .25))
-        self.left_frame_1of2.setMaximumWidth(int(_w * .25))
+        self.left_frame.setMinimumWidth(int(_w * .25))
+        self.left_frame.setMaximumWidth(int(_w * .25))
         self.frame_2of2_expanded = False
-        self.left_frame_2of2.setVisible(self.frame_2of2_expanded)
+        ls_controls_disappear = (
+            self.lbl_gps_antenna_img,
+            self.lbl_gps_antenna_txt,
+            self.lbl_ble_antenna_img,
+            self.lbl_ble_antenna_txt,
+            self.lbl_cell_wifi_img,
+            self.lbl_cell_wifi_txt
+        )
+        for i in ls_controls_disappear:
+            i.setVisible(False)
+        self.btn_expand.setText('↓')
 
 
         lg.a("OK, finished booting graphical user interface")
