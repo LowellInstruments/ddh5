@@ -20,6 +20,7 @@ export LI_FILE_ICCID=$FOL_LI/.iccid
 export LI_DDH_NEEDS_REBOOT_POST_INSTALL=/tmp/.ddh_needs_reboot_post_install.flag
 
 
+
 # 0 black, 1 red, 2 green, 3 yellow
 # 4 blue, 5 magenta, 6 cyan, 7 white
 function _p_color { tput setaf "$1"; printf "%s\n" "$2"; tput sgr0; }
