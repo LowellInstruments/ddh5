@@ -26,7 +26,8 @@ from rd_ctt.ddh import (
 )
 from utils.ddh_common import (
     NAME_EXE_CNV,
-    TESTMODE_FILENAME_PREFIX, ddh_get_path_to_folder_dl_files, ddh_this_process_needs_to_quit, exp_get_use_debug_print
+    TESTMODE_FILENAME_PREFIX, ddh_get_path_to_folder_dl_files,
+    ddh_this_process_needs_to_quit
 )
 from ddh_log import lg_cnv as lg
 

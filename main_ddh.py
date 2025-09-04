@@ -75,7 +75,7 @@ from utils.ddh_common import (
     PATH_MAIN_CONF_BAD, EV_GPS_IN_PORT, PATH_MAIN_IN_PORT, EV_BLE_CONNECTING, EV_BLE_DL_ERROR, EV_BLE_DL_NO_NEED,
     EV_BLE_LOW_BATTERY, EV_BLE_DL_RETRY, PATH_MAIN_BLE_CONNECTING, PATH_MAIN_BLE_DL_OK, PATH_MAIN_BLE_DL_ERROR,
     PATH_MAIN_BLE_DL_OK_NO_RERUN, PATH_MAIN_BLE_DL_NO_NEED, PATH_MAIN_BLE_DL_LOW_BATTERY, PATH_MAIN_BLE_DL_RETRY,
-    PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, exp_get_use_debug_print, EV_GPS_HW_ERROR,
+    PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, EV_GPS_HW_ERROR,
     PATH_MAIN_GPS_HW_ERROR,
 )
 import datetime
@@ -1491,10 +1491,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         code = code.decode() if code else ''
         text = text.decode() if text else ''
         self.bar_dl.setVisible(False)
-        k = RD_DDH_GUI_STATE_EVENT_ICON_LOCK
-        lock_icon = 0 if not r.exists(k) else r.ttl(k)
-        if not lock_icon:
-            self.lbl_main_txt.setText(text)
+
 
         # debug
         # print(f'code {code} \n text {text}')
@@ -1507,16 +1504,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             pi = PATH_MAIN_NO_LOGGERS_ASSIGNED
         elif code in (EV_GPS_IN_PORT, ):
             pi = PATH_MAIN_IN_PORT
-        elif code in (EV_BLE_SCAN, ):
-            pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i) if not lock_icon else ''
         elif code in (EV_GPS_WAITING_BOOT, ):
             pi = PATH_TEMPLATE_MAIN_GPS_BOOT_IMG.format(i)
             t = r.ttl(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT) or 0
-            s = f'{t_str(STR_EV_GPS_WAITING_BOOT)} {t} secs'
-            self.lbl_main_txt.setText(s)
+            text = f'{t_str(STR_EV_GPS_WAITING_BOOT)} {t} secs'
         elif code in (EV_GPS_SYNC_CLOCK, ):
             pi = PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG
         elif code in (EV_BLE_CONNECTING, ):
+            # todo: does this appear?
             pi = PATH_MAIN_BLE_CONNECTING
         elif code in (EV_BLE_DL_OK, ):
             pi = PATH_MAIN_BLE_DL_OK
@@ -1542,18 +1537,30 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 pass
         elif code in (EV_GPS_HW_ERROR, ):
             pi = PATH_MAIN_GPS_HW_ERROR
+        elif code in (EV_BLE_SCAN, ):
+            pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
         else:
-            print('**** unknown state code', code)
-            print('**** unknown state text', text)
-
-        if pi:
-            self.lbl_main_img.setPixmap(QPixmap(pi))
+            print('*1* unknown state code', code)
+            print('*1* unknown state text', text)
 
 
 
+        # update main icon or not
+        k = RD_DDH_GUI_STATE_EVENT_ICON_LOCK
+        lock_icon = 0 if not r.exists(k) else r.ttl(k)
+        if code in (EV_BLE_SCAN, ) and lock_icon:
+            pass
+        else:
+            self.lbl_main_txt.setText(text)
+            if pi:
+                self.lbl_main_img.setPixmap(QPixmap(pi))
+            else:
+                print('*2* unknown state code', code)
+                print('*2* unknown state text', text)
 
-        # show or not the summary box
-        if code in (EV_BLE_DL_OK, EV_BLE_DL_OK_NO_RERUN):
+
+        # show or not the statistics box
+        if 'done' in self.lbl_main_txt.text():
             s = self.lbl_summary_dl.text()
             s = s.replace('mg_l', 'mg/l')
             self.lbl_summary_dl.setText(s)

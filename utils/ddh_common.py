@@ -631,9 +631,6 @@ def exp_get_use_smart_lockout():
 
 
 
-def exp_get_use_debug_print():
-    return _get_exp_key_from_cfg('use_debug_print')
-
 
 
 def exp_get_conf_dox():
@@ -650,6 +647,11 @@ def exp_get_conf_dox():
 
 def exp_get_custom_side_buttons_debounce_time():
     return _get_exp_key_from_cfg('custom_side_buttons_debounce_time')
+
+
+
+def exp_debug_skip_hbw():
+    return _get_exp_key_from_cfg('use_skip_hbw')
 
 
 

@@ -13,7 +13,7 @@ from rd_ctt.ddh import (
 from utils.ddh_common import (
     NAME_EXE_NET,
     TMP_PATH_INET_VIA,
-    ddh_this_process_needs_to_quit, exp_get_use_debug_print
+    ddh_this_process_needs_to_quit
 )
 import subprocess as sp
 from ddh_log import lg_net as lg

@@ -21,7 +21,7 @@ from utils.ddh_common import (
     NAME_EXE_GPS, ddh_config_is_gps_error_forced_enabled, LI_PATH_GPS_DUMMY,
     LI_PATH_CELL_FW, EV_GPS_WAITING_BOOT, app_state_set, t_str,
     EV_GPS_IN_PORT,
-    STR_EV_GPS_IN_PORT, STR_EV_BLE_SCAN_2, EV_BLE_SCAN, ddh_this_process_needs_to_quit, exp_get_use_debug_print
+    STR_EV_GPS_IN_PORT, STR_EV_BLE_SCAN_2, EV_BLE_SCAN, ddh_this_process_needs_to_quit
 )
 import datetime
 import json

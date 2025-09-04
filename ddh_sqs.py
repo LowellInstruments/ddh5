@@ -8,7 +8,7 @@ from mat.utils import linux_is_rpi
 from utils.ddh_common import (
     ddh_config_get_vessel_name,
     NAME_EXE_SQS, ddh_config_is_sqs_enabled,
-    ddh_this_process_needs_to_quit, exp_get_use_debug_print
+    ddh_this_process_needs_to_quit
 )
 from ddh_log import lg_aws as lg
 import glob

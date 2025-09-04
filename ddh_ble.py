@@ -57,8 +57,8 @@ from utils.ddh_common import (
     EV_GPS_SYNC_CLOCK, STR_EV_GPS_SYNC_CLOCK,
     EV_BLE_DL_PROGRESS, STR_EV_BLE_DL_PROGRESS,
     STR_EV_BLE_DL_RETRY, EV_GPS_HW_ERROR, STR_EV_GPS_HW_ERROR,
-    calculate_path_to_folder_within_dl_files_from_mac_address, EV_NO_ASSIGNED_LOGGERS,
-    STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit, exp_get_use_debug_print
+    EV_NO_ASSIGNED_LOGGERS,
+    STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit
 )
 from ddh_log import lg_ble as lg
 

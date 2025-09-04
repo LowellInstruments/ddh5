@@ -25,7 +25,7 @@ from utils.ddh_common import (
     ddh_get_path_to_db_aws_status_file,
     ddh_config_get_vessel_name,
     ddh_config_get_one_aws_credential_value,
-    LI_PATH_LAST_YEAR_AWS_TEMPLATE, ddh_this_process_needs_to_quit, exp_get_use_debug_print)
+    LI_PATH_LAST_YEAR_AWS_TEMPLATE, ddh_this_process_needs_to_quit)
 from ddh_log import lg_aws as lg
 
 
