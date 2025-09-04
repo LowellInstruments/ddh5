@@ -743,15 +743,32 @@ def gui_get_my_current_wlan_ssid() -> str:
 class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
-    def handle_stderr(self):
-        bb = self.process_log.readAllStandardError()
+    @staticmethod
+    def _he(bb):
         s = bytes(bb).decode()
-        print(s, end='')
+        print(s, end='', flush=True)
 
-    def handle_stdout(self):
-        bb = self.process_log.readAllStandardOutput()
+    def handle_stderr_aws(self): self._he(self.process_aws.readAllStandardError())
+    def handle_stderr_ble(self): self._he(self.process_ble.readAllStandardError())
+    def handle_stderr_cnv(self): self._he(self.process_cnv.readAllStandardError())
+    def handle_stderr_gps(self): self._he(self.process_gps.readAllStandardError())
+    def handle_stderr_log(self): self._he(self.process_log.readAllStandardError())
+    def handle_stderr_net(self): self._he(self.process_net.readAllStandardError())
+    def handle_stderr_sqs(self): self._he(self.process_sqs.readAllStandardError())
+
+    @staticmethod
+    def _ho(bb):
         s = bytes(bb).decode()
-        print(s, end='')
+        print(s, end='', flush=True)
+
+    def handle_stdout_aws(self): self._ho(self.process_aws.readAllStandardOutput())
+    def handle_stdout_ble(self): self._ho(self.process_ble.readAllStandardOutput())
+    def handle_stdout_cnv(self): self._ho(self.process_cnv.readAllStandardOutput())
+    def handle_stdout_gps(self): self._ho(self.process_gps.readAllStandardOutput())
+    def handle_stdout_log(self): self._ho(self.process_log.readAllStandardOutput())
+    def handle_stdout_net(self): self._ho(self.process_net.readAllStandardOutput())
+    def handle_stdout_sqs(self): self._ho(self.process_sqs.readAllStandardOutput())
+
 
     def handle_state_ble(self, state):
         self.process_state_ble = d_process_states[state]
@@ -1473,11 +1490,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         code, text = app_state_get()
         code = code.decode() if code else ''
         text = text.decode() if text else ''
-        self.lbl_main_txt.setText(text)
         self.bar_dl.setVisible(False)
         k = RD_DDH_GUI_STATE_EVENT_ICON_LOCK
         lock_icon = 0 if not r.exists(k) else r.ttl(k)
-
+        if not lock_icon:
+            self.lbl_main_txt.setText(text)
 
         # debug
         # print(f'code {code} \n text {text}')
@@ -1491,8 +1508,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         elif code in (EV_GPS_IN_PORT, ):
             pi = PATH_MAIN_IN_PORT
         elif code in (EV_BLE_SCAN, ):
-            if not lock_icon:
-                pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
+            pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i) if not lock_icon else ''
         elif code in (EV_GPS_WAITING_BOOT, ):
             pi = PATH_TEMPLATE_MAIN_GPS_BOOT_IMG.format(i)
             t = r.ttl(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT) or 0
@@ -1569,11 +1585,22 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.process_gps = QProcess()
         self.process_net = QProcess()
         self.process_sqs = QProcess()
-        # todo: check all these work as expected and also lg.set_debugq
-        self.process_log.readyReadStandardOutput.connect(self.handle_stdout)
-        self.process_ble.readyReadStandardOutput.connect(self.handle_stdout)
-        self.process_log.readyReadStandardError.connect(self.handle_stderr)
-        self.process_ble.readyReadStandardError.connect(self.handle_stderr)
+
+        # LOG_HANDLES things queued by using print()
+        self.process_aws.readyReadStandardOutput.connect(self.handle_stdout_aws)
+        self.process_ble.readyReadStandardOutput.connect(self.handle_stdout_ble)
+        self.process_cnv.readyReadStandardOutput.connect(self.handle_stdout_cnv)
+        self.process_gps.readyReadStandardOutput.connect(self.handle_stdout_gps)
+        self.process_log.readyReadStandardOutput.connect(self.handle_stdout_log)
+        self.process_net.readyReadStandardOutput.connect(self.handle_stdout_net)
+        self.process_sqs.readyReadStandardOutput.connect(self.handle_stdout_sqs)
+        self.process_aws.readyReadStandardError.connect(self.handle_stderr_aws)
+        self.process_ble.readyReadStandardError.connect(self.handle_stderr_ble)
+        self.process_cnv.readyReadStandardError.connect(self.handle_stderr_cnv)
+        self.process_gps.readyReadStandardError.connect(self.handle_stderr_gps)
+        self.process_log.readyReadStandardError.connect(self.handle_stderr_log)
+        self.process_net.readyReadStandardError.connect(self.handle_stderr_net)
+        self.process_sqs.readyReadStandardError.connect(self.handle_stderr_sqs)
         self.process_ble.stateChanged.connect(self.handle_state_ble)
         self.process_log.start('python3', [f'{NAME_EXE_LOG}.py'])
         self.process_aws.start('python3', [f'{NAME_EXE_AWS}.py'])
@@ -1697,7 +1724,6 @@ def main_ddh_gui():
 
 
     setproctitle.setproctitle(NAME_EXE_DDH)
-    lg.set_debug(exp_get_use_debug_print() or not linux_is_rpi())
 
 
     app = QApplication(sys.argv)

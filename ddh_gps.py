@@ -338,7 +338,7 @@ def _ddh_gps(ignore_gui):
         lg.a(f'using dummy')
         r.set(RD_DDH_GPS_ANTENNA, 'dummy')
     else:
-        lg.a(f'using NMEA port {port_nmea}')
+        lg.a(f'OK, using NMEA port {port_nmea}, type {port_type}')
         r.set(RD_DDH_GPS_ANTENNA, ant_type)
 
 
@@ -403,8 +403,6 @@ def _ddh_gps(ignore_gui):
 def main_ddh_gps(ignore_gui=False):
     signal.signal(signal.SIGINT, _cb_ctrl_c)
     signal.signal(signal.SIGTERM, _cb_kill)
-
-    lg.set_debug(exp_get_use_debug_print() or not linux_is_rpi())
 
     while 1:
         try:

@@ -227,8 +227,6 @@ def main_ddh_cnv(ignore_gui=False):
     signal.signal(signal.SIGINT, _cb_ctrl_c)
     signal.signal(signal.SIGTERM, _cb_kill)
 
-    lg.set_debug(exp_get_use_debug_print() or not linux_is_rpi())
-
     while 1:
         try:
             _ddh_cnv(ignore_gui)

@@ -57,22 +57,14 @@ class LogDDHByModule:
         self.label = label
         self.debug = False
 
-    def set_debug(self, v: bool):
-        v = True if v == 1 else False
-        self.debug = v
-
 
     def a(self, s):
         s = f'{self.label.upper()}: {s}'
         r.rpush(q, s)
-        if self.debug:
-            print(s)
 
 
     def x(self):
         r.rpush(q, '\n')
-        if self.debug:
-            print('\n')
 
 
 
@@ -116,6 +108,8 @@ def _write_to_log_file(s):
 
 
 
+
+# LOG_HANDLES things queued by using lg.a()
 def _dequeue_n_log():
     global g_last_now
 

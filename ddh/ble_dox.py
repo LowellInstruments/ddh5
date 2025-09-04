@@ -299,7 +299,6 @@ async def ble_download_dox(d):
     rv = await cmd_wak(w)
     _rae(rv, "wak")
     lg.a(f"WAK | {w} OK")
-    await asyncio.sleep(1)
 
 
 

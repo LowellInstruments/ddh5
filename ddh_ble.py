@@ -390,7 +390,7 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
     ln.gfv = d['gfv']
 
 
-    # e-mail notifications
+    # analyze success or failure
     gps_pos = d['gps_pos']
     if rv == 0:
         lg.a(f'OK, adding mac {mac} to black list')
@@ -412,9 +412,8 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
         r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 60, 1)
 
 
-
+    # failure
     else:
-
         # not success, mild
         if mac not in _g_logger_errors:
             _g_logger_errors[mac] = 1
@@ -457,11 +456,9 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
     dt_local = dt.replace(tzinfo=tz_utc).astimezone(tz=tz_ddh)
     ep_loc = int(dt_local.timestamp())
     ep_utc = int(dt.timestamp())
-    e = 'ok' if not rv else d['error']
+    e = 'ok' if not rv else f"error {d['error']}"
     gui_add_to_history_database(mac, e, lat, lon, ep_loc, ep_utc, rerun, u, name)
     r.set(RD_DDH_GUI_REFRESH_HISTORY_TABLE, 1)
-
-
 
 
 
@@ -556,6 +553,7 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
 def _ddh_ble(ignore_gui):
 
     setproctitle.setproctitle(p_name)
+    print(f"BLE: process '{p_name}' is running")
     _check_bluez_version()
     ddh_create_needed_folders()
     macs_color_show_at_boot()
@@ -568,6 +566,8 @@ def _ddh_ble(ignore_gui):
     lg.a(f"using BLE antenna hci{antenna_idx}, type {antenna_s}")
     r.set(RD_DDH_BLE_ANTENNA, antenna_s)
 
+
+    # know your GPS antenna
 
     _ddh_ble_boot_gps_clock_sync()
 
@@ -653,8 +653,6 @@ def main_ddh_ble(ignore_gui=False):
 
     signal.signal(signal.SIGINT, _cb_ctrl_c)
     signal.signal(signal.SIGTERM, _cb_kill)
-
-    lg.set_debug(exp_get_use_debug_print() or not linux_is_rpi())
 
     while 1:
         try:

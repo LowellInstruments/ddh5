@@ -1,4 +1,6 @@
 import os
+import sys
+
 import toml
 from ble.ble import *
 from ddh.lef import lef_create_file
@@ -156,7 +158,7 @@ async def ble_download_tdo(d):
     # feature has-logger-been-in-water
     flag_ignore_hbw = ddh_get_template_of_path_of_hbw_flag_file().format(mac)
     if state == 'running':
-        # todo: try this HBW command
+        # todo: try this HBW command here and on DOX
         if v >= MIN_VERSION_HBW_CMD:
             lg.a('sending command Has-Been-in-Water')
             rv, v = await cmd_hbw()
@@ -315,15 +317,12 @@ async def ble_download_tdo(d):
     await _tdo_reconfigure_profiling(d['gfv'])
 
 
-
     # wake mode
     rerun_flag = not ddh_does_do_not_rerun_file_flag_exist()
     w = "on" if rerun_flag else "off"
     rv = await cmd_wak(w)
     _rae(rv, "wak")
     lg.a(f"WAK | {w} OK")
-    await asyncio.sleep(1)
-
 
 
     # re-run the logger or not
