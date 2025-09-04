@@ -4,9 +4,9 @@ source /home/pi/li/ddh/scripts/utils.sh
 
 
 echo
-_pr "=============="
-_pr "running DDH"
-_pr "=============="
+_pg "=============="
+_pg "DDH - init"
+_pg "=============="
 echo
 
 
