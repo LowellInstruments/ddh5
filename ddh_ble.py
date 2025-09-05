@@ -40,7 +40,7 @@ from ddh.notifications_v2 import (
 )
 from ddh.slo import slo_get_all, slo_add, slo_delete
 from ddh.timecache import is_it_time_to
-from ddh.tracks import ddh_log_tracking_add, get_path_current_track_file
+from ddh.tracking import ddh_log_tracking_add, get_path_current_track_file
 from main_ddh import gui_add_to_history_database
 from mat.utils import linux_is_rpi
 from rd_ctt.ddh import *
@@ -294,7 +294,7 @@ def _ddh_ble_boot_gps_clock_sync():
         return
 
     if not linux_is_rpi():
-        lg.a("warning, development, not syncing clock via GPS at boot")
+        lg.a("upon boot, when developing, not syncing clock via GPS")
         return
 
 
@@ -401,14 +401,14 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
         slo_add(mac)
         if mac in _g_logger_errors.keys():
             del _g_logger_errors[mac]
-        lg.a(f"OK, all done for logger {mac}/{sn}")
+        lg.a(f"all done for logger {mac}/{sn}")
         notify_logger_download(gps_pos, ln)
 
         if ddh_does_do_not_rerun_file_flag_exist():
             lg.a("warning, telling this logger is not set for auto-re-run")
-            app_state_set(EV_BLE_DL_OK_NO_RERUN, t_str(STR_EV_BLE_DL_OK_NO_RERUN))
+            app_state_set(EV_BLE_DL_OK_NO_RERUN, t_str(STR_EV_BLE_DL_OK_NO_RERUN) + f' {sn}')
         else:
-            app_state_set(EV_BLE_DL_OK, t_str(STR_EV_BLE_DL_OK))
+            app_state_set(EV_BLE_DL_OK, t_str(STR_EV_BLE_DL_OK) + f' {sn}')
         r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 60, 1)
 
 
@@ -528,7 +528,7 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
     for p_dl in d_interaction['dl_files']:
         if p_dl.endswith('.lid'):
             bn = os.path.basename(p_dl)
-            lg.a(f'debug, post BLE download push of {bn} to CNV queue')
+            lg.a(f'post download push of {bn} to CNV queue')
             r.rpush(RD_DDH_CNV_QUEUE, p_dl)
 
 
@@ -538,11 +538,11 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
     # ------------------------------------------------
     ptf = get_path_current_track_file()
     bn = os.path.basename(ptf)
-    lg.a(f'debug, post BLE download push of track file {bn} to AWS COPY queue')
+    lg.a(f'post download push of track file {bn} to AWS COPY queue')
     r.rpush(RD_DDH_AWS_COPY_QUEUE, ptf)
     for p_dl in d_interaction['dl_files']:
         bn = os.path.basename(p_dl)
-        lg.a(f'debug, post BLE download push of file {bn} to AWS COPY queue')
+        lg.a(f'post download push of file {bn} to AWS COPY queue')
         r.rpush(RD_DDH_AWS_COPY_QUEUE, p_dl)
 
     return rv
@@ -593,7 +593,7 @@ def _ddh_ble(ignore_gui):
 
         # get a gps fix from redis
         g = ddh_gps_get()
-        lg.a(f'debug: g = {g}')
+        # lg.a(f'debug: g = {g}')
         if not g:
             app_state_set(EV_GPS_HW_ERROR, t_str(STR_EV_GPS_HW_ERROR))
             r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 3, 1)
@@ -633,7 +633,8 @@ def _ddh_ble(ignore_gui):
             ls = _ddh_ble_scan_loggers(antenna_idx)
             if not ls:
                 continue
-            lg.a(f'list of loggers to download: {ls}')
+            lg.a(f'list of loggers to download')
+            lg.a(f'\t{ls}')
         except (Exception, ) as ex:
             lg.a(f'error during _scan_loggers() -> {ex}')
             continue

@@ -68,7 +68,7 @@ def utils_graph_classify_file_wc_mode(p):
 
     # decision for DO-1 loggers
     if _is_dox and 'Water' not in h:
-        lg.a(f'graph water column mode: ON for DO-1 file {bn}')
+        lg.a(f'graph water column mode = True for DO-1 file {bn}')
         pathlib.Path(f_wc).touch()
         return True
 
@@ -80,11 +80,11 @@ def utils_graph_classify_file_wc_mode(p):
         for i in ll[3:]:
             w_cur = float(i.split(',')[-1])
             if w_cur > 50:
-                lg.a(f'graph water column mode: ON for DO2 file {bn}')
+                lg.a(f'graph water column mode = True for DO2 file {bn}')
                 pathlib.Path(f_wc).touch()
                 return True
 
-        lg.a(f'graph water column mode: OFF for DO2 file {bn}')
+        lg.a(f'graph water column mode = False for DO2 file {bn}')
         pathlib.Path(f_nowc).touch()
         return False
 
@@ -98,15 +98,15 @@ def utils_graph_classify_file_wc_mode(p):
 
         been_in_water = len(df_iw) > 0
         if been_in_water:
-            lg.a(f'graph water column mode: ON for TDO file {bn}')
+            lg.a(f'graph water column mode = True for TDO file {bn}')
             pathlib.Path(f_wc).touch()
             return True
 
-        lg.a(f'graph water column mode: OFF for TDO file {bn}')
+        lg.a(f'graph water column mode = False for TDO file {bn}')
         pathlib.Path(f_nowc).touch()
         return False
 
-    lg.a(f'error, _utils_graph_classify_file_wc_mode for unknown file {p}')
+    lg.a(f'error, _utils_graph_classify_file_wc_mode = Unknown for file {p}')
 
 
 
@@ -135,7 +135,7 @@ def utils_graph_get_abs_fol_list() -> list:
 
 def _data_get_prune_period(x, met):
     if len(x) > 6000:
-        lg.a(f'data pruning: faster graph for {met}')
+        lg.a(f'OK, data-pruning performed, faster graph for {met}')
         return int(len(x) / 600)
     return 1
 
@@ -174,13 +174,17 @@ def utils_graph_fetch_csv_data(
     _filter_tdo_by_size = [i for i in _g_ff_tdo if os.path.getsize(i) > 1024]
     _g_ff_tdo = _filter_tdo_by_size
 
+
+    # ---------------------------------------------------------
     # include any file NOT having a NO_WC flag
+    # water mode graph filtering properly done on a file basis
+    # ---------------------------------------------------------
     if ddh_do_we_graph_out_of_water_data():
-        lg.a('debug, graph INCLUDING out of water data')
+        lg.a('out of water data, detected user setting so INCLUDING it in graph')
         _g_ff_tdo_wc = _g_ff_tdo
         _g_ff_dot_wc = _g_ff_dot
     else:
-        lg.a('debug, graph SKIPPING out of water data')
+        lg.a('out of water data, did NOT detect user setting so NOT INCLUDING it in graph')
         _g_ff_tdo_wc = [
             i for i in _g_ff_tdo
             if not os.path.exists(_gfm_build_filename_no_wc(i))
@@ -411,10 +415,12 @@ def utils_graph_fetch_csv_data(
     except (Exception, ):
         x = [dp.isoparse(f'{i}').timestamp() for i in x]
 
+
     # display time performance of data-grabbing procedure
     end_ts = time.perf_counter()
     el_ts = int((end_ts - start_ts) * 1000)
-    lg.a(f'data-grabbing {len(x)} {met} points, took {el_ts} ms')
+    lg.a(f'it took {el_ts} ms to LOAD {len(x)} {met} data points')
+
 
     # decide logger type
     lg_t = met

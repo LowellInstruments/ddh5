@@ -420,11 +420,6 @@ def ddh_config_does_flag_file_download_test_mode_exist():
 
 
 
-def ddh_config_does_flag_file_gps_external_exist():
-    return os.path.exists(LI_PATH_DDH_GPS_EXTERNAL)
-
-
-
 def ddh_config_is_gps_error_forced_enabled():
     return cfg['flags']['hook_gps_error_measurement_forced']
 
@@ -695,7 +690,6 @@ TMP_PATH_DDH_HBW = '/tmp/ddh_hbw_{}.flag'
 # -----------------------------------------------------------------
 
 d = '/home/pi/li/' if _linux_is_rpi() else '/tmp'
-LI_PATH_DDH_GPS_EXTERNAL = f'{d}/.ddt_gps_external.flag'
 LI_PATH_GROUPED_S3_FILE_FLAG = f'{d}/.ddt_this_box_has_grouped_s3_uplink.flag'
 LI_PATH_CELL_FW = f'{d}/.fw_cell_ver'
 DDH_USES_SHIELD_JUICE4HALT = f'{d}/.ddt_j4h_shield.flag'
@@ -937,7 +931,6 @@ if __name__ == '__main__':
     print('vessel_name', ddh_config_get_vessel_name())
     print('aws_en', ddh_config_get_is_aws_s3_enabled())
     print('flag_graph_test', ddh_config_does_flag_file_graph_test_mode_exist())
-    print('flag_gps_external', ddh_config_does_flag_file_gps_external_exist())
     print('flag_gps_error_forced', ddh_config_is_gps_error_forced_enabled())
     print('ls_sn_macs', ddh_config_get_list_of_monitored_serial_numbers())
     print('json_mac_dns', ddh_config_get_logger_sn_from_mac("11-22-33-44-55-66"))

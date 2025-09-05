@@ -65,7 +65,6 @@ async def ble_download_dox(d):
     #     'antenna_desc': 'internal',
     #     'uuid': '9d8f50cd-0b08-467e-ab98-c62bae39fc96'}
 
-    _is_a_lid_v2_logger = False
     logger_type = d['dev'].name.split('_')[0]
     dev = d['dev']
     mac = dev.address
@@ -120,20 +119,9 @@ async def ble_download_dox(d):
             lg.a('logger NOT running, not considering HBW command')
 
 
-    # to know if this DO-X logger uses LID or LIX files
-    rv = await cmd_xod()
-    _is_a_lid_v2_logger = rv == 0
-    lg.a(f"XOD | LIX {_is_a_lid_v2_logger}")
-
-
     rv = await cmd_sws(g)
     _rae(rv, "sws")
     lg.a("SWS | OK")
-
-
-    rv, t = await cmd_utm()
-    _rae(rv, "utm")
-    lg.a(f"UTM | {t}")
 
 
     rv, b = await cmd_bat()
@@ -300,7 +288,6 @@ async def ble_download_dox(d):
     rv = await cmd_wak(w)
     _rae(rv, "wak")
     lg.a(f"WAK | {w} OK")
-
 
 
     # re-run the logger or not

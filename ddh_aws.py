@@ -137,7 +137,7 @@ def _aws_sync(past_year=False):
     yyyy_prev = yyyy - 1
     yyyy_prev_flag = LI_PATH_LAST_YEAR_AWS_TEMPLATE + str(yyyy_prev)
     if past_year and os.path.exists(yyyy_prev_flag):
-        lg.a(f'warning, skip AWS sync for last year {yyyy_prev} because flag detected')
+        lg.a(f'skip AWS sync for LAST YEAR {yyyy_prev} because flag detected')
         return 0
 
 
@@ -319,7 +319,11 @@ def _ddh_aws(ignore_gui):
         for i in range(r.llen(q)):
             _, path_to_file_to_cp = r.blpop([q])
             p = path_to_file_to_cp.decode()
-            lg.a(f'copying to bucket file {p}')
+            bn = os.path.basename(p)
+            if 'MAT.cfg' in bn:
+                continue
+            dn = os.path.dirname(p).split('/')[-1]
+            lg.a(f'copying to bucket file {dn}/{bn}')
             try:
                 _aws_cp(p)
             except (Exception,) as ex:

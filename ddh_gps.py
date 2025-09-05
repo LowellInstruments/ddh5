@@ -338,7 +338,7 @@ def _ddh_gps(ignore_gui):
         lg.a(f'using dummy')
         r.set(RD_DDH_GPS_ANTENNA, 'dummy')
     else:
-        lg.a(f'OK, using NMEA port {port_nmea}, type {port_type}')
+        lg.a(f'using type {port_type.upper()} on NMEA port {port_nmea}')
         r.set(RD_DDH_GPS_ANTENNA, ant_type)
 
 

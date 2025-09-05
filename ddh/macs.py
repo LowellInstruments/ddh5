@@ -19,8 +19,8 @@ PERIOD_MACS_ORANGE_SECS = 15
 def macs_color_show_at_boot():
     b = macs_black()
     o = macs_orange()
-    lg.a(f"debug, boot macs_black  = {b}")
-    lg.a(f"debug, boot macs_orange = {o}")
+    lg.a(f"upon boot, macs_black  = {b}")
+    lg.a(f"upon boot, macs_orange = {o}")
 
 
 
@@ -36,7 +36,9 @@ def _macs_get_them_by_color(s) -> list:
         mac, t = os.path.basename(f).split("@")
         # purge while searching
         if now > int(t):
-            lg.a(f"macs {s} purge {f}")
+            bn = os.path.basename(f)
+            dn = os.path.dirname(f).split('/')[-1]
+            lg.a(f"macs {s} purge {dn}/{bn}")
             os.unlink(f)
         else:
             ls.append(mac)

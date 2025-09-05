@@ -6,8 +6,8 @@ import sys
 import setproctitle
 import time
 import redis
-from ddh.draw_graph import graph_request
-from ddh.utils_graph import utils_graph_classify_file_wc_mode
+from ddh.graph_draw import graph_request
+from ddh.graph_utils import utils_graph_classify_file_wc_mode
 from mat.data_converter import (
     default_parameters,
     DataConverter
@@ -81,18 +81,19 @@ def _lid_v1_file_has_sensor_data_type(path, suffix):
 def _convert_lid_file_v1(f, suf):
     if id_lid_file_flavor(f) != LID_FILE_V1:
         return 1
-    lg.a(f"converting LID file v1 {f} for suffix {suf}")
+    bn = os.path.basename(f)
+    dn = os.path.dirname(f).split('/')[-1]
+    lg.a(f"converting LID file v1 {dn}/{bn} for suffix {suf}")
 
     # check v1 file header to skip files w/o this sensor data / suffix
     if not _lid_v1_file_has_sensor_data_type(f, suf):
-        bn = os.path.basename(f)
-        lg.a(f'warning, skip v1 conversion because file {bn} has no {suf} data')
+        lg.a(f'warning, skip v1 conversion, file {dn}/{bn} has no {suf} data')
         return 1
 
     # do the v1 conversion
     _params = default_parameters()
     DataConverter(f, _params).convert()
-    lg.a(f"OK: converted LID file v1 {f} for suffix {suf}")
+    lg.a(f"OK: converted LID file v1 {dn}/{bn} for suffix {suf}")
     return 0
 
 
@@ -102,9 +103,11 @@ def _convert_lid_file_v2(f, suf):
         return 1
     if not lid_file_v2_has_sensor_data_type(f, suf):
         return 1
-    lg.a(f"converting LID file v2 {f} suffix {suf}")
+    bn = os.path.basename(f)
+    dn = os.path.dirname(f).split('/')[-1]
+    lg.a(f"converting LID file v2 {dn}/{bn} suffix {suf}")
     rv = convert_lix_file(f)
-    lg.a(f"OK: converted LID file v2 {f} suffix {suf}")
+    lg.a(f"OK: converted LID file v2 {dn}/{bn} suffix {suf}")
     return rv
 
 
@@ -156,7 +159,7 @@ def _boot_cnv():
         ls_csv = glob.glob(mask_one_csv, recursive=True)
         if not ls_csv:
             bn = os.path.basename(pb)
-            lg.a(f'debug, boot push {bn} to CNV queue')
+            lg.a(f'upon boot, push {bn} to own queue')
             r.rpush(RD_DDH_CNV_QUEUE, pb)
 
 
@@ -203,7 +206,7 @@ def _ddh_cnv(ignore_gui):
             if rv == 0:
                 ls_converted_files.append(p)
             else:
-                lg.a(f'error, file {p}')
+                lg.a(f'error, file {bn}')
 
 
         # push to AWS COPY queue any new CSV file
@@ -212,14 +215,14 @@ def _ddh_cnv(ignore_gui):
             ls_csv = glob.glob(mask)
             for pc in ls_csv:
                 bn = os.path.basename(pc)
-                lg.a(f'debug, push {bn} to AWS COPY queue')
+                dn = os.path.dirname(pc)
+                lg.a(f'post conversion push of {bn} to AWS COPY queue')
                 r.rpush(RD_DDH_AWS_COPY_QUEUE, pc)
-                lg.a(f'debug, analyzing water mode for {bn}')
+                lg.a(f'post conversion analysis of water mode for file {bn}')
                 utils_graph_classify_file_wc_mode(pc)
-                lg.a(f'debug, plotting newly converted file {bn}')
+                lg.a(f'post conversion plot of file {bn}')
                 r.set(RD_DDH_GUI_PLOT_REASON, 'BLE')
-                fol = os.path.dirname(pc)
-                r.set(RD_DDH_GUI_PLOT_FOLDER, fol)
+                r.set(RD_DDH_GUI_PLOT_FOLDER, dn)
 
 
 

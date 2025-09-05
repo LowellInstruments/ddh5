@@ -4,15 +4,14 @@ import sys
 import time
 from os.path import exists
 import serial
-
 from gps.gps_quectel import gps_hat_detect_list_of_usb_ports
-from mat.linux import linux_is_process_running_strict
 from scripts.script_nadv import main_nadv
 from utils.ddh_common import (
     ddh_get_path_to_folder_settings, ddh_config_load_file,
     ddh_get_path_to_config_file, \
-    LI_PATH_GPS_DUMMY, LI_PATH_DDH_GPS_EXTERNAL,
-    TMP_PATH_GRAPH_TEST_MODE_JSON, LI_PATH_TEST_MODE, NAME_EXE_DDH, DDH_USES_SHIELD_JUICE4HALT, DDH_USES_SHIELD_SAILOR,
+    LI_PATH_GPS_DUMMY,
+    TMP_PATH_GRAPH_TEST_MODE_JSON, LI_PATH_TEST_MODE,
+    DDH_USES_SHIELD_JUICE4HALT, DDH_USES_SHIELD_SAILOR,
     ddh_get_local_software_version
 )
 import subprocess as sp
@@ -732,10 +731,8 @@ def _ddc_run_check():
     ok_issue_20220922 = sh('cat /boot/issue.txt | grep 2022-09-22') == 0
     is_rpi3 = sh("cat /proc/cpuinfo | grep 'aspberry Pi 3'") == 0
     ok_hostname = sh('hostname | grep raspberrypi') == 0
-    flag_gps_ext = sh(f'[ -f {LI_PATH_DDH_GPS_EXTERNAL} ]') == 0
     flag_vp_gps_puck1 = sh(f'lsusb | grep {VP_GPS_PUCK_1}') == 0
     flag_vp_gps_puck2 = sh(f'lsusb | grep {VP_GPS_PUCK_2}') == 0
-    flag_vp_quectel = sh(f'lsusb | grep {VP_QUECTEL}') == 0
     flag_mod_btuart = sh(f'md5sum /usr/bin/btuart | grep {MD5_MOD_BTUART}') == 0
     ok_ble_v = sh('bluetoothctl -v | grep 5.66') == 0
     _c = 'systemctl is-active unit_switch_net.service | grep -w active'
@@ -857,10 +854,6 @@ def _ddc_run_check():
         _e('crontab LXP not set')
     if not ok_check_ddh_version:
         _e('could not check DDH application version')
-
-    if flag_gps_ext and not flag_vp_gps_puck1 and not flag_vp_gps_puck2:
-        _e('GPS puck set but not detected')
-        rv += 1
     if not (flag_vp_quectel or flag_vp_gps_puck1 or flag_vp_gps_puck2):
         _e('no GPS hardware present')
 

@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
 )
 import ddh.gui.gui as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
-from ddh.draw_graph import graph_request
+from ddh.graph_draw import graph_request
 from ddh.preferences import preferences_set_models_index
 from ddh_gps import ddh_gps_get
 from ddh.buttons import ddh_create_thread_buttons
@@ -35,7 +35,7 @@ from rd_ctt.ddh import (
     RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_REFRESH_PROCESSES_PRESENT,
     RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
-    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP
+    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -86,12 +86,12 @@ import time
 import shutil
 from math import ceil
 from ddh.db.db_his import DbHis
-from ddh.draw_graph import graph_process_n_draw
+from ddh.graph_draw import graph_process_n_draw
 from ddh.preferences import (
     preferences_get_brightness_clicks,
     preferences_get_models_index, preferences_set_brightness_clicks
 )
-from ddh.utils_maps import gui_populate_maps_tab
+from ddh.utils_models import gui_populate_models_tab
 from ddh.emolt import this_box_has_grouped_s3_uplink
 from ddh.timecache import is_it_time_to
 from mat.utils import linux_is_rpi
@@ -147,7 +147,7 @@ def gui_kill_all_processes():
 def gui_check_all_processes():
     for p_name in ls_processes:
         if not linux_is_process_running_strict(p_name):
-            lg.a(f'warning, error {p_name} not present')
+            lg.a(f'warning, process {p_name} not present')
 
 
 
@@ -359,10 +359,12 @@ def gui_tabs_populate_history(my_app):
     a.tbl_his.tableWidget.setColumnCount(3)
     a.tbl_his.tableWidget.setSortingEnabled(0)
 
+
     # get the history database and order by most recent first
     db = DbHis(ddh_get_path_to_db_history_file())
     rows = db.get_all().values()
     rows = sorted(rows, key=lambda x: x["ep_loc"], reverse=True)
+
 
     # we will show just one entry per mac
     fil_r = []
@@ -371,6 +373,7 @@ def gui_tabs_populate_history(my_app):
         if h['mac'] not in already:
             already.append(h['mac'])
             fil_r.append(h)
+
 
     # we only have one, the newest, history entry per mac
     for i, h in enumerate(fil_r):
@@ -1386,7 +1389,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         if ddh_config_are_maps_enabled() and \
                 _calc_app_uptime() > 10 and \
                 is_it_time_to('update_maps_tab', 3600):
-            gui_populate_maps_tab(self)
+            gui_populate_models_tab(self)
 
 
 
@@ -1561,7 +1564,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # show or not the statistics box
         if 'done' in self.lbl_main_txt.text():
-            s = self.lbl_summary_dl.text()
+            s = r.get(RD_DDH_GUI_GRAPH_STATISTICS)
+            s = s.decode() if s else ''
             s = s.replace('mg_l', 'mg/l')
             self.lbl_summary_dl.setText(s)
             self.lbl_summary_dl.setVisible(True)

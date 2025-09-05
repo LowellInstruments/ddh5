@@ -11,12 +11,12 @@ import pyqtgraph as pg
 from pyqtgraph import LinearRegionItem
 from pyqtgraph.Qt import QtGui
 
-from ddh.utils_graph import (
+from ddh.graph_utils import (
     utils_graph_get_abs_fol_list,
     utils_graph_fetch_csv_data,
 )
 from mat.utils import linux_is_rpi
-from rd_ctt.ddh import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER
+from rd_ctt.ddh import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_GRAPH_STATISTICS
 from utils.ddh_common import (
     calculate_path_to_folder_within_dl_files_from_mac_address,
     get_total_number_of_hauls,
@@ -99,6 +99,8 @@ def _get_color_by_label(lbl):
 class LimitsTypeError(Exception):
     def __init__(self, err='Limits type must be type int or tuple of ints', *args, **kwargs):
         super().__init__(self, err, *args, **kwargs)
+
+
 
 
 class FiniteLinearRegionItem(LinearRegionItem):
@@ -256,7 +258,6 @@ def _graph_process_n_draw(a, plot_reason=''):
             raise GraphException(e)
         r.delete(RD_DDH_GUI_PLOT_FOLDER)
         fol = fol.decode()
-        lg.a(f'last BLE download {fol}')
     else:
         # people pressing GUI graph buttons
         sn = a.cb_g_sn.currentText()
@@ -630,15 +631,13 @@ def _graph_process_n_draw(a, plot_reason=''):
     # statistics: benchmark and number of points
     end_ts = time.perf_counter()
     el_ts = int((end_ts - start_ts) * 1000)
-    lg.a(f'graphed {len(x)} {met} points, took {el_ts} ms')
+    lg.a(f'it took {el_ts} ms to PLOT {len(x)} {met} data points')
 
-
-    # todo: do the statistics
 
     # ------------------------------------
     # statistics: summary box in main tab
     # ------------------------------------
-    # _u(f"{STATE_DDH_BLE_DOWNLOAD_STATISTICS}/")
+    r.delete(RD_DDH_GUI_GRAPH_STATISTICS)
     is_rpi = linux_is_rpi()
     try:
         been_water = False
@@ -659,16 +658,15 @@ def _graph_process_n_draw(a, plot_reason=''):
                         ls_p.append(dp[i])
                         ls_t.append(dt[i])
 
+                s = 'haul summary\nTDO\n'
                 if been_water:
-                    s = 'haul summary TDO\n'
                     s += f'{t1}\n{t2}\n'
                     s += '{:5.2f} fathoms\n'.format(np.nanmean(ls_p))
                     s += '{:5.2f} °F'.format(np.nanmean(ls_t))
                 else:
-                    s = 'haul summary TDO\n'
-                    s += f'{t1}\n{t2}\n'
-                    s += '(not available)'
-                # _u(f"{STATE_DDH_BLE_DOWNLOAD_STATISTICS}/{s}")
+                    s += f'{t1}\n{t2}\n(not available)'
+                r.set(RD_DDH_GUI_GRAPH_STATISTICS, s)
+
 
         if met == 'DO':
             if (not is_rpi) or (is_rpi and plot_reason == 'BLE'):
@@ -676,30 +674,32 @@ def _graph_process_n_draw(a, plot_reason=''):
                 dt = data['Temperature (F) DO']
                 wat = data['Water Detect (%) DO']
                 ls_do, ls_dt = [], []
+
+                # statistics, for DO-2 we check water content
                 if len(wat):
-                    lg.a('debug, filtering DO2 data values by water %')
+                    lg.a('statistics for DO2, filtering data by water % value')
                     for i, w in enumerate(wat):
                         if w >= 50:
                             been_water = True
                             ls_do.append(_do[i])
                             ls_dt.append(dt[i])
+
+                # statistics, for DO-1 we always show
                 else:
-                    # DO-1 we always show
                     been_water = True
-                    lg.a('debug, adding all values for DO-1 data')
+                    lg.a('statistics for DO1, adding all values, no filtering at all')
                     ls_do = _do
                     ls_dt = dt
 
+                s = 'haul summary\noxygen\n'
                 if been_water:
-                    s = 'haul summary oxygen\n'
                     s += f'{t1}\n{t2}\n'
                     s += '{:5.2f} mg_l\n'.format(np.nanmean(ls_do))
                     s += '{:5.2f} °F'.format(np.nanmean(ls_dt))
                 else:
-                    s = 'haul summary oxygen\n'
-                    s += f'{t1}\n{t2}\n'
-                    s += '(not available)'
-                # _u(f"{STATE_DDH_BLE_DOWNLOAD_STATISTICS}/{s}")
+                    s += f'{t1}\n{t2}\n(not available)'
+                r.set(RD_DDH_GUI_GRAPH_STATISTICS, s)
+
 
     except (Exception, ) as ex:
         lg.a(f'warning, exception {ex} while doing summary box')
