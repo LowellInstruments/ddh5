@@ -22,7 +22,6 @@
 
 4.0.05
     
-    prevented deletion of error_maps.gif when receiving doppio maps from DDN
     added possibility of water column mode for TDO
 
 4.0.06

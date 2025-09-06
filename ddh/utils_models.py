@@ -30,7 +30,7 @@ def gui_populate_models_tab(my_app):
 
     # delete any previous (not today's) map gifs
     for i in glob.glob(f"{fol}/*.gif"):
-        if 'error_maps' in i:
+        if 'error_models' in i:
             continue
         if i in (fg_dtm, fg_gom, fg_mab):
             # do not delete today's maps
@@ -42,7 +42,7 @@ def gui_populate_models_tab(my_app):
     if not linux_is_rpi():
         lg.a('debug, when developing, delete even today\'s models gif files')
         for i in glob.glob(f"{fol}/*.gif"):
-            if 'error_maps' in i:
+            if 'error_models' in i:
                 continue
             os.unlink(i)
 
@@ -109,9 +109,9 @@ def gui_populate_models_tab(my_app):
         got_mab = True
         lg.a(f"re-using today's MAB forecast map file {bn}")
 
-    # calculate how many good maps we have
-    my_app.n_good_maps = int(got_dtm) + int(got_gom) + int(got_mab)
-    if my_app.n_good_maps > 1:
+    # calculate how many good models we have
+    my_app.n_good_models = int(got_dtm) + int(got_gom) + int(got_mab)
+    if my_app.n_good_models > 1:
         my_app.btn_map_next.setVisible(True)
 
     # check user preferences
@@ -137,7 +137,7 @@ def gui_populate_models_tab(my_app):
             lg.a(f'loading default model MAB')
             fp = fg_mab
         else:
-            fp = f"{fol}/error_maps.gif"
+            fp = f"{fol}/error_models.gif"
 
     # load the models picture
     a = my_app

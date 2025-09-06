@@ -48,7 +48,7 @@ from utils.ddh_common import (
     ddh_get_template_of_path_of_hbw_flag_file,
     NAME_EXE_LOG, NAME_EXE_CNV, NAME_EXE_GPS, NAME_EXE_AWS,
     NAME_EXE_NET, ddh_config_get_vessel_name,
-    ddh_config_get_box_sn, ddh_config_are_maps_enabled,
+    ddh_config_get_box_sn,
     ddh_config_does_flag_file_download_test_mode_exist,
     ddh_config_is_skip_in_port_enabled,
     ddh_config_does_flag_file_graph_test_mode_exist,
@@ -257,10 +257,6 @@ def gui_setup_view(my_win):
         a.chk_rerun.setChecked(False)
     else:
         a.chk_rerun.setChecked(True)
-
-    # maps enable flag
-    me = ddh_config_are_maps_enabled()
-    a.chk_b_maps.setChecked(me)
 
     # test mode
     a.lbl_testmode.setVisible(False)
@@ -489,7 +485,6 @@ def gui_setup_buttons(my_app):
     a.btn_note_no.clicked.connect(a.click_btn_note_no)
     a.btn_note_yes_specific.clicked.connect(a.click_btn_note_yes_specific)
     a.chk_rerun.toggled.connect(a.click_chk_rerun)
-    a.chk_b_maps.toggled.connect(a.click_chk_b_maps)
     a.cb_s3_uplink_type.activated.connect(a.click_chk_s3_uplink_type)
     a.btn_sms.clicked.connect(a.click_btn_sms)
     a.btn_map_next.clicked.connect(a.click_btn_map_next)
@@ -540,7 +535,7 @@ def gui_tabs_hide_map(ui):
 
 
 
-def gui_tabs_hide_maps_next_btn(ui):
+def gui_tabs_hide_models_next_btn(ui):
     ui.btn_map_next.setVisible(False)
 
 
@@ -924,23 +919,24 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             t = 0
         self.lne_forget.setText(str(t))
 
-        # input: vessel name
+        # vessel name before saving config
         ves = self.lne_vessel.text()
+        if not ves:
+            self.lbl_setup_result.setText("bad empty vessel name")
+            return
+        if '&' in ves:
+            self.lbl_setup_result.setText("bad vessel name contains &")
+            return
 
-        # last haul graph type
+
         lhf = self.cbox_gear_type.currentIndex()
 
         # skip in port
         sk = self.cb_skip_in_port.currentIndex()
 
-        # maps, in hidden advanced tab
-        me = self.chk_b_maps.isChecked()
-
+        # do not allow to save a bad forget time
         if t < 600:
             self.lbl_setup_result.setText("bad forget_time")
-            return
-        if not ves:
-            self.lbl_setup_result.setText("bad vessel name")
             return
 
 
@@ -950,7 +946,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         save_cfg['behavior']['gear_type'] = lhf
         save_cfg['monitored_macs'] = pairs
         save_cfg['flags']['skip_dl_in_port_en'] = sk
-        save_cfg['flags']['maps_en'] = int(me)
         ddh_config_save_to_file(save_cfg)
 
 
@@ -1258,17 +1253,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_show_advanced_tab(self)
 
 
-    def click_chk_b_maps(self, _):
-        c = ddh_config_load_file()
-        c['flags']['maps_en'] = int(self.chk_b_maps.isChecked())
-        ddh_config_save_to_file(c)
-
-
-
     def click_btn_map_next(self, _):
         fol = str(ddh_get_path_to_folder_gui_res())
-        self.i_good_maps = (self.i_good_maps + 1) % self.n_good_maps
-        lg.a(f'showing map #{self.i_good_maps}')
+        self.i_good_models = (self.i_good_models + 1) % self.n_good_models
+        lg.a(f'showing map #{self.i_good_models}')
         now = str(datetime.datetime.now().strftime('%Y%m%d'))
         d = {
             0: f"{fol}/{now}_F_dtm.gif",
@@ -1277,14 +1265,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         }
 
         try:
-            m = d[self.i_good_maps]
+            m = d[self.i_good_models]
             if not os.path.exists(m):
-                m = f"{fol}/error_maps.gif"
+                m = f"{fol}/error_models.gif"
             else:
-                preferences_set_models_index(self.i_good_maps)
+                preferences_set_models_index(self.i_good_models)
         except (Exception, ) as ex:
             lg.a(f'error, when next map => {ex}')
-            m = f"{fol}/error_maps.gif"
+            m = f"{fol}/error_models.gif"
 
         self.gif_map = QMovie(m)
         self.lbl_map.setMovie(self.gif_map)
@@ -1386,10 +1374,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # update MAPS tab, prevent freeze at boot
-        # todo ---> ALWAYS show maps, rename maps to models, simplify all this maps thing
-        if ddh_config_are_maps_enabled() and \
-                _calc_app_uptime() > 10 and \
-                is_it_time_to('update_maps_tab', 3600):
+        if _calc_app_uptime() > 10 and is_it_time_to('update_models_tab', 3600):
             gui_populate_models_tab(self)
 
 
@@ -1635,9 +1620,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.tab_graph_wgt_ref = None
         # brightness 9 is index for 100%
         self.num_clicks_brightness = preferences_get_brightness_clicks()
-        self.i_good_maps = preferences_get_models_index()
+        self.i_good_models = preferences_get_models_index()
         self.gif_map = None
-        self.n_good_maps = 0
+        self.n_good_models = 0
         self.filename_model = None
 
 
@@ -1653,9 +1638,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_tabs_hide_advanced(self)
         gui_tabs_hide_note(self)
         gui_tabs_populate_history(self)
-        gui_tabs_hide_maps_next_btn(self)
-        if not ddh_config_are_maps_enabled():
-            gui_tabs_hide_map(self)
+        gui_tabs_hide_models_next_btn(self)
         gui_tabs_populate_note_dropdown(self)
         gui_tabs_populate_graph_dropdown_sn(self)
         gui_show_models_tab(self)

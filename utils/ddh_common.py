@@ -603,14 +603,6 @@ def ddh_config_get_box_project():
 
 
 
-def ddh_config_are_maps_enabled():
-    try:
-        return int(cfg['flags']['maps_en'])
-    except (Exception, ):
-        return False
-
-
-
 def _get_exp_key_from_cfg(k):
     try:
         return cfg['experimental'][k]
@@ -940,7 +932,6 @@ if __name__ == '__main__':
     print('gear_type', ddh_config_get_gear_type())
     print('get_moving_speed', ddh_config_get_speed_considered_as_trawling())
     print('ddh_config_is_sqs_enabled', ddh_config_is_sqs_enabled())
-    print('ddh_flag_maps_en', ddh_config_are_maps_enabled())
     print('conf_dox', exp_get_conf_dox())
     print('has lowell logger', ddh_config_contains_monitored_lowell_loggers())
     print('buttons debounce time', exp_get_custom_side_buttons_debounce_time())

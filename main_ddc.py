@@ -643,6 +643,8 @@ def _ddc_run_check():
 
     def _ddc_run_check_fw_cell():
 
+        # todo: redo this with new GPS LI library
+
         ls = gps_hat_detect_list_of_usb_ports()
         if not ls:
             _e('no cell USB shield detected')
