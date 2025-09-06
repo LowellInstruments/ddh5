@@ -909,8 +909,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if ans_mb == QMessageBox.No:
                 return
             lg.a('warning, saved a config without macs after confirmation')
-        pairs = gui_dict_from_list_view(l_v)
+
         # pairs: {'11:22:33:44:55:66': '1234567'}
+        pairs = gui_dict_from_list_view(l_v)
 
         # input: forget_time
         try:
@@ -1661,14 +1662,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.timer_cpu_hot = QTimer()
         self.timer_plot = QTimer()
         self.timer_gui_one_second.timeout.connect(self._cb_timer_gui_one_second)
-        self.timer_gui_one_second.start(1000)
         self.timer_six_hours.timeout.connect(self._cb_timer_six_hours)
-        self.timer_six_hours.start(3600 * 6)
         self.timer_cpu_hot.timeout.connect(self._cb_timer_cpu_temperature)
+        self.timer_plot.timeout.connect(self._cb_timer_plot)
+        self.timer_gui_one_second.start(1000)
+        self.timer_six_hours.start(3600 * 6)
+        self.timer_plot.start(1000)
         if linux_is_rpi():
             self.timer_cpu_hot.start(1000)
-        self.timer_plot.timeout.connect(self._cb_timer_plot)
-        self.timer_plot.start(1000)
 
 
         # build context menu shortcuts

@@ -122,7 +122,7 @@ def main_ddh_net(ignore_gui=False):
     try:
         _ddh_net(ignore_gui)
     except (Exception,) as ex:
-        lg.a(f"NET: error, process '{p_name}' restarting after crash -> {ex}")
+        lg.a(f"error, process '{p_name}' restarting after crash -> {ex}")
 
 
 

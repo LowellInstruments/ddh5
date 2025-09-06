@@ -235,7 +235,7 @@ def main_ddh_cnv(ignore_gui=False):
         try:
             _ddh_cnv(ignore_gui)
         except (Exception, ) as ex:
-            lg.a(f"CNV: error, process '{p_name}' restarting after crash -> {ex}")
+            lg.a(f"error, process '{p_name}' restarting after crash -> {ex}")
 
 
 

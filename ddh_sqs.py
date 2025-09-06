@@ -74,6 +74,7 @@ vessel = (ddh_config_get_vessel_name()
           .replace("'", "").replace(" ", "_").upper())
 dev = not linux_is_rpi()
 g_killed = False
+g_sqs_error_credentials = 0
 
 
 
@@ -164,6 +165,9 @@ def _sqs_serve():
         except (Exception,) as ex:
             lg.a(f"error sqs_serve: {ex}")
             ddh_write_timestamp_aws_sqs('sqs', f'error {str(ex)}')
+            if 'Unable to locate credentials' in str(ex):
+                global g_sqs_error_credentials
+                g_sqs_error_credentials = 1
 
         finally:
             if f:
@@ -184,7 +188,8 @@ def _ddh_sqs(ignore_gui):
             sys.exit(0)
 
         time.sleep(1)
-        _sqs_serve()
+        if g_sqs_error_credentials == 0:
+            _sqs_serve()
 
 
 
@@ -200,7 +205,7 @@ def main_ddh_sqs(ignore_gui=False):
         try:
             _ddh_sqs(ignore_gui)
         except (Exception,) as ex:
-            lg.a(f"AWS: error, process '{p_name}' restarting after crash -> {ex}")
+            lg.a(f"error, process '{p_name}' restarting after crash -> {ex}")
 
 
 

@@ -348,7 +348,7 @@ def main_ddh_aws(ignore_gui=False):
         try:
             _ddh_aws(ignore_gui)
         except (Exception, ) as ex:
-            lg.a(f"AWS: error, process '{p_name}' restarting after crash -> {ex}")
+            lg.a(f"error, process '{p_name}' restarting after crash -> {ex}")
 
 
 
