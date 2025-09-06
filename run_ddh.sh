@@ -4,9 +4,9 @@ source /home/pi/li/ddh/scripts/utils.sh
 
 
 echo
-_pg "=============="
-_pg "DDH - init"
-_pg "=============="
+_pb "=============="
+_pb " DDH - init"
+_pb "=============="
 echo
 
 
@@ -25,7 +25,7 @@ sudo rfkill unblock wlan
 
 
 
-_pb "    SYSTEMCTL - restarting bluetooth ervice"
+_pb "    SYSTEMCTL - restarting bluetooth service"
 sudo systemctl restart bluetooth
 sleep 2
 
