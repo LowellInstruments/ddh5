@@ -585,7 +585,7 @@ def gui_show_advanced_tab(ui):
 
 
 
-def gui_show_map_tab(ui):
+def gui_show_models_tab(ui):
     icon = QIcon("ddh/gui/res/icon_waves.png")
     ui.tabs.addTab(ui.tab_map_wgt_ref, icon, "  Models")
     w = ui.tabs.findChild(QWidget, "tab_map")
@@ -1657,6 +1657,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             gui_tabs_hide_map(self)
         gui_tabs_populate_note_dropdown(self)
         gui_tabs_populate_graph_dropdown_sn(self)
+        gui_show_models_tab(self)
 
 
 

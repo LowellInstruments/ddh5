@@ -337,9 +337,14 @@ def _ddh_gps(ignore_gui):
     if using_dummy_gps:
         lg.a(f'using dummy')
         r.set(RD_DDH_GPS_ANTENNA, 'dummy')
-    else:
+    elif port_type:
         lg.a(f'using type {port_type.upper()} on NMEA port {port_nmea}')
         r.set(RD_DDH_GPS_ANTENNA, ant_type)
+    else:
+        # None
+        lg.a(f'error, we have no GPS at all, not even dummy')
+        r.delete(RD_DDH_GPS_ANTENNA)
+        time.sleep(5)
 
 
     # additional initialization of GPS
