@@ -76,7 +76,7 @@ from utils.ddh_common import (
     EV_BLE_LOW_BATTERY, EV_BLE_DL_RETRY, PATH_MAIN_BLE_CONNECTING, PATH_MAIN_BLE_DL_OK, PATH_MAIN_BLE_DL_ERROR,
     PATH_MAIN_BLE_DL_OK_NO_RERUN, PATH_MAIN_BLE_DL_NO_NEED, PATH_MAIN_BLE_DL_LOW_BATTERY, PATH_MAIN_BLE_DL_RETRY,
     PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, EV_GPS_HW_ERROR,
-    PATH_MAIN_GPS_HW_ERROR,
+    PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK,
 )
 import datetime
 import os
@@ -549,7 +549,7 @@ def gui_tabs_hide_advanced(ui):
     # find tab ID, index and keep ref
     w = ui.tabs.findChild(QWidget, "tab_advanced")
     i = ui.tabs.indexOf(w)
-    ui.tab_recipe_wgt_ref = ui.tabs.widget(i)
+    ui.tab_advanced_wgt_ref = ui.tabs.widget(i)
     ui.tabs.removeTab(i)
 
 
@@ -578,7 +578,7 @@ def gui_show_graph_tab(ui):
 
 def gui_show_advanced_tab(ui):
     icon = QIcon("ddh/gui/res/icon_tweak.png")
-    ui.tabs.addTab(ui.tab_recipe_wgt_ref, icon, " Advanced")
+    ui.tabs.addTab(ui.tab_advanced_wgt_ref, icon, " Advanced")
     w = ui.tabs.findChild(QWidget, "tab_advanced")
     i = ui.tabs.indexOf(w)
     ui.tabs.setCurrentIndex(i)
@@ -1193,7 +1193,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def click_lbl_map_pressed(self, ev):
         h = self.lbl_map.height()
         w = self.lbl_map.width()
-        path_map_file = self.map_filename
+        path_map_file = self.filename_model
         x = ev.pos().x()
         y = ev.pos().y()
         # x starts left, y starts top
@@ -1289,7 +1289,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.gif_map = QMovie(m)
         self.lbl_map.setMovie(self.gif_map)
         self.gif_map.start()
-        self.map_filename = m
+        self.filename_model = m
 
 
 
@@ -1563,7 +1563,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # show or not the statistics box
-        if 'done' in self.lbl_main_txt.text():
+        if t_str(STR_EV_BLE_DL_OK) in self.lbl_main_txt.text():
             s = r.get(RD_DDH_GUI_GRAPH_STATISTICS)
             s = s.decode() if s else ''
             s = s.replace('mg_l', 'mg/l')
@@ -1630,14 +1630,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.tab_edit_wgt_ref = None
         self.tab_map_wgt_ref = None
         self.tab_note_wgt_ref = None
-        self.tab_recipe_wgt_ref = None
+        self.tab_advanced_wgt_ref = None
         self.tab_graph_wgt_ref = None
         # brightness 9 is index for 100%
         self.num_clicks_brightness = preferences_get_brightness_clicks()
         self.i_good_maps = preferences_get_models_index()
         self.gif_map = None
         self.n_good_maps = 0
-        self.map_filename = None
+        self.filename_model = None
 
 
         gui_setup_view(self)
@@ -1733,14 +1733,13 @@ def main_ddh_gui():
         print('error: DDH myself already running, leaving')
         return
 
-
     setproctitle.setproctitle(NAME_EXE_DDH)
-
 
     app = QApplication(sys.argv)
     ex = DDH()
     ex.show()
     sys.exit(app.exec())
+
 
 
 
