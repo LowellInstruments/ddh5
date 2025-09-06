@@ -1386,6 +1386,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # update MAPS tab, prevent freeze at boot
+        # todo ---> ALWAYS show maps, rename maps to models, simplify all this maps thing
         if ddh_config_are_maps_enabled() and \
                 _calc_app_uptime() > 10 and \
                 is_it_time_to('update_maps_tab', 3600):
