@@ -1641,7 +1641,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_tabs_hide_models_next_btn(self)
         gui_tabs_populate_note_dropdown(self)
         gui_tabs_populate_graph_dropdown_sn(self)
-        gui_show_models_tab(self)
 
 
 
