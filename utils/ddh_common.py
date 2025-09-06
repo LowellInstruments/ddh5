@@ -540,7 +540,6 @@ def ddh_config_check_file_is_ok():
             'aws_en',
             'sqs_en',
             'ble_en',
-            'maps_en',
             'sms_en',
             'skip_dl_in_port_en',
             'hook_gps_error_measurement_forced',
