@@ -1373,6 +1373,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # update MAPS tab, prevent freeze at boot
+        # todo: find all is_it_time_to and see if we clear them upon boot or for example models do NOT appera
         if _calc_app_uptime() > 10 and is_it_time_to('update_models_tab', 3600):
             gui_populate_models_tab(self)
 
