@@ -796,7 +796,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         m = psutil.virtual_memory()
         if int(m.percent) > 75:
             ma = m.available / 1e9
-            s = "debug, {:.2f}% GB of RAM used, {:.2f} GB available"
+            s = "statistics, {:.2f}% GB of RAM used, {:.2f} GB available"
             lg.a(s.format(m.percent, ma))
 
         # measure temperature of DDH box, tell when too high
@@ -812,7 +812,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 ans = ans.replace(b"'C", b"")
                 ans = ans.replace(b"temp=", b"")
                 ans = float(ans.decode())
-                if ans > 65:
+                if ans > 80:
                     lg.a(f"debug, box temperature {ans} degrees Celsius")
 
         except (Exception,) as ex:
@@ -1064,7 +1064,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
                     sn = self.lst_macs_note_tab.item(i).text()
                     mac = ddh_config_get_logger_mac_from_sn(sn)
-                    lg.a(f'debug, user removed mac {mac} from smart lock-out')
+                    lg.a(f'smart lock-out, user removed mac {mac}')
                     slo_delete(mac)
                     if mac:
                         mac = mac.replace(":", "-")
@@ -1072,8 +1072,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                         ff = glob.glob(mask)
                         for f in ff:
                             os.unlink(f)
-                            s = "debug, clear lock-out selective for {}"
-                            lg.a(s.format(f))
+                            lg.a(f"cleared lock-out selective for {f}")
                     else:
                         lg.a("warning, could not clear lock-out selective")
 
@@ -1108,7 +1107,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # only affects purge_macs note, not BLE GPS one
         if s == STR_NOTE_PURGE_BLACKLIST:
             try:
-                lg.a(f'debug, user removed all macs from smart lock-out')
+                lg.a(f'smart lock-out, user removed ALL macs')
                 slo_delete_all()
                 path_fol = ddh_get_path_to_folder_macs_black()
                 mask = f"{path_fol}/*"
@@ -1171,16 +1170,16 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # identify KEYBOARD key pressed, although we simulate side box keys
         if ev.key() == Qt.Key.Key_1:
-            lg.a("debug, pressed box side button 1")
+            lg.a("user pressed box side button 1")
             self.num_clicks_brightness = (self.num_clicks_brightness + 1) % 18
             gui_setup_brightness(self)
 
         elif ev.key() == Qt.Key.Key_2:
-            lg.a("debug, pressed box side button 2")
+            lg.a("user pressed box side button 2")
             gui_show_note_tab_delete_black_macs(self)
 
         elif ev.key() == Qt.Key.Key_3:
-            lg.a("debug, pressed box side button 3")
+            lg.a("user pressed box side button 3")
             # they decided 0 but, long ago, minimum was 12
             gui_ddh_set_key3_brightness(self, 0)
 
@@ -1305,7 +1304,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             for i in ('slow', 'mid', 'fast', 'fixed5min'):
                 pdf = f'{fol_ddh}/.decided_scf_{i}.toml'
                 if os.path.exists(pdf):
-                    lg.a(f'debug, deleting {pdf}')
                     os.unlink(pdf)
             return
 

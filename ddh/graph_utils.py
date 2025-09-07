@@ -74,7 +74,7 @@ def utils_graph_classify_file_wc_mode(p):
 
     # decision for DO2 loggers, water is last column
     if _is_dox and 'Water' in h:
-        lg.a(f'debug, processing water column mode for DO2 file {bn}')
+        lg.a(f'processing water column mode for DO2 file {bn}')
         with open(p) as f:
             ll = f.readlines()
         for i in ll[3:]:
@@ -90,7 +90,7 @@ def utils_graph_classify_file_wc_mode(p):
 
     # decision for TDO loggers, check pressure threshold
     if _is_tdo:
-        lg.a(f'debug, processing water column mode for TDO file {bn}')
+        lg.a(f'processing water column mode for TDO file {bn}')
         df = _utils_graph_cached_read_csv(p)
 
         # df_iw: dataframe of values in water

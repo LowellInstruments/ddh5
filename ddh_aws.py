@@ -310,7 +310,7 @@ def _ddh_aws(ignore_gui):
         time.sleep(1)
 
         if r.exists(RD_DDH_BLE_SEMAPHORE):
-            lg.a('debug, waiting a bit for BLE to finish')
+            lg.a('waiting a bit for BLE to finish...')
             while r.exists(RD_DDH_BLE_SEMAPHORE):
                 time.sleep(1)
 

@@ -80,7 +80,7 @@ async def ble_download_dox(d):
 
 
     if ddh_ble_logger_needs_a_reset(mac):
-        lg.a(f"debug, logger reset file {mac} found, deleting it")
+        lg.a(f"warning, logger reset file {mac} found, deleting it")
         await cmd_rst()
         # out of here for sure
         raise BLEAppException("DOX interact logger reset file")
@@ -240,17 +240,16 @@ async def ble_download_dox(d):
 
 
     # check need to modify the DO interval in the logger config file
-    lg.a('debug, analyzing need for DOX interval reconfiguration')
     i_dro = exp_get_conf_dox()
     if i_dro:
         # yes, we were asked to try to reconfigure DOX interval
         if i_dro == int(j["DRI"]):
-            lg.a('not changing DRI because it\'s the same')
+            lg.a('DO2 interval reconfiguration, not changing DRI because it\'s the same')
         else:
-            lg.a(f'changing DRI for DOX logger from {j["DRI"]} to {i_dro}')
+            lg.a(f'DO2 interval reconfiguration, DRI from {j["DRI"]} to {i_dro}')
             j["DRI"] = i_dro
     else:
-        lg.a('no experimental conf_dox, keep DRI in DOX logger')
+        lg.a('DO2 interval reconfiguration, no experimental conf_dox setting, skip')
 
 
 

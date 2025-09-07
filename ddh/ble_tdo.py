@@ -80,7 +80,7 @@ async def _tdo_reconfigure_profiling(ver):
         return
 
     # banner
-    lg.a(f"debug, TDO profiling reconfiguration to {d_prf_file['mode']}")
+    lg.a(f"reconfiguring TDO profiling to {d_prf_file['mode']}")
 
     # str_gcf: 'GCF 2d000040000100001000600000200003000010719900030'
     str_gcf = str_gcf[6:]
@@ -104,7 +104,7 @@ async def _tdo_reconfigure_profiling(ver):
             bad_rv = rv == 1
             _rae(bad_rv, f"scf {tag}")
         else:
-            lg.a(f'debug, not sent SCF {tag} {v}, it\'s the same')
+            lg.a(f'not sent SCF {tag} {v}, it\'s the same')
 
 
 
@@ -138,7 +138,7 @@ async def ble_download_tdo(d):
 
 
     if ddh_ble_logger_needs_a_reset(mac):
-        lg.a(f"debug, logger reset file {mac} found, deleting it")
+        lg.a(f"warning, logger reset file {mac} found, deleting it")
         await cmd_rst()
         # out of here for sure
         raise BLEAppException("TDO interact logger reset file")

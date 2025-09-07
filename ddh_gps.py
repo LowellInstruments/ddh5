@@ -227,7 +227,7 @@ def ddh_gps_get_clock_sync_if_so():
     diff_secs = abs((dt_gps_utc - utc_now).total_seconds())
     if diff_secs < 60:
         return g
-    lg.a(f"debug, gps_cloc_sync_diff_secs = {diff_secs}")
+    lg.a(f"warning, the difference between UTC and local time was = {diff_secs} seconds")
     z_my = get_localzone()
     dt_my = dt_gps_utc.astimezone(tz=z_my)
     t = str(dt_my)[:-6]

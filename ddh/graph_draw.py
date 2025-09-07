@@ -649,7 +649,7 @@ def _graph_process_n_draw(a, plot_reason=''):
 
                 # calculate 80th percentile to ensure bottom sea values
                 p80 = _percentile(dp, 80)
-                lg.a(f'debug, percentile 80 for TDO data is {p80}')
+                lg.a(f'statistics TDO, percentile 80 of this data is {p80}')
 
                 ls_p, ls_t = [], []
                 for i, p in enumerate(dp):
@@ -677,7 +677,7 @@ def _graph_process_n_draw(a, plot_reason=''):
 
                 # statistics, for DO-2 we check water content
                 if len(wat):
-                    lg.a('statistics for DO2, filtering data by water % value')
+                    lg.a('statistics DO2, filtering data by water % value')
                     for i, w in enumerate(wat):
                         if w >= 50:
                             been_water = True
@@ -687,7 +687,7 @@ def _graph_process_n_draw(a, plot_reason=''):
                 # statistics, for DO-1 we always show
                 else:
                     been_water = True
-                    lg.a('statistics for DO1, adding all values, no filtering at all')
+                    lg.a('statistics DO1, adding all values, no filtering at all')
                     ls_do = _do
                     ls_dt = dt
 
