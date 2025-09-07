@@ -4,7 +4,9 @@ import sys
 import time
 from os.path import exists
 import serial
-from gps.gps_quectel import gps_hat_detect_list_of_usb_ports
+
+from gps.gps import gps_find_any_usb_port, gps_hardware_read, gps_parse_sentence_type_rmc
+from gps.gps_quectel import gps_hat_detect_list_of_usb_ports, gps_hat_init, gps_hat_get_firmware_version
 from scripts.script_nadv import main_nadv
 from utils.ddh_common import (
     ddh_get_path_to_folder_settings, ddh_config_load_file,
@@ -16,6 +18,11 @@ from utils.ddh_common import (
 )
 import subprocess as sp
 from mat.utils import PrintColors as PC
+
+
+
+
+VP_QUECTEL = '2c7c:0125'
 
 
 
@@ -183,146 +190,118 @@ def _menu_cb_test_gps_quectel():
 
 
 
-def _p_e(param):
-    pass
+def _p_e(s):
+    print('error, ' + s)
 
 
 
 
 # CSQ: cell signal quality
 def _menu_cb_cell_signal_quality():
-    # todo: redo this with new GPS library
-    print('hello get CSQ')
-    # rv = detect_quectel_usb_ports()
-    # if not rv:
-    #     _p_e('could not detect quectel USB ports for CSQ')
-    #     time.sleep(2)
-    #     return
-    # _, p_ctl = rv
-    #
-    # till = time.perf_counter() + 1
-    # b = bytes()
-    # ser = None
-    # try:
-    #     ser = serial.Serial(p_ctl, 115200, timeout=.1, rtscts=True, dsrdtr=True)
-    #     ser.write(b'AT+CSQ \r')
-    #     time.sleep(.5)
-    #     while time.perf_counter() < till:
-    #         b += ser.read()
-    #     ser.close()
-    # except (Exception,):
-    #     _p_e('error working with serial port on CSQ')
-    #     if ser and ser.is_open:
-    #         ser.close()
-    #     input()
-    #     return
-    #
-    # # +CSQ: 19,99 among other lines
-    # try:
-    #     # _p_e(f'CSQ b = {b}')
-    #     v = b.split(b'+CSQ: ')[1].split(b',')[0]
-    #     # _p_e(f'CSQ v = {v}')
-    #     v = int(v.decode())
-    # except (Exception,) as ex:
-    #     _p_e(f'exception on CSQ {ex}')
-    #     input()
-    #     return
-    #
-    # # page 81 datasheet EG25
-    # s = ''
-    # if v == 0:
-    #     s = '< -113 dBm'
-    # elif v == 1:
-    #     s = '-111 dBm'
-    # elif 2 <= v <= 30:
-    #     s = f'{-113 + (2 * v)} dBm'
-    # elif v == 31:
-    #     s = '> -51 dBm'
-    # elif v == 99:
-    #     s = 'not detectable'
-    # elif v == 100:
-    #     s = '< -116 dBm'
-    # elif v == 101:
-    #     s = '-115 dBm'
-    # elif 102 <= v <= 190:
-    #     s = f'{-114 + (1 * v)} dBm'
-    # elif v == 191:
-    #     s = '> -25 dBm'
-    # elif v == 199:
-    #     s = 'not detectable'
-    # _p(f'cell signal quality {s} (lowest is -115 dBm)')
-    # input()
+
+    # todo: test this CELL SIGNAL QUALITY
+
+    ls_p = gps_hat_detect_list_of_usb_ports()
+    if not ls_p:
+        _p_e('no USB ports for CELL signal quality')
+        time.sleep(2)
+        return
+    port_ctrl = ls_p[-2]
+
+
+    os.system('clear')
+    gps_hat_init(port_ctrl)
+    print('CELL signal quality test loop started')
+    till = time.perf_counter() + 1
+    b = bytes()
+    ser = None
+    try:
+        ser = serial.Serial(port_ctrl, 115200,
+                            timeout=.1, rtscts=True, dsrdtr=True)
+        ser.write(b'AT+CSQ \r')
+        time.sleep(.5)
+        while time.perf_counter() < till:
+            b += ser.read()
+        ser.close()
+    except (Exception,):
+        _p_e('error working with serial port on CSQ')
+        if ser:
+            ser.close()
+        input()
+        return
+
+
+    # +CSQ: 19,99 among other lines
+    try:
+        v = b.split(b'+CSQ: ')[1].split(b',')[0]
+        v = int(v.decode())
+    except (Exception,) as ex:
+        _p_e(f'exception on CSQ {ex}')
+        input()
+        return
+
+
+    # page 81 datasheet EG25
+    s = ''
+    if v == 0:
+        s = '< -113 dBm'
+    elif v == 1:
+        s = '-111 dBm'
+    elif 2 <= v <= 30:
+        s = f'{-113 + (2 * v)} dBm'
+    elif v == 31:
+        s = '> -51 dBm'
+    elif v == 99:
+        s = 'not detectable'
+    elif v == 100:
+        s = '< -116 dBm'
+    elif v == 101:
+        s = '-115 dBm'
+    elif 102 <= v <= 190:
+        s = f'{-114 + (1 * v)} dBm'
+    elif v == 191:
+        s = '> -25 dBm'
+    elif v == 199:
+        s = 'not detectable'
+    _p(f'cell signal quality {s} (lowest is -115 dBm)')
+    input()
 
 
 def _menu_cb_gps_signal_quality():
-    # todo: redo this with new GPS library
-    print('hello get GSQ')
-    # rv = detect_quectel_usb_ports()
-    # if not rv:
-    #     _p_e('could not detect quectel USB ports for CSQ')
-    #     time.sleep(2)
-    #     return
-    # p_gps, p_ctl = rv
-    #
-    # os.system('clear')
-    # ser = serial.Serial(p_gps, 115200, timeout=.1)
-    # ser_ctl = serial.Serial(p_ctl, 115200, timeout=1)
-    #
-    # # perform a reset at start
-    # try:
-    #     print('GPS performing hot reset at start')
-    #     ser_ctl.write(b'AT+QGPSEND\r')
-    #     ser_ctl.write(b'AT+QGPSDEL=1\r')
-    #     ser_ctl.write(b'AT+QGPS=1\r')
-    #     rv = ser_ctl.read(100)
-    #     print('result: ', rv)
-    #
-    # except (Exception,) as ex:
-    #     print('ex', ex)
-    #
-    # time.sleep(3)
-    #
-    # # starts GPS signal quality loop
-    # print('GPS quality test, running')
-    # last_lat_lon = ''
-    # last_time = ''
-    # dt = {}
-    # while 1:
-    #     bb = bytes()
-    #     we_have_line = 0
-    #
-    #     # get one GPS frame
-    #     till_read = time.perf_counter() + 2
-    #     while time.perf_counter() < till_read:
-    #         b = ser.read()
-    #         bb += b
-    #         if b == b'\n':
-    #             we_have_line = 1
-    #             break
-    #
-    #     # not valid
-    #     if we_have_line == 0:
-    #         continue
-    #     if len(bb) < 20:
-    #         continue
-    #
-    #     # we only want GPGSV lines
-    #     line = bb.decode()
-    #     if not line.startswith('$GPGSV') and not line.startswith('$GPRMC'):
-    #         continue
-    #
-    #     if line.startswith('$GPRMC'):
-    #         g = line.split(',')
-    #         # g: ['$GPRMC', '145557.00', 'A', '4136.603719', 'N', '07036.560277', 'W', ...]
-    #         if g[2] == 'A':
-    #             def toDD(s):
-    #                 d = float(s[:-7])
-    #                 m = float(s[-7:]) / 60
-    #                 return d + m
-    #
-    #             last_lat_lon = (toDD(g[3]), g[4], toDD(g[5]), g[6])
-    #             last_time = f'{g[1][0:2]}:{g[1][2:4]}:{g[1][4:6]}'
-    #
+
+    ls_p = gps_hat_detect_list_of_usb_ports()
+    if not ls_p:
+        _p_e('could not detect quectel USB ports for GPS signal quality')
+        time.sleep(2)
+        return
+
+    port_nmea = ls_p[1]
+    port_ctrl = ls_p[-2]
+
+    os.system('clear')
+    gps_hat_init(port_ctrl)
+
+    print('GPS signal quality test loop started')
+    while 1:
+
+        d_bb = dict()
+        gps_hardware_read(port_nmea, 115200, d_bb, debug=False)
+        bb = d_bb['bb']
+        if not bb:
+            continue
+
+        # get number of satellites
+        print(f"number of satellites = {d_bb['ns']}")
+
+
+        # get latitude and longitude
+        d_rmc = gps_parse_sentence_type_rmc(bb)
+
+
+        # get other stuff
+        # todo: do this, maybe we can even skip RMC above
+        d_gsv = gps_parse_sentence_type_gsv(bb)
+
     #     # wait for the first frame of the GPGSV set
     #     line = line[:line.index('*')]
     #     f = line.split(',')
@@ -641,40 +620,25 @@ def _ddc_run_check():
             _i(f'app patch version mismatch, local {vl}, github {vg}')
         return 1
 
+
     def _ddc_run_check_fw_cell():
+        # todo: test this get firwmare version
+        ls_p = gps_hat_detect_list_of_usb_ports()
+        if not ls_p:
+            _p_e('no USB ports to get hat firmware version')
+            time.sleep(2)
+            return False
+        port_ctrl = ls_p[-2]
 
-        # todo: redo this with new GPS LI library
+        os.system('clear')
+        fv, fm = gps_hat_get_firmware_version(port_ctrl)
+        print('fv', fv)
+        print('fm', fm)
+        is_2022 = b'2022' in fv
+        is_2022 = is_2022 or b'2022' in fm
+        time.sleep(1)
+        return is_2022
 
-        ls = gps_hat_detect_list_of_usb_ports()
-        if not ls:
-            _e('no cell USB shield detected')
-            return 0
-
-        port_nmea = ls[1]
-        port_ctrl = ls[-2]
-        print(f'\nQUS -> port_GPS {port_nmea}, port_CTL: {port_ctrl}')
-
-
-        version = ''
-        p = port_ctrl
-        till = time.perf_counter() + .3
-        b = bytes()
-        ser = None
-        try:
-            ser = serial.Serial(p, 115200, timeout=.1, rtscts=True, dsrdtr=True)
-            ser.write(b'AT+CVERSION \rAT+CVERSION \r')
-            while time.perf_counter() < till:
-                b += ser.read()
-            ser.close()
-            if b'VERSION' in b:
-                version = b.decode()
-        except (Exception,):
-            if ser and ser.isOpen():
-                ser.close()
-            # print(f'error {p} -> {ex}')
-
-        # check
-        return '2022' in version
 
     def _ddc_run_check_aws_credentials():
         c = ddh_config_load_file()
@@ -735,6 +699,7 @@ def _ddc_run_check():
     ok_hostname = sh('hostname | grep raspberrypi') == 0
     flag_vp_gps_puck1 = sh(f'lsusb | grep {VP_GPS_PUCK_1}') == 0
     flag_vp_gps_puck2 = sh(f'lsusb | grep {VP_GPS_PUCK_2}') == 0
+    flag_vp_gps_quectel = sh(f'lsusb | grep {VP_QUECTEL}') == 0
     flag_mod_btuart = sh(f'md5sum /usr/bin/btuart | grep {MD5_MOD_BTUART}') == 0
     ok_ble_v = sh('bluetoothctl -v | grep 5.66') == 0
     _c = 'systemctl is-active unit_switch_net.service | grep -w active'
@@ -856,7 +821,7 @@ def _ddc_run_check():
         _e('crontab LXP not set')
     if not ok_check_ddh_version:
         _e('could not check DDH application version')
-    if not (flag_vp_quectel or flag_vp_gps_puck1 or flag_vp_gps_puck2):
+    if not (flag_vp_gps_quectel or flag_vp_gps_puck1 or flag_vp_gps_puck2):
         _e('no GPS hardware present')
 
     if not ok_shield_j4h and not ok_shield_sailor:
