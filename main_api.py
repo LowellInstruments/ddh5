@@ -267,8 +267,11 @@ async def ep_logs_get_with_since(start, end):
     name_start = f'{vn}_{start}.log'
     name_end = f'{vn}_{end}.log'
 
-
     ls_log = glob.glob(f'{d}/logs/*.log')
+    print('name_start', name_start)
+    print('name_end', name_end)
+    print('ls_log', ls_log)
+
     ls_log = [i for i in ls_log if os.path.basename(i) >= name_start]
     ls_log = [i for i in ls_log if os.path.basename(i) <= name_end]
     s_ls = ' '.join(ls_log)
