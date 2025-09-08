@@ -3,8 +3,13 @@ source /home/pi/li/ddh/scripts/utils.sh
 
 
 
-echo
 clear
+
+# for crontab to detect already running
+check_already_running "ddh_main"
+
+
+
 _pb "=============="
 _pb " DDH - init"
 _pb "=============="
