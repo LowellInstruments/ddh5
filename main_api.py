@@ -110,16 +110,6 @@ async def ep_monitored_macs():
     return d
 
 
-# @app.get('/history')
-# async def ep_history():
-#     # p: path relative to this current file
-#     p = 'ddh/db/db_his.json'
-#     db = DbHis(p)
-#     r = db.get_all()
-#     try:
-#         return {"history": CTT_API_OK, "entries": r}
-#     except (Exception, ):
-#         return {"history": CTT_API_ER, "entries": {}}
 
 
 @app.get('/history')
@@ -132,40 +122,43 @@ async def ep_history(since=None):
     try:
         if not since:
             return {"history": CTT_API_OK, "entries": r}
-        d = {k:v for k,v in r.items() if v['ep_loc'] >= since}
+        print('since', since)
+        print('typeof(since)', type(since))
+        d = {k:v for k,v in r.items() if v['ep_loc'] >= int(since)}
         return {"history": CTT_API_OK, "entries": d}
     except (Exception, ):
         return {"history": CTT_API_ER, "entries": {}}
 
 
 
-ep = 'upload_conf'
 
 
-@app.post(f"/{ep}")
-async def api_upload_conf(file: UploadFile = File(...)):
-    if not file.filename == 'config.toml':
-        return {ep: f'{CTT_API_ER}_filename'}
+# @app.post(f"/upload_conf")
+# async def api_upload_conf(file: UploadFile = File(...)):
+#     if not file.filename == 'config.toml':
+#         return {ep: f'{CTT_API_ER}_filename'}
+#
+#     # accept the upload and save it to /tmp folder
+#     uploaded_name = f'/tmp/{file.filename}'
+#     try:
+#         with open(uploaded_name, "wb") as buf:
+#             shutil.copyfileobj(file.file, buf)
+#     except (Exception, ):
+#         return {ep: f'{CTT_API_ER}_file_uploading'}
+#
+#     # overwrite DDH configuration only on DDH boxes
+#     if not api_linux_is_rpi():
+#         return {ep: 'no_install_not_Rpi'}
+#
+#     p = api_get_full_ddh_config_file_path()
+#     rv = _sh(f'cp {uploaded_name} {p}')
+#     if rv.returncode:
+#         return {ep: f'{CTT_API_ER}_file_install'}
+#
+#     # response back
+#     return {ep: CTT_API_OK}
 
-    # accept the upload and save it to /tmp folder
-    uploaded_name = f'/tmp/{file.filename}'
-    try:
-        with open(uploaded_name, "wb") as buf:
-            shutil.copyfileobj(file.file, buf)
-    except (Exception, ):
-        return {ep: f'{CTT_API_ER}_file_uploading'}
 
-    # overwrite DDH configuration only on DDH boxes
-    if not api_linux_is_rpi():
-        return {ep: 'no_install_not_Rpi'}
-
-    p = api_get_full_ddh_config_file_path()
-    rv = _sh(f'cp {uploaded_name} {p}')
-    if rv.returncode:
-        return {ep: f'{CTT_API_ER}_file_install'}
-
-    # response back
-    return {ep: CTT_API_OK}
 
 
 @app.get('/sim')
@@ -236,6 +229,8 @@ async def api_get_info():
     return d
 
 
+
+
 @app.get('/logs_get')
 async def ep_logs_get():
     now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -249,9 +244,17 @@ async def ep_logs_get():
         return FileResponse(path=f, filename=os.path.basename(f))
 
 
+
+
 @app.get('/logs_get_with_since')
 async def ep_logs_get_with_since(start, end):
-    # start: "%Y%m%d%H%M%S"
+
+    # start: "%Y%m%d%H%M%S", lets change format a bit
+    ts_start = datetime.datetime.strptime(start, '%Y%m%d%H%M%S')
+    ts_end = datetime.datetime.strptime(end, '%Y%m%d%H%M%S')
+    start = f'{ts_start.year}_{ts_start.month}_{ts_start.day}'
+    end = f'{ts_end.year}_{ts_end.month}_{ts_end.day}'
+
     vn = ddh_config_get_vessel_name().replace(' ', '')
     f = f'/tmp/logs_{vn}_{start}_{end}.zip'
     d = api_get_folder_path_root()
@@ -260,11 +263,15 @@ async def ep_logs_get_with_since(start, end):
     c = f'rm {f}'
     _sh(c)
 
-    # grab all logs
-    # todo: see start and end match the new ts in log names
-    ls_log = glob.glob(f'{d}/logs/*.log')
-    s_ls = ' '.join(ls_log)
+    # grab all logs in middle of dates
+    name_start = f'{vn}_{start}.log'
+    name_end = f'{vn}_{end}.log'
 
+
+    ls_log = glob.glob(f'{d}/logs/*.log')
+    ls_log = [i for i in ls_log if os.path.basename(i) >= name_start]
+    ls_log = [i for i in ls_log if os.path.basename(i) <= name_end]
+    s_ls = ' '.join(ls_log)
     print('sls', s_ls)
 
 
@@ -273,6 +280,7 @@ async def ep_logs_get_with_since(start, end):
     rv = _sh(c)
     if rv.returncode == 0:
         return FileResponse(path=f, filename=os.path.basename(f))
+
 
 
 @app.get("/dl_files_get")
@@ -289,6 +297,8 @@ async def ep_dl_files_get():
     # send it as response
     if rv.returncode == 0:
         return FileResponse(path=f, filename=os.path.basename(f))
+
+
 
 
 @app.get("/conf_get")
@@ -308,9 +318,11 @@ async def ep_conf_get():
         return FileResponse(path=f, filename=os.path.basename(f))
 
 
+
+
 def _ep_update(_ep, c):
     if not api_linux_is_rpi():
-        return {ep: 'not RPi, not updating DDH'}
+        return {'_ep_update': 'not RPi, not updating DDH'}
     rv = _sh(c)
     with open('/tmp/ddr_update_log.txt', 'w') as f:
         f.write(f'rc {rv.returncode}')
@@ -319,10 +331,7 @@ def _ep_update(_ep, c):
     return {_ep: CTT_API_OK if rv.returncode == 0 else CTT_API_ER}
 
 
-@app.get('/update_ddt')
-async def ep_update_ddt():
-    d = api_ddt_get_folder_path_root()
-    return _ep_update('update_ddt', f'{d}/pop_ddt.sh')
+
 
 
 @app.get('/update_ddh')
@@ -332,10 +341,6 @@ async def ep_update_ddh():
     return rv
 
 
-@app.get('/update_mat')
-async def ep_update_mat():
-    d = api_ddt_get_folder_path_root()
-    return _ep_update('update_mat', f'{d}/pop_mat.sh')
 
 
 @app.get('/kill_ddh')
@@ -424,72 +429,72 @@ async def ep_rpi_temperature():
         return {'rpi_temperature': CTT_API_ER}
 
 
-@app.get("/provision")
-async def ep_provision():
-    sn = ddh_config_get_box_sn()
-    prj = ddh_config_get_box_project()
-    addr = DDN_API_PROVISIONING_IP
-    port = DDN_API_PROVISIONING_PORT
-    ip_ddh = api_get_ip_vpn()
-    dl_zip_file = get_files_from_server(prj, sn, ip_ddh, addr, port=port)
-    if not dl_zip_file:
-        print('error, DDH API running ep_provision')
-        raise HTTPException(status_code=503, detail="provision error")
-    _sh(f'unzip -o {dl_zip_file} -d /tmp')
-    if not api_linux_is_rpi():
-        return
-
-    # separator
-    _p('')
-
-    fc = f'/tmp/config.toml'
-    d = '/home/pi/li/ddh/settings'
-    _p(f'moving {fc} to DDH settings folder')
-    # _sh(f'mv {fc} {d}')
-
-    fa = f'/tmp/all_macs.toml'
-    s = f'moving {fa} to DDH settings folder'
-    _p(s)
-    rv = _sh(f'mv {fa} {d}')
-    if rv.returncode:
-        print('error provision: ' + s)
-        return {'provision': CTT_API_ER}
-
-    # fw = f'/tmp/wg0.conf'
-    # _p(f'moving {fw} to wireguard settings folder')
-    # _sh(f"sudo mv {fw} /etc/wireguard/")
-    # _p('restarting DDH wireguard service')
-    # _sh("sudo systemctl restart wg-quick@wg0.service")
-    # _p('enabling DDH wireguard service')
-    # _sh("sudo systemctl enable wg-quick@wg0.service")
-
-    fd = f'/tmp/sshd_config'
-    rv = _sh(f'sudo chmod 644 {fd}')
-    if rv.returncode:
-        print('error provision: chmod sshd_config')
-        return {'provision': CTT_API_ER}
-    _p(f'moving {fd} to /etc/ssh')
-    rv = _sh(f'sudo mv {fd} /etc/ssh')
-    if rv.returncode:
-        print('error provision: move sshd_config')
-        return {'provision': CTT_API_ER}
-
-    fs = f'/tmp/authorized_keys'
-    _p(f'moving {fs} to /home/pi/.ssh')
-    _sh(f'mkdir -p /home/pi/.ssh')
-    rv = _sh(f'sudo mv {fs} /home/pi/.ssh/')
-    if rv.returncode:
-        print('error provision: move authorized_keys')
-        return {'provision': CTT_API_ER}
-    rv = _sh('sudo chmod 600 /home/pi/.ssh/authorized_keys')
-    if rv.returncode:
-        print('error provision: chmod authorized_keys')
-        return {'provision': CTT_API_ER}
-    rv = _sh("sudo systemctl restart ssh")
-    if rv.returncode:
-        print('error provision: restart ssh')
-        return {'provision': CTT_API_ER}
-    return {'provision': CTT_API_OK}
+# @app.get("/provision")
+# async def ep_provision():
+#     sn = ddh_config_get_box_sn()
+#     prj = ddh_config_get_box_project()
+#     addr = DDN_API_PROVISIONING_IP
+#     port = DDN_API_PROVISIONING_PORT
+#     ip_ddh = api_get_ip_vpn()
+#     dl_zip_file = get_files_from_server(prj, sn, ip_ddh, addr, port=port)
+#     if not dl_zip_file:
+#         print('error, DDH API running ep_provision')
+#         raise HTTPException(status_code=503, detail="provision error")
+#     _sh(f'unzip -o {dl_zip_file} -d /tmp')
+#     if not api_linux_is_rpi():
+#         return
+#
+#     # separator
+#     _p('')
+#
+#     fc = f'/tmp/config.toml'
+#     d = '/home/pi/li/ddh/settings'
+#     _p(f'moving {fc} to DDH settings folder')
+#     # _sh(f'mv {fc} {d}')
+#
+#     fa = f'/tmp/all_macs.toml'
+#     s = f'moving {fa} to DDH settings folder'
+#     _p(s)
+#     rv = _sh(f'mv {fa} {d}')
+#     if rv.returncode:
+#         print('error provision: ' + s)
+#         return {'provision': CTT_API_ER}
+#
+#     # fw = f'/tmp/wg0.conf'
+#     # _p(f'moving {fw} to wireguard settings folder')
+#     # _sh(f"sudo mv {fw} /etc/wireguard/")
+#     # _p('restarting DDH wireguard service')
+#     # _sh("sudo systemctl restart wg-quick@wg0.service")
+#     # _p('enabling DDH wireguard service')
+#     # _sh("sudo systemctl enable wg-quick@wg0.service")
+#
+#     fd = f'/tmp/sshd_config'
+#     rv = _sh(f'sudo chmod 644 {fd}')
+#     if rv.returncode:
+#         print('error provision: chmod sshd_config')
+#         return {'provision': CTT_API_ER}
+#     _p(f'moving {fd} to /etc/ssh')
+#     rv = _sh(f'sudo mv {fd} /etc/ssh')
+#     if rv.returncode:
+#         print('error provision: move sshd_config')
+#         return {'provision': CTT_API_ER}
+#
+#     fs = f'/tmp/authorized_keys'
+#     _p(f'moving {fs} to /home/pi/.ssh')
+#     _sh(f'mkdir -p /home/pi/.ssh')
+#     rv = _sh(f'sudo mv {fs} /home/pi/.ssh/')
+#     if rv.returncode:
+#         print('error provision: move authorized_keys')
+#         return {'provision': CTT_API_ER}
+#     rv = _sh('sudo chmod 600 /home/pi/.ssh/authorized_keys')
+#     if rv.returncode:
+#         print('error provision: chmod authorized_keys')
+#         return {'provision': CTT_API_ER}
+#     rv = _sh("sudo systemctl restart ssh")
+#     if rv.returncode:
+#         print('error provision: restart ssh')
+#         return {'provision': CTT_API_ER}
+#     return {'provision': CTT_API_OK}
 
 
 @app.get("/test_crash")
@@ -559,6 +564,9 @@ def controller_main_api():
         _alarm_api_crash(p.exitcode)
         print(f"=== {s} waits child, exitcode {p.exitcode} ===")
         time.sleep(5)
+
+
+
 
 
 if __name__ == "__main__":
