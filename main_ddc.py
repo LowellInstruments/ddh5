@@ -581,6 +581,8 @@ def _ddc_run_check():
         global str_w
         str_w += f'   - {s}\n'
 
+
+
     def _ddc_run_check_version_ddh():
         vl = ddh_get_local_software_version()
 
@@ -612,19 +614,18 @@ def _ddc_run_check():
             _i(f'app patch version mismatch, local {vl}, github {vg}')
         return 1
 
-    def _ddc_run_check_fw_cell():
 
+
+    def _ddc_run_check_fw_cell():
         ls = gps_hat_detect_list_of_usb_ports()
         if not ls:
             _e('no cell USB hat detected')
             return 0
-
         port_ctrl = ls[-2]
-        fw_a, fw_b = gps_hat_get_firmware_version(port_ctrl)
-        print('fw_a', fw_a)
-        print('fw_b', fw_b)
-        time.sleep(2)
-        return '2022' in fw_a
+        gfv, _ = gps_hat_get_firmware_version(port_ctrl)
+        return gfv and b'2022' in gfv
+
+
 
     def _ddc_run_check_aws_credentials():
         c = ddh_config_load_file()
@@ -642,11 +643,15 @@ def _ddc_run_check():
             return 0
         return 1
 
+
+
     def _ddc_run_check_gps_dummy():
         if os.path.exists(LI_PATH_GPS_DUMMY):
             _w(f'GPS dummy ON')
             return 1
         return 0
+
+
 
     def _ddc_run_check_files_network():
         path_w = '/etc/wireguard/wg0.conf'
@@ -663,6 +668,8 @@ def _ddc_run_check():
         # a = os.path.exists(f'/home/pi/.ssh/authorized_keys')
         # if not a:
         #   _i('file SSH authorized keys is missing')
+
+
 
     def _ddc_run_check_files_all_macs_toml():
         m = os.path.exists(f'{ddh_get_path_to_folder_settings()}/all_macs.toml')
@@ -828,7 +835,9 @@ def main_ddc():
 
     while 1:
         os.system('clear')
-        print('\nDDC\n---')
+        print(' --------\n')
+        print('   DDC')
+        print(' --------\n')
 
         global g_e
         global g_w
