@@ -293,6 +293,11 @@ def _ddh_aws(ignore_gui):
     setproctitle.setproctitle(p_name)
     _ddh_aws_set_state('boot')
 
+    if '&' in vessel:
+        lg.a('--------------------------------------------------------------')
+        lg.a("error, S3 does not like vessel names containing character '&'")
+        lg.a('--------------------------------------------------------------')
+
 
     # first, do the past year one
     aws_sync(past_year=True)
@@ -301,7 +306,6 @@ def _ddh_aws(ignore_gui):
 
     # forever loop waiting requests
     while 1:
-
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name, g_killed):
             sys.exit(0)
