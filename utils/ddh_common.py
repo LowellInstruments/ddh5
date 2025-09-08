@@ -554,8 +554,7 @@ def ddh_config_check_file_is_ok():
     # check for EXTRA UNKNOWN ones, but this is NOT critical
     aux = b['flags']
     if len(aux):
-        print(f'error, ddh_config_check_file_is_ok')
-        print(f'error, unexpected flags {aux}')
+        print(f'warning, ddh_config_check_file_is_ok extra flags {aux}')
 
     assert type(b['behavior']['moving_speed']) is list
     assert type(b['behavior']['fake_gps_position']) is list

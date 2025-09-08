@@ -4,6 +4,7 @@ source /home/pi/li/ddh/scripts/utils.sh
 
 
 echo
+clear
 _pb "=============="
 _pb " DDH - init"
 _pb "=============="
@@ -105,9 +106,9 @@ export DISPLAY=:0
 
 
 echo && echo
-_pg "--------------"
-_pg "DDH - run GUI"
-_pg "--------------"
+_pb "==============="
+_pb "DDH - run GUI"
+_pb "==============="
 
 
 echo
