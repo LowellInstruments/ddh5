@@ -259,7 +259,8 @@ def _menu_cb_cell_signal_quality():
         s = '> -25 dBm'
     elif v == 199:
         s = 'not detectable'
-    _p(f'cell signal quality = {s} (minimum is -115 dBm)')
+    _p(f'\ncell signal quality = {s} (minimum is -115 dBm)')
+    print('test end, press ENTER to go back to DDC menu')
     input()
 
 
@@ -306,7 +307,7 @@ def _menu_cb_gps_signal_quality():
 
             if mn == "1":
                 os.system('clear')
-                print(f'\ nsatellites in view = {sv}')
+                print(f'\n satellites in view = {sv}')
                 print(f' theoretical SNR max is 99')
                 rem = till - time.perf_counter()
                 print(f' test will end in {int(rem)} seconds\n')
@@ -335,7 +336,7 @@ def _menu_cb_gps_signal_quality():
             if mn == tm:
                 for k, v in d_gsv.items():
                     if not v:
-                        print(f'[ {k} ] na')
+                        print(f' [ {k} ] n/a')
                         continue
                     n = int(v)
                     s = '#' * n
@@ -835,7 +836,7 @@ def main_ddc():
 
     while 1:
         os.system('clear')
-        print(' --------\n')
+        print(' --------')
         print('   DDC')
         print(' --------\n')
 
