@@ -252,8 +252,10 @@ async def ep_logs_get_with_since(start, end):
     # start: "%Y%m%d%H%M%S", lets change format a bit
     ts_start = datetime.datetime.strptime(start, '%Y%m%d%H%M%S')
     ts_end = datetime.datetime.strptime(end, '%Y%m%d%H%M%S')
-    start = f'{ts_start.year}-{ts_start.month}-{ts_start.day}'
-    end = f'{ts_end.year}-{ts_end.month}-{ts_end.day}'
+    start = str(ts_start.year) + '-' + str(ts_start.month).zfill(2) + '-' + \
+            str(ts_start.day).zfill(2)
+    end = str(ts_end.year) + '-' + str(ts_end.month).zfill(2) + '-' + \
+            str(ts_end.day).zfill(2)
 
     vn = ddh_config_get_vessel_name().replace(' ', '')
     f = f'/tmp/logs_{vn}_{start}_{end}.zip'
@@ -275,7 +277,7 @@ async def ep_logs_get_with_since(start, end):
     ls_log = [i for i in ls_log if os.path.basename(i) >= name_start]
     ls_log = [i for i in ls_log if os.path.basename(i) <= name_end]
     s_ls = ' '.join(ls_log)
-    print('\n\nsls =', s_ls)
+    print(f'\n\nsls = {s_ls} **')
 
 
     # zip ONLY .log files
