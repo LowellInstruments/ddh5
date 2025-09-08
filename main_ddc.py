@@ -6,7 +6,7 @@ from os.path import exists
 import serial
 from gps.gps import gps_find_any_usb_port, gps_hardware_read
 from gps.gps_adafruit import gps_adafruit_init
-from gps.gps_quectel import gps_hat_detect_list_of_usb_ports, gps_hat_init
+from gps.gps_quectel import gps_hat_detect_list_of_usb_ports, gps_hat_init, gps_hat_get_firmware_version
 from scripts.script_nadv import main_nadv
 from utils.ddh_common import (
     ddh_get_path_to_folder_settings, ddh_config_load_file,
@@ -183,7 +183,7 @@ def _menu_cb_test_gps_quectel():
     ls_p = gps_hat_detect_list_of_usb_ports()
     if not ls_p:
         _p_e('could not detect quectel USB ports')
-        time.sleep(2)
+        input()
         return
     port_nmea = ls_p[1]
     port_ctrl = ls_p[-2]
@@ -192,13 +192,12 @@ def _menu_cb_test_gps_quectel():
         print(f'OK! found GPS output on quectel port {port_nmea}')
     else:
         _p_e('cannot find GPS output for hat')
-    time.sleep(2)
+    input()
 
 
 
 def _p_e(e):
     print(f'DDC error, {e}')
-
 
 
 
@@ -260,16 +259,16 @@ def _menu_cb_cell_signal_quality():
         s = '> -25 dBm'
     elif v == 199:
         s = 'not detectable'
-    _p(f'cell signal quality {s} (lowest is -115 dBm)')
+    _p(f'cell signal quality = {s} (minimum is -115 dBm)')
     input()
 
 
-def _menu_cb_gps_signal_quality():
 
+
+def _menu_cb_gps_signal_quality():
     port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
     if not port_type:
         _p_e('could not detect quectel USB ports to get GPS signal quality')
-        time.sleep(2)
         return
 
     os.system('clear')
@@ -307,10 +306,10 @@ def _menu_cb_gps_signal_quality():
 
             if mn == "1":
                 os.system('clear')
-                print(f'\nsatellites in view = {sv}')
-                print(f'theoretical snr max is 99')
+                print(f'\ nsatellites in view = {sv}')
+                print(f' theoretical SNR max is 99')
                 rem = till - time.perf_counter()
-                print(f'test will end in {int(rem)} seconds')
+                print(f' test will end in {int(rem)} seconds\n')
 
             # 1    = Total number of messages of this type in this cycle
             # 2    = Message number
@@ -340,8 +339,8 @@ def _menu_cb_gps_signal_quality():
                         continue
                     n = int(v)
                     s = '#' * n
-                    print(f'[ {k} ] snr {v} {s} ')
-                time.sleep(3)
+                    print(f' [ {k} ] {s} {v}')
+                time.sleep(1)
 
     print('\nGPS quality test end, press ENTER to go back to DDC menu')
     input()
@@ -620,31 +619,12 @@ def _ddc_run_check():
             _e('no cell USB hat detected')
             return 0
 
-        port_nmea = ls[1]
         port_ctrl = ls[-2]
-        print(f'\nQUS -> port_GPS {port_nmea}, port_CTL: {port_ctrl}')
-
-
-        version = ''
-        p = port_ctrl
-        till = time.perf_counter() + .3
-        b = bytes()
-        ser = None
-        try:
-            ser = serial.Serial(p, 115200, timeout=.1, rtscts=True, dsrdtr=True)
-            ser.write(b'AT+CVERSION \rAT+CVERSION \r')
-            while time.perf_counter() < till:
-                b += ser.read()
-            ser.close()
-            if b'VERSION' in b:
-                version = b.decode()
-        except (Exception,):
-            if ser and ser.isOpen():
-                ser.close()
-            # print(f'error {p} -> {ex}')
-
-        # check
-        return '2022' in version
+        fw_a, fw_b = gps_hat_get_firmware_version(port_ctrl)
+        print('fw_a', fw_a)
+        print('fw_b', fw_b)
+        time.sleep(2)
+        return '2022' in fw_a
 
     def _ddc_run_check_aws_credentials():
         c = ddh_config_load_file()
@@ -924,7 +904,7 @@ def main_ddc():
 
         except (Exception,):
             p_e(f'invalid menu option {c}')
-            time.sleep(1)
+            time.sleep(2)
 
 
 if __name__ == "__main__":
