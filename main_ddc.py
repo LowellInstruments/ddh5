@@ -4,9 +4,9 @@ import sys
 import time
 from os.path import exists
 import serial
-
-from gps.gps import gps_find_any_usb_port, gps_hardware_read, gps_parse_sentence_type_rmc
-from gps.gps_quectel import gps_hat_detect_list_of_usb_ports, gps_hat_init, gps_hat_get_firmware_version
+from gps.gps import gps_find_any_usb_port, gps_hardware_read
+from gps.gps_adafruit import gps_adafruit_init
+from gps.gps_quectel import gps_hat_detect_list_of_usb_ports, gps_hat_init
 from scripts.script_nadv import main_nadv
 from utils.ddh_common import (
     ddh_get_path_to_folder_settings, ddh_config_load_file,
@@ -18,11 +18,6 @@ from utils.ddh_common import (
 )
 import subprocess as sp
 from mat.utils import PrintColors as PC
-
-
-
-
-VP_QUECTEL = '2c7c:0125'
 
 
 
@@ -50,6 +45,7 @@ path_script_deploy_tdo = f'{h}/{p}/scripts/run_script_deploy_logger_tdo.sh'
 path_script_scan_li = f'{h}/{p}/scripts/run_script_scan_li.sh'
 VP_GPS_PUCK_1 = '067B:2303'
 VP_GPS_PUCK_2 = '067B:23A3'
+VP_QUECTEL = '2C7C:0125'
 MD5_MOD_BTUART = '95da1d6d0bea327aa5426b7f90303778'
 TMP_DDC_ERR = '/tmp/ddc_err'
 DEBUG_TIME = False
@@ -65,6 +61,22 @@ g_i = None
 
 def _p(s):
     print(s)
+
+
+def p_e(s):
+    PC.R('[ error ] ' + s)
+    with open(TMP_DDC_ERR, 'a') as f:
+        f.write(f'error, {s}\n')
+
+
+
+def p_w(s):
+    PC.Y('[ warning ] ' + s)
+
+
+
+def p_i(s):
+    PC.B('[ information ] ' + s)
 
 
 def _show_issues_error():
@@ -112,23 +124,6 @@ def _menu_cb_quit():
 def c_e():
     if os.path.exists(TMP_DDC_ERR):
         os.unlink(TMP_DDC_ERR)
-
-
-
-def p_e(s):
-    PC.R('[ error ] ' + s)
-    with open(TMP_DDC_ERR, 'a') as f:
-        f.write(f'error, {s}\n')
-
-
-
-def p_w(s):
-    PC.Y('[ warning ] ' + s)
-
-
-
-def p_i(s):
-    PC.B('[ information ] ' + s)
 
 
 
@@ -185,13 +180,24 @@ def _menu_cb_show_ddh_issues():
 
 # simply see there is stuff coming from Quectel NMEA port
 def _menu_cb_test_gps_quectel():
-    # todo: redo this with new GPS library
-    print('hello tesT_gps_quectel')
+    ls_p = gps_hat_detect_list_of_usb_ports()
+    if not ls_p:
+        _p_e('could not detect quectel USB ports')
+        time.sleep(2)
+        return
+    port_nmea = ls_p[1]
+    port_ctrl = ls_p[-2]
+    rv = gps_hat_init(port_ctrl)
+    if rv:
+        print(f'OK! found GPS output on quectel port {port_nmea}')
+    else:
+        _p_e('cannot find GPS output for hat')
+    time.sleep(2)
 
 
 
-def _p_e(s):
-    print('error, ' + s)
+def _p_e(e):
+    print(f'DDC error, {e}')
 
 
 
@@ -199,37 +205,29 @@ def _p_e(s):
 # CSQ: cell signal quality
 def _menu_cb_cell_signal_quality():
 
-    # todo: test this CELL SIGNAL QUALITY
-
     ls_p = gps_hat_detect_list_of_usb_ports()
     if not ls_p:
-        _p_e('no USB ports for CELL signal quality')
+        _p_e('could not detect quectel USB ports to get CELL signal quality')
         time.sleep(2)
         return
     port_ctrl = ls_p[-2]
 
-
-    os.system('clear')
-    gps_hat_init(port_ctrl)
-    print('CELL signal quality test loop started')
     till = time.perf_counter() + 1
     b = bytes()
     ser = None
     try:
-        ser = serial.Serial(port_ctrl, 115200,
-                            timeout=.1, rtscts=True, dsrdtr=True)
+        ser = serial.Serial(port_ctrl, 115200, timeout=.1, rtscts=True, dsrdtr=True)
         ser.write(b'AT+CSQ \r')
         time.sleep(.5)
         while time.perf_counter() < till:
             b += ser.read()
         ser.close()
     except (Exception,):
-        _p_e('error working with serial port on CSQ')
+        _p_e('working with serial port on CSQ')
         if ser:
             ser.close()
         input()
         return
-
 
     # +CSQ: 19,99 among other lines
     try:
@@ -239,7 +237,6 @@ def _menu_cb_cell_signal_quality():
         _p_e(f'exception on CSQ {ex}')
         input()
         return
-
 
     # page 81 datasheet EG25
     s = ''
@@ -269,91 +266,85 @@ def _menu_cb_cell_signal_quality():
 
 def _menu_cb_gps_signal_quality():
 
-    ls_p = gps_hat_detect_list_of_usb_ports()
-    if not ls_p:
-        _p_e('could not detect quectel USB ports for GPS signal quality')
+    port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
+    if not port_type:
+        _p_e('could not detect quectel USB ports to get GPS signal quality')
         time.sleep(2)
         return
 
-    port_nmea = ls_p[1]
-    port_ctrl = ls_p[-2]
-
     os.system('clear')
-    gps_hat_init(port_ctrl)
+    br = 115200
+    if port_type == 'hat':
+        gps_hat_init(port_ctrl)
+    elif port_type == 'adafruit':
+        gps_adafruit_init(port_nmea)
+    else:
+        # gps puck
+        br = 4800
 
-    print('GPS signal quality test loop started')
-    while 1:
-
-        d_bb = dict()
-        gps_hardware_read(port_nmea, 115200, d_bb, debug=False)
-        bb = d_bb['bb']
+    # starts GPS signal quality loop
+    print('GPS quality test, running')
+    till = time.perf_counter() + 30
+    while time.perf_counter() < till:
+        d = {}
+        gps_hardware_read(port_nmea, br, d, debug=False)
+        bb = d['bb']
         if not bb:
             continue
+        bb = bb.split(b'\r\n')
+        bb_gsv = [i for i in bb if i.startswith(b'$GPGSV') and chr(i[-3]) == '*']
 
-        # get number of satellites
-        print(f"number of satellites = {d_bb['ns']}")
+        d_gsv = {}
+        for _ in bb_gsv:
+            line = _.decode()
+            # lose the checksum
+            line = line[:-3]
+            f = line.split(',')
+            # f: ['$GPGSV', '2', '1', '07', '15', '79', '221', ... '24*78']
+            tm = f[1]
+            mn = f[2]
+            sv = f[3]
 
+            if mn == "1":
+                os.system('clear')
+                print(f'\nsatellites in view = {sv}')
+                print(f'theoretical snr max is 99')
+                rem = till - time.perf_counter()
+                print(f'test will end in {int(rem)} seconds')
 
-        # get latitude and longitude
-        d_rmc = gps_parse_sentence_type_rmc(bb)
+            # 1    = Total number of messages of this type in this cycle
+            # 2    = Message number
+            # 3    = Total number of SVs in view
+            # 4    = SV PRN number
+            # 5    = Elevation in degrees, 90 maximum
+            # 6    = Azimuth, degrees from true north, 000 to 359
+            # 7    = SNR, 00-99 dB (null when not tracking)
+            # 8-11 = Information about second SV, same as field 4-7
+            # 12-15= Information about third SV, same as field 4-7
+            # 16-19= Information about fourth SV, same as field 4-7
 
+            for i in range(4, 17, 4):
+                try:
+                    s_id = f[i]
+                    s_snr = f[i + 3]
+                    d_gsv[s_id] = s_snr
+                except (Exception, ):
+                    pass
 
-        # get other stuff
-        # todo: do this, maybe we can even skip RMC above
-        d_gsv = gps_parse_sentence_type_gsv(bb)
+            # order final dictionary
+            d_gsv = dict(sorted(d_gsv.items()))
+            if mn == tm:
+                for k, v in d_gsv.items():
+                    if not v:
+                        print(f'[ {k} ] na')
+                        continue
+                    n = int(v)
+                    s = '#' * n
+                    print(f'[ {k} ] snr {v} {s} ')
+                time.sleep(3)
 
-    #     # wait for the first frame of the GPGSV set
-    #     line = line[:line.index('*')]
-    #     f = line.split(',')
-    #     tm = f[1]
-    #     mn = f[2]
-    #     sv = f[3]
-    #     if mn == "1":
-    #         os.system('clear')
-    #         print(f'time {last_time}  pos {last_lat_lon}')
-    #         print(f'satellites in view = {sv}')
-    #
-    #     # 1    = Total number of messages of this type in this cycle
-    #     # 2    = Message number
-    #     # 3    = Total number of SVs in view
-    #     # 4    = SV PRN number
-    #     # 5    = Elevation in degrees, 90 maximum
-    #     # 6    = Azimuth, degrees from true north, 000 to 359
-    #     # 7    = SNR, 00-99 dB (null when not tracking)
-    #     # 8-11 = Information about second SV, same as field 4-7
-    #     # 12-15= Information about third SV, same as field 4-7
-    #     # 16-19= Information about fourth SV, same as field 4-7
-    #
-    #     d = {}
-    #     d[mn] = {}
-    #     if mn == '1':
-    #         dt = {}
-    #
-    #     for i in range(4, 17, 4):
-    #         try:
-    #             s_id = f[i]
-    #             s_snr = f[i + 3]
-    #             d[mn][s_id] = s_snr
-    #             dt[s_id] = s_snr
-    #         except:
-    #             pass
-    #
-    #     # order final dictionary
-    #     dt = {k: v for k, v in sorted(dt.items(), key=lambda item: item[1], reverse=True)}
-    #     # print(d)
-    #     if mn == tm:
-    #         print('[ id ] snr (max 99)\n')
-    #         for k, v in dt.items():
-    #             if not v:
-    #                 print(f'[ {k} ] na')
-    #                 continue
-    #             n = int(v)
-    #             s = '#' * n
-    #             print(f'[ {k} ] {v} {s} ')
-    #         time.sleep(3)
-    #
-    # print('GPS quality test ended, press ENTER to go back to DCC')
-    # input()
+    print('\nGPS quality test end, press ENTER to go back to DDC menu')
+    input()
 
 
 
@@ -547,12 +538,11 @@ def _get_crontab(s):
 def _menu_cb_show_help():
     _p('test mode    -> prefixes downloaded filenames with "testfile_"')
     _p('GPS dummy    -> GPS is simulated, it uses position in config.toml')
-    _p('GPS USB puck -> GPS source is a GPS USB puck, not a RPi shield')
     _p('crontab      -> automatically starts or not DDH app upon boot')
     # _p('kill DDH     -> forces DDH app to quit')
     _p('graph demo   -> the DDH plotting tab will use simulated data')
     _p('credentials  -> checks the DDH has all the passwords to run OK')
-    _p('GPS shield   -> tests the GPS shield, not the GPS USB puck')
+    _p('GPS hat      -> tests the GPS hat, not the GPS USB puck')
     _p('side buttons -> tests the DDH real side buttons to be working')
     _p('BLE range    -> tests how well a logger\'s signal reaches the DDH')
     _p('deploy DOX   -> prepares a DO1 or DO2 logger for deployment')
@@ -610,7 +600,10 @@ def _ddc_run_check():
         with open(f'/tmp/{s}', 'r') as f:
             vg = f.readline().replace('\n', '')
 
-        if vl[0] != vg[0]:
+        if vl > vg[0]:
+            # you are ahead, ok
+            pass
+        elif vl[0] != vg[0]:
             _w(f'app major version mismatch, local {vl}, github {vg}')
         elif vl[2] != vg[2]:
             _w(f'app minor version mismatch, local {vl}, github {vg}')
@@ -620,25 +613,38 @@ def _ddc_run_check():
             _i(f'app patch version mismatch, local {vl}, github {vg}')
         return 1
 
-
     def _ddc_run_check_fw_cell():
-        # todo: test this get firwmare version
-        ls_p = gps_hat_detect_list_of_usb_ports()
-        if not ls_p:
-            _p_e('no USB ports to get hat firmware version')
-            time.sleep(2)
-            return False
-        port_ctrl = ls_p[-2]
 
-        os.system('clear')
-        fv, fm = gps_hat_get_firmware_version(port_ctrl)
-        print('fv', fv)
-        print('fm', fm)
-        is_2022 = b'2022' in fv
-        is_2022 = is_2022 or b'2022' in fm
-        time.sleep(1)
-        return is_2022
+        ls = gps_hat_detect_list_of_usb_ports()
+        if not ls:
+            _e('no cell USB hat detected')
+            return 0
 
+        port_nmea = ls[1]
+        port_ctrl = ls[-2]
+        print(f'\nQUS -> port_GPS {port_nmea}, port_CTL: {port_ctrl}')
+
+
+        version = ''
+        p = port_ctrl
+        till = time.perf_counter() + .3
+        b = bytes()
+        ser = None
+        try:
+            ser = serial.Serial(p, 115200, timeout=.1, rtscts=True, dsrdtr=True)
+            ser.write(b'AT+CVERSION \rAT+CVERSION \r')
+            while time.perf_counter() < till:
+                b += ser.read()
+            ser.close()
+            if b'VERSION' in b:
+                version = b.decode()
+        except (Exception,):
+            if ser and ser.isOpen():
+                ser.close()
+            # print(f'error {p} -> {ex}')
+
+        # check
+        return '2022' in version
 
     def _ddc_run_check_aws_credentials():
         c = ddh_config_load_file()
@@ -791,7 +797,7 @@ def _ddc_run_check():
         _e('no cell internet access via ping')
         rv += 1
     if not ok_fw_cell:
-        _w('no cell shield proper firmware')
+        _w('no cell hat proper firmware')
     if not ok_service_cell_sw:
         _e('service switch cell / wifi not running')
     if not ok_dwservice:
@@ -868,7 +874,7 @@ def main_ddc():
             '2': (f"2) set crontab       [{fcd}]", _menu_cb_toggle_crontab_ddh),
             '3': (f"3) set graph demo    [{fgt}]", _menu_cb_graph_demo),
             '4': (f"4) check all keys    [{fdk}]", _menu_cb_print_check_all_keys),
-            '5': (f"5) test GPS shield", _menu_cb_test_gps_quectel),
+            '5': (f"5) test GPS hat", _menu_cb_test_gps_quectel),
             '6': (f"6) test side buttons", _menu_cb_test_buttons),
             'r': (f"r) run BLE range tool", _menu_cb_run_brt),
             'e': (f"e) edit BLE range tool", _menu_cb_edit_brt_cfg_file),
