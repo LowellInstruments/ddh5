@@ -35,7 +35,7 @@ from rd_ctt.ddh import (
     RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_REFRESH_PROCESSES_PRESENT,
     RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
-    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS
+    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -185,10 +185,15 @@ def _calc_app_uptime():
 
 
 def gui_init_redis():
-    r.delete(RD_DDH_GUI_PLOT_REASON)
-    r.delete(RD_DDH_GUI_PLOT_FOLDER)
-    r.delete(RD_DDH_BLE_SEMAPHORE)
-    r.delete(RD_DDH_GUI_STATE_EVENT_ICON_LOCK)
+    for k in (
+        RD_DDH_GUI_PLOT_REASON,
+        RD_DDH_GUI_PLOT_FOLDER,
+        RD_DDH_BLE_SEMAPHORE,
+        RD_DDH_GUI_STATE_EVENT_ICON_LOCK,
+        RD_DDH_AWS_SYNC_REQUEST,
+        RD_DDH_GUI_MODELS_UPDATE
+    ):
+        r.delete(k)
 
 
 
@@ -1372,10 +1377,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.tabs.setCurrentIndex(0)
 
 
-        # update MAPS tab, prevent freeze at boot
-        # todo: find all is_it_time_to and see if we clear them upon boot or for example models do NOT appera
-        if _calc_app_uptime() > 10 and is_it_time_to('update_models_tab', 3600):
+        # update MODELS tab, prevent freeze at boot
+        if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_MODELS_UPDATE):
             gui_populate_models_tab(self)
+            r.setex(RD_DDH_GUI_MODELS_UPDATE, 3600, 1)
 
 
 

@@ -1,6 +1,7 @@
 import redis
-
 from rd_ctt.ddh import RD_DDH_SLO_LS
+
+
 
 r = redis.Redis('localhost', port=6379)
 PRE = 'ddh:timecache:'
@@ -32,6 +33,8 @@ def is_it_time_to(k, t):
     annotate_time_this_occurred(k, t)
     return True
 
+
+# todo: maybe remove all this file and use REDIS
 
 
 def query_is_it_time_to(k):
