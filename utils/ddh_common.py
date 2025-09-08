@@ -612,13 +612,6 @@ def _get_exp_key_from_cfg(k):
 
 
 
-def exp_get_use_smart_lockout():
-    return _get_exp_key_from_cfg('use_smart_lockout')
-
-
-
-
-
 def exp_get_conf_dox():
     rv = _get_exp_key_from_cfg('conf_dox')
     if rv == -1:

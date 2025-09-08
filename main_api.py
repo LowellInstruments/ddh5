@@ -56,18 +56,19 @@ from ddh.db.db_his import DbHis
 import uvicorn
 from fastapi import (
     FastAPI,
-    UploadFile,
-    File,
-    HTTPException
 )
 import os
 from fastapi.responses import FileResponse
 import concurrent.futures
 import subprocess as sp
+from utils.ddh_common import (
+    ddh_config_get_vessel_name, ddh_config_get_monitored_pairs,
+    LI_FILE_ICCID, \
+    ddh_config_get_box_project,
+    ddh_config_get_box_sn, ddh_config_contains_monitored_lowell_loggers, \
+    TMP_PATH_DDH_APP_OVERRIDE
+)
 
-from utils.ddh_common import ddh_config_get_vessel_name, ddh_config_get_monitored_pairs, LI_FILE_ICCID, \
-    ddh_config_get_box_project, ddh_config_get_box_sn, ddh_config_contains_monitored_lowell_loggers, \
-    TMP_PATH_DDH_APP_OVERRIDE, NAME_EXE_DDH
 
 
 # instead, the DDN port is 9000 & 9001
@@ -80,12 +81,13 @@ NAME_EXE_API_CONTROLLER = NAME_EXE_API + "_controller"
 
 
 app = FastAPI()
-
 g_ts_last_email_api_crash = 0
+
 
 
 def _p(s):
     print(s)
+
 
 
 @app.get('/ping')
@@ -348,27 +350,6 @@ async def ep_update_ddh():
 
 
 
-@app.get('/kill_ddh')
-async def ep_kill_ddh():
-    # todo: test this API kill DDH answer
-    d = dict()
-    rv = _sh(f'killall {NAME_EXE_DDH}')
-    s = rv.stderr.decode().replace('\n', '')
-    if rv.returncode == 0:
-        s = CTT_API_OK
-    if 'no process found' in s:
-        s = 'N/A'
-    d[NAME_EXE_DDH] = s
-    return d
-
-
-@app.get('/kill_api')
-async def ep_kill_api():
-    _sh('killall main_api')
-    # does not matter, won't answer
-    return {'kill_api': CTT_API_OK}
-
-
 @app.get('/force_reboot')
 async def ep_force_reboot():
     if api_linux_is_rpi():
@@ -376,6 +357,8 @@ async def ep_force_reboot():
         # does not matter, won't answer
         return {'force_reboot': CTT_API_OK}
     return {'force_reboot': 'not a raspberry'}
+
+
 
 
 @app.get('/ddh_clear_lock_out_time')

@@ -1505,7 +1505,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         elif code in (EV_GPS_SYNC_CLOCK, ):
             pi = PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG
         elif code in (EV_BLE_CONNECTING, ):
-            # todo: does this appear?
+            # todo: does this one icon appear?
             pi = PATH_MAIN_BLE_CONNECTING
         elif code in (EV_BLE_DL_OK, ):
             pi = PATH_MAIN_BLE_DL_OK
