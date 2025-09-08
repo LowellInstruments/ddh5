@@ -21,7 +21,7 @@ from utils.ddh_common import (
     NAME_EXE_GPS, ddh_config_is_gps_error_forced_enabled, LI_PATH_GPS_DUMMY,
     LI_PATH_CELL_FW, EV_GPS_WAITING_BOOT, app_state_set, t_str,
     EV_GPS_IN_PORT,
-    STR_EV_GPS_IN_PORT, STR_EV_BLE_SCAN_2, EV_BLE_SCAN, ddh_this_process_needs_to_quit
+    STR_EV_GPS_IN_PORT, STR_EV_BLE_SCAN_2, EV_BLE_SCAN, ddh_this_process_needs_to_quit, TMP_PATH_GPS_LAST_JSON
 )
 import datetime
 import json
@@ -198,7 +198,22 @@ def _ddh_gps_get():
             speed = r.get(RD_DDH_GPS_FIX_SPEED).decode()
         lat = "{:+.6f}".format(float(d['lat']))
         lon = "{:+.6f}".format(float(d['lon']))
+
+
+        # this is extra for API
+        try:
+            d = {
+                "lat": lat,
+                "lon": lon,
+                "gps_time": str(d['dt']),
+                "speed": speed
+            }
+            with open(TMP_PATH_GPS_LAST_JSON, "w") as f:
+                json.dump(d, f)
+        except (Exception,) as ex:
+            lg.a(f'error: saving {TMP_PATH_GPS_LAST_JSON} -> {ex}')
         return lat, lon, dt, speed
+
 
     return None
 
@@ -401,7 +416,6 @@ def _ddh_gps(ignore_gui):
         else:
             if d_gga:
                 _set_redis_gps_fix_dict(d_gga)
-
 
 
 
