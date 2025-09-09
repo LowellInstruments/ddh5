@@ -294,7 +294,7 @@ def ddh_get_contents_of_config_file_all_macs():
             # d: {'11:22:33:44:55:66': 'sn1234567'}
             return toml.load(f)
     except (Exception,) as ex:
-        print('error, get_ddh_toml_all_macs_content: ', ex)
+        print('error, ddh_get_contents_of_config_file_all_macs: ', ex)
         os._exit(1)
 
 

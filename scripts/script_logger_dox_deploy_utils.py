@@ -1,17 +1,13 @@
-import asyncio
-import json
-from bleak import BleakScanner, BleakError
-from bleak.backends.device import BLEDevice
-from mat.ble.bleak.cc26x2r import BleCC26X2
-from mat.utils import PrintColors as PC
+from bleak import BleakScanner
+from ble.ble import *
+from ble.ble_linux import ble_linux_find_best_interface
+from mat.utils import PrintColors as _Pc
 
-
-lc = BleCC26X2("hci0", dbg_ans=True)
 
 
 def _e(_rv, s):
     if _rv:
-        _ = "[ BLE ] example exception {}, rv {}"
+        _ = "[ BLE ] exception {}, rv {}"
         raise Exception(_.format(s, _rv))
 
 
@@ -22,89 +18,97 @@ def get_script_cfg_file():
         return json.load(f)
 
 
+
 def set_script_cfg_file(cfg_d: dict):
     p = f"script_logger_dox_deploy_cfg.json"
     with open(p, "w") as f:
         return json.dump(cfg_d, f)
 
 
-async def deploy_logger_dox(mac, sn, flag_run, flag_sensor):
 
+
+async def deploy_logger_dox(mac, sn, flag_run, flag_sensor, dn):
     rv = 0
 
     try:
-        rv = await lc.connect(mac)
-        _e(rv, "connecting")
+        rv = await connect_by_mac(mac)
+        _e(not rv, "connecting TDO logger")
 
-        # firmware version the first in case fails
-        rv, v = await lc.cmd_gfv()
+        rv, v = await cmd_gfv()
         _e(rv, "gfv")
+        ver = v
+        print(f'firmware version = {ver}')
 
-        rv = await lc.cmd_stp()
-        _e(rv, "stp")
 
-        rv = await lc.cmd_led()
+        g = ("-3.333333", "-4.444444", None, None)
+        rv = await cmd_sws(g)
+        _e(rv, "sws")
+
+
+        print(f'blinking LEDs')
+        rv = await cmd_led()
         _e(rv, "led")
 
-        rv = await lc.cmd_sts()
+
+        rv = await cmd_sts()
         _e(rv[0], "sts")
 
-        rv, t = await lc.cmd_gtm()
+        print('synchronizing time')
+        rv, t = await cmd_gtm()
         _e(rv, "gtm")
 
-        rv = await lc.cmd_stm()
+        rv = await cmd_stm()
         _e(rv, "stm")
 
-        rv = await lc.cmd_frm()
+
+        print('formatting logger file-system')
+        rv = await cmd_frm()
         _e(rv, "frm")
 
+
+        print(f'setting deployment name to {dn}')
+        rv = await cmd_dns(dn)
+        _e(rv, "dns")
+
+
         d = get_script_cfg_file()
-        rv = await lc.cmd_cfg(d)
+        rv = await cmd_cfg(d)
         _e(rv, "cfg")
 
-        rv = await lc.cmd_wli("BA8007")
+
+        rv = await cmd_wli("BA8007")
         _e(rv, "wli_ba")
         await asyncio.sleep(.1)
 
-        rv = await lc.cmd_wli("MA1234ABC")
+        rv = await cmd_wli("MA1234ABC")
         _e(rv, "wli_ma")
         await asyncio.sleep(.1)
 
-        rv = await lc.cmd_wli("CA1234")
+
+        rv = await cmd_wli("CA1234")
         _e(rv, "wli_ca")
         await asyncio.sleep(.1)
 
-        s = "SN{}".format(sn)
-        rv = await lc.cmd_wli(s)
+        rv = await cmd_wli(f"SN{sn}")
         _e(rv, "wli_sn")
         await asyncio.sleep(.1)
 
-        rv, info = await lc.cmd_rli()
-        _e(len(info.keys()) != 3, "rli")
+        rv, info = await cmd_rli()
 
-        rv = await lc.cmd_wak("on")
-        if rv:
-            rv = await lc.cmd_wak("on")
-        _e(rv, "wak")
 
-        # these stand for First Deployment Get / Set on TDO loggers
-        # rv, v = await lc.cmd_fdg()
-        # _e(rv, 'fds')
-        # rv, v = await lc.cmd_fds()
-        # _e(rv, 'fds')
-        # rv, v = await lc.cmd_fdg()
-        # _e(rv, 'fdg')
+        print('measuring battery')
+        rv, b = await cmd_bat()
+        _e(rv == 1, "bat")
+        print(f'battery is {b} mV')
 
-        rv = await lc.cmd_gdo()
-        print("\t\tGDO --> {}".format(rv))
-        bad_rv = not rv or (rv and rv[0] == "0000")
+
+        print('measuring oxygen sensor')
+        rv = await cmd_gdo()
+        print(f'oxygen value is {rv}')
+        bad_rv = not rv or (rv and rv[0] in ("0000", -1))
         if flag_sensor:
             _e(bad_rv, "gdo")
 
-        rv, b = await lc.cmd_bat()
-        bad_rv = rv == 1
-        _e(bad_rv, "bat")
-        print("\t\tBAT | {} mV".format(b))
 
         # -------------------------------
         # RUNs logger, depending on flag
@@ -112,47 +116,45 @@ async def deploy_logger_dox(mac, sn, flag_run, flag_sensor):
         if flag_run:
             await asyncio.sleep(1)
             g = (1.111111, 2.222222, None, None)
-            rv = await lc.cmd_rws(g)
-            print("\t\tRWS --> {}".format(rv))
+            rv = await cmd_rws(g)
             _e(rv, "rws")
+            print('DOX logger is running')
+
+            rv = await cmd_wak("on")
+            _e(rv, "wak")
+            print('DOX logger set wake mode 1')
 
         else:
-            print("\t\tRWS --> omitted: current flag value is False")
+            s = (_Pc.WARNING +
+                 "DOX logger not running, current RUN flag = 'False'" +
+                 _Pc.ENDC)
+            print(s)
 
-        # do not remove this
+
+        # do NOT remove this
         rv = 0
 
     except (Exception,) as ex:
-        print(PC.FAIL + "\t{}".format(ex) + PC.ENDC)
+        print(_Pc.FAIL + "\t{}".format(ex) + _Pc.ENDC)
         rv = 1
 
     finally:
-        await lc.disconnect()
+        await disconnect()
         return rv
 
 
+
 async def ble_scan_for_dox_loggers(t=5.0):
-
-    _dd = {}
-    _dl = []
-
-    def _scan_cb(d: BLEDevice, adv_data):
-        logger_types = ["DO-2", "DO-1"]
-        if d.name in logger_types:
-            _dd[d.address.lower()] = adv_data.rssi
-        if 'DO2' in d.name:
-            _dd[d.address.lower()] = adv_data.rssi
-
-    try:
-        print(f"\nscanning for {int(t)} seconds for DOX loggers")
-        scanner = BleakScanner(_scan_cb, None)
-        await scanner.start()
-        await asyncio.sleep(t)
-        await scanner.stop()
-        # _dl: [ (mac, rssi), (mac2, rssi), ...]
-        _dl = [(k, v) for k, v in _dd.items()]
-        return _dl
-
-    except (asyncio.TimeoutError, BleakError, OSError) as ex:
-        print("error BLE scan {}".format(ex))
-        return []
+    ad_i = ble_linux_find_best_interface()
+    ad_s = f'hci{ad_i}'
+    print(f"scanning {int(t)} seconds for DOX loggers on {ad_s}")
+    ls_dev = await BleakScanner(adapter=ad_s).discover(
+        timeout=t,
+        return_adv=True
+    )
+    ls_macs_rssi = []
+    for dev, adv in ls_dev.values():
+        n = dev.name
+        if n and ('DO-1' in n or 'DO-2' in n or 'DO2' in n):
+            ls_macs_rssi.append((dev.address, adv.rssi))
+    return ls_macs_rssi

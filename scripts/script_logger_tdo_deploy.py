@@ -6,6 +6,8 @@ import sys
 import subprocess as sp
 import os
 import toml
+
+from ble.ble_linux import ble_linux_disconnect_all
 from mat.utils import PrintColors as _Pc, linux_is_rpi
 from script_logger_tdo_deploy_utils import (
     deploy_logger_tdo,
@@ -27,6 +29,12 @@ g_cfg = {
 }
 
 
+
+ael = asyncio.new_event_loop()
+asyncio.set_event_loop(ael)
+
+
+
 def get_ddh_toml_all_macs_content():
     try:
         with open(FILE_ALL_MACS_TOML, 'r') as f:
@@ -37,16 +45,16 @@ def get_ddh_toml_all_macs_content():
         os._exit(1)
 
 
+
 def _screen_clear():
     sp.run("clear", shell=True)
+    print('\n')
+
 
 
 def _screen_separation():
     print("\n\n")
 
-
-def _menu_get():
-    return input("\t-> ")
 
 
 def _list_all_macs_file_content():
@@ -62,32 +70,26 @@ def _list_all_macs_file_content():
 
 
 
-def _menu_display(d: dict):
-    print("scan done!")
+def _menu_display_for_tdo_loggers(d: dict):
     print("\nchoose an option:")
-    print("\ts) scan for loggers nearby")
+    print("\ts) scan for TDO loggers nearby")
     print("\tl) list monitored macs in config.toml file")
-    print(f"\tr) toggle RUN flag, current value is {g_cfg['RUN']}")
-    print(f"\td) set DEPLOYMENT, current value is {g_cfg['DFN']}")
-    print(f"\tp) toggle PROFILING file, now is {g_cfg['PRF'].split('_cfg_')[1]}")
+    print(f"\tr) toggle RUN flag, current value '{g_cfg['RUN']}'")
+    print(f"\td) set DEPLOYMENT name, current value '{g_cfg['DFN']}'")
+    current_profile_file = g_cfg['PRF'].split('_cfg_')[1].split('.')[0]
+    print(f"\tp) toggle PROFILING file, current value '{current_profile_file}'")
     print("\tq) quit")
-    if not d:
-        return
-
 
     # print found macs with number
     for k, v in d.items():
-        s = "\t{}) deploy {} -> SN {} -> rssi {}"
-        print(s.format(k, v[0], v[1], v[2]))
+        mac, sn, rssi = v
+        print(f'\t{k}) deploy {mac} -> SN {sn}, rssi {rssi}')
+    return input("\t-> ")
 
 
-
-ael = asyncio.new_event_loop()
-asyncio.set_event_loop(ael)
 
 
 def _menu_execute(_m, _c):
-
     # _c: user choice
     if _c == "q":
         print("bye!")
@@ -130,7 +132,6 @@ def _menu_execute(_m, _c):
         return
 
 
-
     # --------------------------------------------
     # safety check, logger menu keys are integers
     # --------------------------------------------
@@ -153,14 +154,14 @@ def _menu_execute(_m, _c):
     # =====================================
     # call main routine logger preparation
     # =====================================
-    print(_Pc.OKBLUE + "\n\tdeploying logger {}...".format(mac) + _Pc.ENDC)
+    print(_Pc.OKBLUE + f"\ndeploying TDO logger {mac}..." + _Pc.ENDC)
     rv = ael.run_until_complete(deploy_logger_tdo(mac, sn, g_cfg))
 
 
     # show green or red success
-    _ = "\n\t========================"
-    s_ok = _Pc.OKGREEN + _ + "\n\tsuccess {}" + _ + _Pc.ENDC
-    s_nok = _Pc.FAIL + _ + "\n\terror {}" + _ + _Pc.ENDC
+    _ = "\n\t========================="
+    s_ok = _Pc.OKGREEN + _ + "\n\t✅ OK {}" + _ + _Pc.ENDC
+    s_nok = _Pc.FAIL + _ + "\n\t❌ {}" + _ + _Pc.ENDC
     s = s_ok if rv == 0 else s_nok
     print(s.format(mac))
 
@@ -168,34 +169,35 @@ def _menu_execute(_m, _c):
 
 
 def main_logger_tdo_deploy():
-
+    ble_linux_disconnect_all()
     _screen_clear()
-    # convert to lower-case the all_macs file content
     d_macs_file = get_ddh_toml_all_macs_content()
     d_macs_file = dict((k.lower(), v) for k, v in d_macs_file.items())
     menu_size = 10
-    print(f'TDO_deploy current folder: {os.getcwd()}')
     if not d_macs_file:
         e = "error -> all_macs list is empty"
         print(_Pc.FAIL + e + _Pc.ENDC)
         return
 
-
     while True:
-        d_menu = {}
+        # sr: ('D9:E8:C8:13:08:BE', -83)
         sr = ael.run_until_complete(ble_scan_for_tdo_loggers())
+
         # builds menu of up to 'n' entries d[#i]: (mac, sn, rssi)
-        for i, r in enumerate(sr):
+        d_menu = {}
+        i = 0
+        for r in sr:
             mac, rssi = r
             mac = mac.lower()
             if mac not in d_macs_file.keys():
                 continue
             sn = str(d_macs_file[mac])
-            d_menu[r] = (mac, sn , rssi)
+            d_menu[i] = (mac, sn, rssi)
+            i += 1
             if i == menu_size - 1:
                 break
-        _menu_display(d_menu)
-        c = _menu_get()
+
+        c = _menu_display_for_tdo_loggers(d_menu)
         _menu_execute(d_menu, c)
         _screen_separation()
 
