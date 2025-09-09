@@ -5,11 +5,8 @@ import asyncio
 import sys
 import subprocess as sp
 import os
-import time
-
 import toml
-
-from mat.utils import PrintColors as PC, linux_is_rpi
+from mat.utils import PrintColors as _Pc, linux_is_rpi
 from script_logger_tdo_deploy_utils import (
     deploy_logger_tdo,
     ble_scan_for_tdo_loggers,
@@ -64,37 +61,6 @@ def _list_all_macs_file_content():
         print(f'{i}) {k} SN{v}')
 
 
-def _menu_build(_sr: dict, n: int):
-
-    ddh_d = get_ddh_toml_all_macs_content()
-    if not ddh_d:
-        e = "error -> all_macs list is empty"
-        print(PC.FAIL + e + PC.ENDC)
-        return
-    # convert to lower-case
-    ddh_d = dict((k.lower(), v) for k, v in ddh_d.items())
-
-    # --------------------------------------------------
-    # filters scan results: only MACS in our dictionary
-    # --------------------------------------------------
-    d = {}
-    i = 0
-    for each_sr in _sr:
-        mac, rssi = each_sr
-        if mac not in ddh_d:
-            continue
-
-        # --------------------------------------------------------
-        # builds menu of up to 'n' entries d[#i]: (mac, sn, rssi)
-        # --------------------------------------------------------
-        sn = str(ddh_d[mac])
-        d[i] = (mac, sn, rssi)
-        i += 1
-        if i == n - 1:
-            break
-
-    return d
-
 
 def _menu_display(d: dict):
     print("scan done!")
@@ -108,10 +74,12 @@ def _menu_display(d: dict):
     if not d:
         return
 
+
     # print found macs with number
     for k, v in d.items():
         s = "\t{}) deploy {} -> SN {} -> rssi {}"
         print(s.format(k, v[0], v[1], v[2]))
+
 
 
 ael = asyncio.new_event_loop()
@@ -148,6 +116,8 @@ def _menu_execute(_m, _c):
         g_cfg["PRF"] = _p
         return
 
+
+
     if _c == "d":
         # ------------------------
         # set new deployment name
@@ -159,49 +129,77 @@ def _menu_execute(_m, _c):
         g_cfg["DFN"] = i
         return
 
+
+
     # --------------------------------------------
     # safety check, logger menu keys are integers
     # --------------------------------------------
     if not str(_c).isnumeric():
-        print(PC.WARNING + "\tunknown option" + PC.ENDC)
+        print(_Pc.WARNING + "\tunknown option" + _Pc.ENDC)
         return
     _c = int(_c)
     if _c >= len(_m):
-        print(PC.WARNING + "\tbad option" + PC.ENDC)
+        print(_Pc.WARNING + "\tbad option" + _Pc.ENDC)
         return
 
     # safety check, SN length
     mac, sn = _m[_c][0], _m[_c][1]
     if len(sn) != 7:
         e = "\terror, got {}, but serial numbers must be 7 digits long"
-        print(PC.FAIL + e.format(sn) + PC.ENDC)
+        print(_Pc.FAIL + e.format(sn) + _Pc.ENDC)
         return
+
 
     # =====================================
     # call main routine logger preparation
     # =====================================
-    print(PC.OKBLUE + "\n\tdeploying logger {}...".format(mac) + PC.ENDC)
+    print(_Pc.OKBLUE + "\n\tdeploying logger {}...".format(mac) + _Pc.ENDC)
     rv = ael.run_until_complete(deploy_logger_tdo(mac, sn, g_cfg))
+
 
     # show green or red success
     _ = "\n\t========================"
-    s_ok = PC.OKGREEN + _ + "\n\tsuccess {}" + _ + PC.ENDC
-    s_nok = PC.FAIL + _ + "\n\terror {}" + _ + PC.ENDC
+    s_ok = _Pc.OKGREEN + _ + "\n\tsuccess {}" + _ + _Pc.ENDC
+    s_nok = _Pc.FAIL + _ + "\n\terror {}" + _ + _Pc.ENDC
     s = s_ok if rv == 0 else s_nok
     print(s.format(mac))
 
 
+
+
 def main_logger_tdo_deploy():
+
     _screen_clear()
+    # convert to lower-case the all_macs file content
+    d_macs_file = get_ddh_toml_all_macs_content()
+    d_macs_file = dict((k.lower(), v) for k, v in d_macs_file.items())
+    menu_size = 10
     print(f'TDO_deploy current folder: {os.getcwd()}')
+    if not d_macs_file:
+        e = "error -> all_macs list is empty"
+        print(_Pc.FAIL + e + _Pc.ENDC)
+        return
+
 
     while True:
+        d_menu = {}
         sr = ael.run_until_complete(ble_scan_for_tdo_loggers())
-        m = _menu_build(sr, 10)
-        _menu_display(m)
+        # builds menu of up to 'n' entries d[#i]: (mac, sn, rssi)
+        for i, r in enumerate(sr):
+            mac, rssi = r
+            mac = mac.lower()
+            if mac not in d_macs_file.keys():
+                continue
+            sn = str(d_macs_file[mac])
+            d_menu[r] = (mac, sn , rssi)
+            if i == menu_size - 1:
+                break
+        _menu_display(d_menu)
         c = _menu_get()
-        _menu_execute(m, c)
+        _menu_execute(d_menu, c)
         _screen_separation()
+
+
 
 
 if __name__ == "__main__":
