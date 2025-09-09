@@ -42,6 +42,5 @@ hook_gps_error_measurement_forced = 0
 [experimental]
 # conf_dox can be 60, 300, 900
 # conf_dox = 900
-use_smart_lockout = 0
 # custom_side_buttons_debounce_time = 2
-use_debug_print = 0
+use_skip_hbw = 1

@@ -488,7 +488,8 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
 
     # tell what we are doing to GUI
     app_state_set(EV_BLE_CONNECTING, t_str(STR_EV_BLE_CONNECTING) + f' to {sn}')
-    lg.a('\n-------------------------------')
+    lg.x()
+    lg.a('-------------------------------')
     lg.a(f'connecting to logger {sn}')
     lg.a('-------------------------------')
 

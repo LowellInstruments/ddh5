@@ -1,11 +1,9 @@
-import json
 import os
-import toml
 from ble.ble import *
 from ddh.lef import lef_create_file
 from ddh.notifications_v2 import (
     LoggerNotification, notify_logger_error_low_battery,
-    notify_logger_error_sensor_pressure, notify_logger_error_sensor_oxygen
+    notify_logger_error_sensor_oxygen
 )
 from mat.utils import linux_is_rpi
 from utils.ddh_common import (
@@ -13,12 +11,13 @@ from utils.ddh_common import (
     create_path_to_folder_dl_files_from_mac,
     ddh_ble_logger_needs_a_reset,
     ddh_get_template_of_path_of_hbw_flag_file,
-    ddh_get_path_to_folder_scripts, EV_BLE_LOW_BATTERY,
+    EV_BLE_LOW_BATTERY,
     STR_EV_BLE_LOW_BATTERY, app_state_set, t_str,
-    ddh_does_do_not_rerun_file_flag_exist, EV_BLE_DL_ERROR,
+    ddh_does_do_not_rerun_file_flag_exist,
     TESTMODE_FILENAME_PREFIX,
     calculate_path_to_folder_within_dl_files_from_mac_address,
-    ddh_config_does_flag_file_download_test_mode_exist, exp_get_conf_dox, exp_debug_skip_hbw,
+    ddh_config_does_flag_file_download_test_mode_exist,
+    exp_get_conf_dox, exp_debug_skip_hbw,
 )
 from ddh_log import lg_ble as lg
 
@@ -102,21 +101,24 @@ async def ble_download_dox(d):
     if exp_debug_skip_hbw() != 1:
         if state == 'running':
             if v >= MIN_VERSION_HBW_CMD:
-                lg.a('sending command Has-Been-in-Water')
-                rv, v = await cmd_hbw()
-                _rae(rv, "hbw")
-                lg.a(f"HBW | {v}")
                 if os.path.exists(flag_ignore_hbw):
                     os.unlink(flag_ignore_hbw)
-                    lg.a('file flag to ignore HBW exists, force download it')
+                    lg.a('file flag to ignore HBW exists, FORCE download it')
                 else:
+                    # normal HBW command
+                    lg.a('sending command Has-Been-in-Water')
+                    rv, v = await cmd_hbw()
+                    _rae(rv, "hbw")
+                    lg.a(f"HBW | {v}")
                     if v == 0:
                         lg.a('logger has NOT been in water, no need to download it')
                         await disconnect()
                         return 2
-                    lg.a("logger has been in water, we will download it")
+                    lg.a("logger has been in water, we download it")
         else:
-            lg.a('logger NOT running, not considering HBW command')
+            lg.a('logger NOT running, not sending HBW command')
+    else:
+        lg.a("not sending command Has-Been-in-Water, it's disabled in configuration file")
 
 
     rv = await cmd_sws(g)

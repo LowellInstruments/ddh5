@@ -330,10 +330,6 @@
 
     added text input to filter and add loggers by serial number on "Setup" tab
 
-4.0.75 February 21, 2025
-
-    added new experimental flag 'exp_new_side_buttons'
-
 4.0.76 February 21, 2025
 
     fixed continuously uploading same but growing track.txt to AWS S3

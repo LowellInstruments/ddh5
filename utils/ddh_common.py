@@ -603,10 +603,10 @@ def ddh_config_get_box_project():
 
 def _get_exp_key_from_cfg(k):
     try:
-        return cfg['experimental'][k]
-    except (Exception, ):
-        # print(f'error, _get_exp_key_from_cfg -> {ex}')
+        return int(cfg['experimental'][k])
+    except (Exception, ) as ex:
         # no value in [experimental] section
+        print(f'error, _get_exp_key_from_cfg -> {ex}')
         return -1
 
 
