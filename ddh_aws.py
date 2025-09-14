@@ -11,12 +11,13 @@ import time
 import redis
 import subprocess as sp
 from ddh.emolt import this_box_has_grouped_s3_uplink
+from ddh.notifications_v2 import notify_error_sw_aws_s3
 from ddh_net import ddh_net_calculate_via
 from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
     RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
-    RD_DDH_AWS_SYNC_REQUEST, RD_DDH_GUI_PROCESS_AWS_OUTPUT
+    RD_DDH_AWS_SYNC_REQUEST, RD_DDH_AWS_PROCESS_STATE, RD_DDH_AWS_RV
 )
 from utils.ddh_common import (
     NAME_EXE_AWS,
@@ -74,12 +75,12 @@ def _get_path_of_aws_binary():
 
 
 def _ddh_aws_set_state(s):
-    r.set(RD_DDH_GUI_PROCESS_AWS_OUTPUT, s)
+    r.set(RD_DDH_AWS_PROCESS_STATE, s)
 
 
 
 def ddh_aws_get_state():
-    return r.get(RD_DDH_GUI_PROCESS_AWS_OUTPUT)
+    return r.get(RD_DDH_AWS_PROCESS_STATE)
 
 
 
@@ -279,6 +280,20 @@ def aws_sync(past_year=False):
         rv = _aws_sync(past_year)
         s = 'OK' if rv == 0 else 'error'
         _ddh_aws_set_state(s)
+
+        # see AWS is doing good enough
+        # todo: test this
+        k = RD_DDH_AWS_RV
+        if rv:
+            r.set(f'{k}_{int(time.time())}', 1)
+        _it = r.scan_iter(f'{k}_*', count=10)
+        ls = list(_it)
+        if len(ls) >= 5:
+            notify_error_sw_aws_s3()
+        if rv == 0 or len(ls) >= 5:
+            for i in ls:
+                r.delete(i)
+
     except (Exception, ) as ex:
         lg.a(f'error, aws_sync -> {ex}')
         _ddh_aws_set_state('error')
@@ -289,7 +304,7 @@ def aws_sync(past_year=False):
 def _ddh_aws(ignore_gui):
 
     # prepare AWS process
-    r.delete(RD_DDH_GUI_PROCESS_AWS_OUTPUT)
+    r.delete(RD_DDH_AWS_PROCESS_STATE)
     setproctitle.setproctitle(p_name)
     _ddh_aws_set_state('boot')
 
@@ -333,6 +348,7 @@ def _ddh_aws(ignore_gui):
             except (Exception,) as ex:
                 lg.a(f'error, aws_cp -> {ex}')
                 _ddh_aws_set_state('error')
+
 
 
         # AWS SYNC upload every 12 hours or when user deletes the flag

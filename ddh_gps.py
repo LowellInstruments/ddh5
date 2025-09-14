@@ -14,7 +14,7 @@ from gps.gps import (
 )
 from gpiozero import LED
 from ddh.notifications_v2 import (
-    notify_ddh_number_of_gps_satellites,
+    notify_ddh_number_of_gps_satellites, notify_ddh_error_hw_gps,
 )
 from rd_ctt.ddh import RD_DDH_GPS_HAT_GFV, RD_DDH_GPS_FIX_POSITION, RD_DDH_GPS_FIX_SPEED
 from utils.ddh_common import (
@@ -386,7 +386,6 @@ def _ddh_gps(ignore_gui):
     # GPS infinite loop
     while 1:
 
-
         if ddh_this_process_needs_to_quit(ignore_gui, p_name, g_killed):
             sys.exit(0)
 
@@ -399,7 +398,21 @@ def _ddh_gps(ignore_gui):
         else:
             gps_hardware_read(port_nmea, baud_rate, d, debug=False)
             bb_g = d['bb']
+
         if not bb_g:
+            # todo: test this
+            # see if GPS is doing OK
+            rv = 'error_gps' in d.keys()
+            k = RD_DDH_GPS_ERROR_NUMBER
+            if rv:
+                r.setex(f'{k}_{int(time.time())}', 60, 1)
+            _it = r.scan_iter(f'{k}_*', count=20)
+            ls = list(_it)
+            if len(ls) >= 10:
+                notify_ddh_error_hw_gps()
+            if rv == 0 or len(ls) >= 10:
+                for i in ls:
+                    r.delete(i)
             continue
 
 
