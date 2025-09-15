@@ -17,6 +17,7 @@ bleak
 humanize
 boto3
 h5py
+PyQt6
 
 
 

@@ -400,7 +400,6 @@ def _ddh_gps(ignore_gui):
             bb_g = d['bb']
 
         if not bb_g:
-            # todo: test this GPS error notification
             # see GPS is doing OK
             rv = 'error_gps' in d.keys()
             k = RD_DDH_GPS_ERROR_NUMBER
@@ -408,6 +407,7 @@ def _ddh_gps(ignore_gui):
                 r.setex(f'{k}_{int(time.time())}', 60, 1)
             ls = list(r.scan_iter(f'{k}_*', count=20))
             if len(ls) >= 10:
+                lg.a('warning: too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
             if rv == 0 or len(ls) >= 10:
                 for i in ls:
