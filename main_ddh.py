@@ -26,8 +26,8 @@ from mat.linux import linux_is_process_running_strict
 from rd_ctt.ddh import (
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_REFRESH_HISTORY_TABLE,
     RD_DDH_BLE_ANTENNA, \
-    RD_DDH_GPS_ANTENNA, RD_DDH_GUI_PROCESS_AWS_OUTPUT,
-    RD_DDH_GUI_PROCESS_NET_OUTPUT, \
+    RD_DDH_GPS_ANTENNA, RD_DDH_AWS_PROCESS_STATE,
+    RD_DDH_NET_PROCESS_OUTPUT, \
     RD_DDH_AWS_SYNC_REQUEST, RD_DDH_BLE_SEMAPHORE, \
     RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT,
     RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_REFRESH_BLE_ICON_AUTO, \
@@ -35,7 +35,7 @@ from rd_ctt.ddh import (
     RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_REFRESH_PROCESSES_PRESENT,
     RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
-    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE, RD_DDH_CRASH_TS_TEMPLATE
+    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -1397,8 +1397,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             RD_DDH_GUI_REFRESH_HISTORY_TABLE: None,
             RD_DDH_BLE_ANTENNA: self.lbl_ble_antenna_txt,
             RD_DDH_GPS_ANTENNA: self.lbl_gps_antenna_txt,
-            RD_DDH_GUI_PROCESS_AWS_OUTPUT: self.lbl_cloud_txt,
-            RD_DDH_GUI_PROCESS_NET_OUTPUT: self.lbl_cell_wifi_txt,
+            RD_DDH_AWS_PROCESS_STATE: self.lbl_cloud_txt,
+            RD_DDH_NET_PROCESS_OUTPUT: self.lbl_cell_wifi_txt,
         }
         for rd_key, field in ls_fields_to_refresh.items():
             v = r.get(rd_key)
@@ -1415,7 +1415,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             field.setText(v)
 
             # post-processing
-            if rd_key == RD_DDH_GUI_PROCESS_NET_OUTPUT:
+            if rd_key == RD_DDH_NET_PROCESS_OUTPUT:
                 if v in ("wifi", "wi-fi"):
                     ssid = gui_get_my_current_wlan_ssid()
                     self.lbl_cell_wifi_txt.setText(ssid)
@@ -1461,7 +1461,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # refresh icon cell-wifi in main tab left column
         k = RD_DDH_GUI_REFRESH_CELL_WIFI_ICON_AUTO
         if not r.exists(k):
-            via = r.get(RD_DDH_GUI_PROCESS_NET_OUTPUT)
+            via = r.get(RD_DDH_NET_PROCESS_OUTPUT)
             p = PATH_CELL_ICON_ERROR if via == 'none' else PATH_CELL_ICON_OK
             self.lbl_cell_wifi_img.setPixmap(QPixmap(p))
             r.setex(k, 10, 1)
@@ -1727,20 +1727,7 @@ def main_ddh_gui():
     app = QApplication(sys.argv)
     ex = DDH()
     ex.show()
-    rv = app.exec()
-    k = RD_DDH_CRASH_TS_TEMPLATE.format(int(time.time()))
-    r.setex(k, 600, 1)
-
-    iterator = r.scan_iter(f'{RD_DDH_CRASH_TS_TEMPLATE}*', count=10)
-    n = len(list(iterator))
-    if n >= 6:
-        for key in iterator:
-            r.delete(key)
-
-    print(f'application exited {n} times last hour')
-
-    # typical return of pyqt app
-    sys.exit(rv)
+    sys.exit(app.exec())
 
 
 

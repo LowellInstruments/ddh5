@@ -8,7 +8,7 @@ import time
 
 from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
-    RD_DDH_GUI_PROCESS_NET_OUTPUT
+    RD_DDH_NET_PROCESS_OUTPUT
 )
 from utils.ddh_common import (
     NAME_EXE_NET,
@@ -49,7 +49,7 @@ def _cb_ctrl_c(n, _):
 
 
 def ddh_net_get_internet_via():
-    via = r.get(RD_DDH_GUI_PROCESS_NET_OUTPUT)
+    via = r.get(RD_DDH_NET_PROCESS_OUTPUT)
     return via.decode() if via else None
 
 
@@ -106,10 +106,10 @@ def _ddh_net(ignore_gui):
 
 
         time.sleep(1)
-        if not r.exists(RD_DDH_GUI_PROCESS_NET_OUTPUT):
+        if not r.exists(RD_DDH_NET_PROCESS_OUTPUT):
             via = _net()
-            r.set(RD_DDH_GUI_PROCESS_NET_OUTPUT, via)
-            r.expire(RD_DDH_GUI_PROCESS_NET_OUTPUT, 60)
+            r.set(RD_DDH_NET_PROCESS_OUTPUT, via)
+            r.expire(RD_DDH_NET_PROCESS_OUTPUT, 60)
 
 
 

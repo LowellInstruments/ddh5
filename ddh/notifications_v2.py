@@ -203,12 +203,12 @@ def notify_error_api_crash():
 
 
 def notify_ddh_alive(g):
-    if is_it_time_to("ddh_notification_alive", 3600 * 12):
-        return _n(DDH_NOTIFICATION_STATUS_ALIVE, g)
+    return _n(DDH_NOTIFICATION_STATUS_ALIVE, g)
 
 
 def notify_ddh_error_hw_ble(g):
     return _n(DDH_NOTIFICATION_ERROR_HW_BLE, g)
+
 
 
 def notify_ddh_error_hw_gps():
