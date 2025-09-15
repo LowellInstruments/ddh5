@@ -400,14 +400,13 @@ def _ddh_gps(ignore_gui):
             bb_g = d['bb']
 
         if not bb_g:
-            # todo: test this
-            # see if GPS is doing OK
+            # todo: test this GPS error notification
+            # see GPS is doing OK
             rv = 'error_gps' in d.keys()
             k = RD_DDH_GPS_ERROR_NUMBER
             if rv:
                 r.setex(f'{k}_{int(time.time())}', 60, 1)
-            _it = r.scan_iter(f'{k}_*', count=20)
-            ls = list(_it)
+            ls = list(r.scan_iter(f'{k}_*', count=20))
             if len(ls) >= 10:
                 notify_ddh_error_hw_gps()
             if rv == 0 or len(ls) >= 10:

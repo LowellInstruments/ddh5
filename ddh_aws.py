@@ -281,13 +281,13 @@ def aws_sync(past_year=False):
         s = 'OK' if rv == 0 else 'error'
         _ddh_aws_set_state(s)
 
-        # see AWS is doing good enough
-        # todo: test this
+        # see AWS does well enough
         k = RD_DDH_AWS_RV
         if rv:
             r.set(f'{k}_{int(time.time())}', 1)
-        _it = r.scan_iter(f'{k}_*', count=10)
-        ls = list(_it)
+        ls = list(r.scan_iter(f'{k}_*', count=10))
+        if ls:
+            lg.a(f'warning: current AWS sync number of errors = {len(ls)}')
         if len(ls) >= 5:
             notify_error_sw_aws_s3()
         if rv == 0 or len(ls) >= 5:

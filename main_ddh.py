@@ -35,7 +35,7 @@ from rd_ctt.ddh import (
     RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_REFRESH_PROCESSES_PRESENT,
     RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
-    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE
+    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE, RD_DDH_GUI_RV
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -1727,6 +1727,20 @@ def main_ddh_gui():
     app = QApplication(sys.argv)
     ex = DDH()
     ex.show()
+    rv = app.exec()
+
+    # see DDH is doing well
+    k = RD_DDH_GUI_RV
+    if rv:
+        r.setex(f'{k}_{int(time.time())}', 600, 1)
+    ls = list(r.scan_iter(f'{k}_*', count=6))
+    if len(ls) >= 5:
+        notify_error_sw_crash()
+    if rv == 0 or len(ls) >= 5:
+        for i in ls:
+            r.delete(i)
+
+
     sys.exit(app.exec())
 
 
