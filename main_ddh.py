@@ -20,7 +20,7 @@ from ddh.graph_draw import graph_request
 from ddh.preferences import preferences_set_models_index
 from ddh_gps import ddh_gps_get
 from ddh.buttons import ddh_create_thread_buttons
-from ddh.notifications_v2 import notify_via_sms, notify_ddh_alive
+from ddh.notifications_v2 import notify_via_sms, notify_ddh_alive, notify_error_sw_crash
 from ddh.slo import slo_delete, slo_delete_all
 from mat.linux import linux_is_process_running_strict
 from rd_ctt.ddh import (
@@ -35,7 +35,7 @@ from rd_ctt.ddh import (
     RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_REFRESH_PROCESSES_PRESENT,
     RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
-    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE
+    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE, RD_DDH_CRASH_TS_TEMPLATE
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -1727,7 +1727,20 @@ def main_ddh_gui():
     app = QApplication(sys.argv)
     ex = DDH()
     ex.show()
-    sys.exit(app.exec())
+    rv = app.exec()
+    k = RD_DDH_CRASH_TS_TEMPLATE.format(int(time.time()))
+    r.setex(k, 600, 1)
+
+    iterator = r.scan_iter(f'{RD_DDH_CRASH_TS_TEMPLATE}*', count=10)
+    n = len(list(iterator))
+    if n >= 6:
+        for key in iterator:
+            r.delete(key)
+
+    print(f'application exited {n} times last hour')
+
+    # typical return of pyqt app
+    sys.exit(rv)
 
 
 
