@@ -1741,7 +1741,7 @@ def main_ddh_gui():
             r.delete(i)
 
 
-    sys.exit(app.exec())
+    sys.exit(rv)
 
 
 
