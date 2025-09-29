@@ -41,7 +41,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>7</number>
       </property>
       <widget class="QWidget" name="tab">
        <property name="sizePolicy">
@@ -1809,6 +1809,16 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
            </spacer>
           </item>
          </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_maps">
+       <attribute name="title">
+        <string>Maps</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_19">
+        <item>
+         <layout class="QVBoxLayout" name="lay_maps"/>
         </item>
        </layout>
       </widget>

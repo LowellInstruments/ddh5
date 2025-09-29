@@ -19,6 +19,12 @@ boto3
 h5py
 
 
+plotly
+PyQt6-WebEngine
+# on RPi, install PyQt6 via apt
+# apt install python3-pyqt6 pyqt6-dev-tools
+
+
 
 # for BRT tool
 simplepyble~=0.7.3
@@ -31,5 +37,3 @@ ble@git+https://github.com/LowellInstruments/ble.git
 rd_ctt@git+https://github.com/LowellInstruments/rd_ctt.git
 # mat is installed differently
 
-# on RPi, install via apt
-# apt install python3-pyqt6 pyqt6-dev-tools
