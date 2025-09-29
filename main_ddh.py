@@ -107,7 +107,6 @@ from utils.ddh_common import (
     ddh_get_local_software_version,
 )
 from ddh_log import lg_gui as lg
-import plotly.graph_objects as go
 
 
 
@@ -1710,47 +1709,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         lg.a("OK, finished booting graphical user interface")
-
-
-
-        # maps
-        self.maps_webview = QWebEngineView()
-        settings = self.maps_webview.page().settings()
-        settings.setAttribute(
-            QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
-        self.lay_maps.addWidget(self.maps_webview)
-        my_map = go.Scattermap(
-            lat=['45.5017', '46'],
-            lon=['-73.5673', '-74'],
-            mode='markers',
-            marker=go.scattermap.Marker(
-                size=14
-            ),
-            text=['Montreal', 'pepi'],
-        )
-        fig = go.Figure(my_map)
-        fig.update_layout(
-            margin=dict(
-                l=0,
-                r=0,
-                b=0,
-                t=0,
-                pad=0
-            ),
-            hovermode='closest',
-            map=dict(
-                bearing=0,
-                center=go.layout.map.Center(
-                    lat=45,
-                    lon=-73
-                ),
-                pitch=0,
-                zoom=5
-            )
-        )
-        fig.write_html('/tmp/a.html')
-        url = QUrl.fromLocalFile('/tmp/a.html')
-        self.maps_webview.load(url)
 
 
 
