@@ -357,9 +357,10 @@ def _ddh_gps(ignore_gui):
         r.set(RD_DDH_GPS_ANTENNA, ant_type)
     else:
         # None
-        lg.a(f'error, we have no GPS at all, not even dummy')
-        r.delete(RD_DDH_GPS_ANTENNA)
-        time.sleep(5)
+        while 1:
+            lg.a(f'error, we have no GPS at all, not even dummy')
+            r.delete(RD_DDH_GPS_ANTENNA)
+            time.sleep(5)
 
 
     # additional initialization of GPS

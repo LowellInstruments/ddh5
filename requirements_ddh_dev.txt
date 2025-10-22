@@ -32,8 +32,3 @@ lsb@git+https://github.com/LowellInstruments/lsb.git
 # gps@git+https://github.com/LowellInstruments/gps.git
 # mat@git+https://github.com/LowellInstruments/mat.git
 # rd_ctt@git+https://github.com/LowellInstruments/rd_ctt.git
-
-
-
-# on RPi, install via apt
-# apt install python3-pyqt6 pyqt6-dev-tools

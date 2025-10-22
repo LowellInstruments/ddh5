@@ -23,6 +23,7 @@ from ddh.buttons import ddh_create_thread_buttons
 from ddh.notifications_v2 import notify_via_sms, notify_ddh_alive, notify_error_sw_crash
 from ddh.slo import slo_delete, slo_delete_all
 from mat.linux import linux_is_process_running_strict
+from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_REFRESH_HISTORY_TABLE,
     RD_DDH_BLE_ANTENNA, \
@@ -94,7 +95,6 @@ from ddh.preferences import (
 from ddh.utils_models import gui_populate_models_tab
 from ddh.emolt import this_box_has_grouped_s3_uplink
 from ddh.timecache import is_it_time_to
-from mat.utils import linux_is_rpi
 import subprocess as sp
 import pyqtgraph as pg
 from utils.ddh_common import (
@@ -775,9 +775,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def handle_state_ble(self, state):
         self.process_state_ble = d_process_states[state]
 
+
     def _cb_timer_six_hours(self):
         g = ddh_gps_get()
         if g:
+            print('**************** notify is alive')
             notify_ddh_alive(g)
             self.timer_six_hours.start(3600 * 6)
         else:

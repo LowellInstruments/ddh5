@@ -100,8 +100,8 @@ def _cb_ctrl_c(n, _):
 
 def _check_bluez_version():
     v = ble_linux_get_bluez_version()
-    if v != '5.66':
-        lg.a(f"warning, bluez version {v} != 5.66")
+    if v < '5.66':
+        lg.a(f"warning, bluez version {v} < 5.66")
 
 
 
