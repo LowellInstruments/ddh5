@@ -2,7 +2,11 @@ import threading
 import time
 from signal import pause
 from mat.utils import linux_is_rpi
-from rd_ctt.ddh import RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_BOX_SIDE_BUTTON_MID, RD_DDH_GUI_BOX_SIDE_BUTTON_LOW
+from rd_ctt.ddh import (
+    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP,
+    RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
+    RD_DDH_GUI_BOX_SIDE_BUTTON_LOW
+)
 from utils.ddh_common import (
     exp_get_custom_side_buttons_debounce_time,
 )
@@ -23,19 +27,18 @@ PIN_BTN_3 = 21
 
 
 
-# custom debounce time
-cdt = exp_get_custom_side_buttons_debounce_time()
-if cdt == 1:
-    cdt = .1
-elif cdt == 2:
-    cdt = .01
-else:
-    cdt = .001
-
-
 def _th_gpio_box_buttons():
 
     from gpiozero import Button
+
+    # custom debounce time
+    cdt = exp_get_custom_side_buttons_debounce_time()
+    if cdt == 1:
+        cdt = .1
+    elif cdt == 2:
+        cdt = .01
+    else:
+        cdt = .001
 
     print(f'new buttons thread using cdt = {cdt}')
     b1 = Button(PIN_BTN_1, pull_up=True, bounce_time=cdt)
@@ -78,8 +81,3 @@ def ddh_create_thread_buttons():
     print(f'GUI: creating buttons thread')
     bth = threading.Thread(target=_th_gpio_box_buttons)
     bth.start()
-
-
-
-if __name__ == '__main__':
-    ddh_create_thread_buttons()
