@@ -2,7 +2,7 @@ import os
 
 import toml
 from ble.ble import *
-from ble.ble_linux import ble_linux_find_best_interface
+from ble.ble_linux import ble_linux_find_best_adapter_index
 from mat.utils import PrintColors as _Pc
 
 
@@ -19,7 +19,7 @@ async def deploy_logger_tdo(mac, sn, cfg_from_menu):
     rv = 0
 
     try:
-        rv = await connect_by_mac(mac)
+        rv = await ble_connect_by_mac(mac)
         _e(not rv, 'connecting DOX logger')
 
 
@@ -176,14 +176,14 @@ async def deploy_logger_tdo(mac, sn, cfg_from_menu):
 
 
     finally:
-        await disconnect()
+        await ble_disconnect()
         return rv
 
 
 
 
 async def ble_scan_for_tdo_loggers(t=5.0):
-    ad_i = ble_linux_find_best_interface()
+    ad_i = ble_linux_find_best_adapter_index('')
     ad_s = f'hci{ad_i}'
     print(f"scanning {int(t)} seconds for TDO loggers on {ad_s}")
     ls_dev = await BleakScanner(adapter=ad_s).discover(
