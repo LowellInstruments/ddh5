@@ -72,7 +72,7 @@ async def ble_download_dox(d):
     create_path_to_folder_dl_files_from_mac(mac)
 
 
-    rv = await connect(dev)
+    rv = await ble_connect_by_dev(dev)
     _une(not rv, d, "comm.")
     _rae(not rv, "connecting")
     lg.a(f"connected to {mac}")
@@ -112,7 +112,7 @@ async def ble_download_dox(d):
                     lg.a(f"HBW | {v}")
                     if v == 0:
                         lg.a('logger has NOT been in water, no need to download it')
-                        await disconnect()
+                        await ble_disconnect()
                         return 2
                     lg.a("logger has been in water, we download it")
         else:
@@ -301,5 +301,5 @@ async def ble_download_dox(d):
         lg.a("RWS | OK")
 
 
-    await disconnect()
+    await ble_disconnect()
     return 0

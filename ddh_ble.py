@@ -11,13 +11,13 @@ import time
 import signal
 import setproctitle
 import redis
-from ble.ble import ble_scan_slow, disconnect
+from ble.ble import ble_scan_slow, ble_disconnect
 from ble.ble_linux import (
     ble_linux_get_bluez_version,
-    ble_linux_is_antenna_up_n_running,
-    ble_linux_detect_devices_left_connected_ll,
-    ble_linux_disconnect_all, ble_linux_find_best_interface,
-    ble_linux_get_type_of_interface, ble_linux_reset_antenna,
+    ble_linux_is_adapter_up_by_index,
+    ble_linux_is_there_any_mac_left_connected,
+    ble_linux_disconnect_all, ble_linux_find_best_adapter_index,
+    ble_linux_get_adapter_type_by_index, ble_linux_reset_adapter_by_index,
     ble_linux_disconnect_by_mac, ble_linux_is_mac_already_connected
 )
 from ddh.ble_dox import ble_download_dox
@@ -119,9 +119,9 @@ def _ddh_ble_hardware_error_notify_via_email(g, antenna_idx, rv_error_ble_hw):
 
 def _ddh_ble_hardware_describe_antenna_type():
 
-    antenna_idx = ble_linux_find_best_interface()
+    antenna_idx = ble_linux_find_best_adapter_index('ddh')
     if antenna_idx != -1:
-        antenna_desc = ble_linux_get_type_of_interface(antenna_idx)
+        antenna_desc = ble_linux_get_adapter_type_by_index(antenna_idx)
     else:
         antenna_desc = 'error'
 
@@ -139,8 +139,8 @@ def _ddh_ble_hardware_describe_antenna_type():
 def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
 
     brr = r.get(RD_DDH_BLE_RESET_REQ)
-    aur = ble_linux_is_antenna_up_n_running(antenna_idx)
-    nlc = ble_linux_detect_devices_left_connected_ll()
+    aur = ble_linux_is_adapter_up_by_index(antenna_idx)
+    nlc = ble_linux_is_there_any_mac_left_connected()
     need_hw_reset = brr or aur
     rv = 0
 
@@ -165,15 +165,15 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
 
         if linux_is_rpi() and need_hw_reset:
             lg.a("warning, starting hci0 reset")
-            ble_linux_reset_antenna(0)
+            ble_linux_reset_adapter_by_index(0)
             time.sleep(1)
             lg.a("warning, starting hci1 reset")
-            ble_linux_reset_antenna(1)
+            ble_linux_reset_adapter_by_index(1)
             time.sleep(1)
 
 
         # linux BLE system health check: again
-        aur = ble_linux_is_antenna_up_n_running(antenna_idx)
+        aur = ble_linux_is_adapter_up_by_index(antenna_idx)
         if aur:
             lg.a('error, cannot get a good BLE antenna')
             rv = 1
@@ -278,7 +278,7 @@ async def _ble_logger_id_and_download(d):
     except (Exception, ) as ex:
         lg.a(f'error, ble_id_and_download_logger -> {ex}')
         rv = 1
-        await disconnect()
+        await ble_disconnect()
         ble_linux_disconnect_by_mac(mac)
 
 
