@@ -80,6 +80,7 @@ lg_net = LogDDHByModule("net")
 lg_emo = LogDDHByModule("emo")
 lg_gra = LogDDHByModule("gra")
 lg_trk = LogDDHByModule("trk")
+lg_tst = LogDDHByModule("tst")
 
 
 

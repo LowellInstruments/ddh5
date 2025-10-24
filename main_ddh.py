@@ -638,12 +638,12 @@ def gui_add_to_history_database(mac, e, lat, lon, ep_loc, ep_utc, rerun, u, info
 def gui_confirm_by_user(s):
     """ask user to press OK or CANCEL"""
     m = QMessageBox()
-    m.setIcon(QMessageBox.Information)
+    m.setIcon(QMessageBox.Icon.Information)
     m.setWindowTitle("warning")
     m.setText(s)
-    choices = QMessageBox.Ok | QMessageBox.Cancel
+    choices = QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel
     m.setStandardButtons(choices)
-    return m.exec_() == QMessageBox.Ok
+    return m.exec() == QMessageBox.StandardButton.Ok
 
 
 
@@ -779,11 +779,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def _cb_timer_six_hours(self):
         g = ddh_gps_get()
         if g:
-            print('**************** notify is alive')
             notify_ddh_alive(g)
-            self.timer_six_hours.start(3600 * 6)
+            self.timer_six_hours.start(3600 * 6 * 1000)
         else:
-            self.timer_six_hours.start(3600 * 1)
+            self.timer_six_hours.start(3600 * 1 * 1000)
 
 
     def _cb_timer_plot(self):
@@ -909,10 +908,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         l_v = self.lst_mac_dst
         if not l_v:
-            ans_mb = QMessageBox.question(self, 'Question',
-                                     "Do you want to save an empty logger list?",
-                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if ans_mb == QMessageBox.No:
+            ans_mb = QMessageBox.question(
+                self,
+                'Question',
+                "Do you want to save an empty logger list?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No)
+            if ans_mb == QMessageBox.StandardButton.No:
                 return
             lg.a('warning, saved a config without macs after confirmation')
 
@@ -1002,7 +1004,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 return
             shutil.rmtree(str(d), ignore_errors=True)
         except OSError as e:
-            lg.a("error {} : {}".format(d, e))
+            lg.a(f"error {d} : {e}")
 
 
 
@@ -1670,8 +1672,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.timer_six_hours.timeout.connect(self._cb_timer_six_hours)
         self.timer_cpu_hot.timeout.connect(self._cb_timer_cpu_temperature)
         self.timer_plot.timeout.connect(self._cb_timer_plot)
-        self.timer_gui_one_second.start(1000)
-        self.timer_six_hours.start(3600 * 6)
+        self.timer_gui_one_second.start(1 * 1000)
+        # well, the first will be less than 6 hours, more like 10 seconds
+        self.timer_six_hours.start(10 * 1000)
         self.timer_plot.start(1000)
         if linux_is_rpi():
             self.timer_cpu_hot.start(1000)
