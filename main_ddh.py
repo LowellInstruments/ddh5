@@ -353,6 +353,7 @@ def gui_tabs_populate_history(my_app):
 
     # clear the table
     a = my_app
+    a.tbl_his.clear()
     a.tbl_his.tableWidget = None
     a.tbl_his.tableWidget = QTableWidget()
     a.tbl_his.tableWidget.setRowCount(25)
