@@ -9,4 +9,8 @@
 
         fixed timer sending alive notifications too often
 
+5.0.03  10/24/25
+
+        fixed bug not deleting history
+        fixed bug not deleting dl_files
 
