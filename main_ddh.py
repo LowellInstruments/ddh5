@@ -1032,8 +1032,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         s = "sure to purge history?"
         if gui_confirm_by_user(s):
-            db = DbHis(ddh_get_path_to_db_history_file())
-            lg.a(f"pressed btn_purge_dl_folder, path {db}")
+            p = ddh_get_path_to_db_history_file()
+            db = DbHis(p)
+            lg.a(f"pressed btn_purge_dl_folder, path = {p}")
             db.delete_all()
         gui_tabs_populate_history(self)
 
