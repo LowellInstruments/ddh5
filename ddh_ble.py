@@ -1,24 +1,17 @@
 import datetime
 import os
-import pathlib
-import shutil
 import sys
-
 from tzlocal import get_localzone
 from uuid import uuid4
 import json
 import time
-import signal
 import setproctitle
 import redis
 from ble.ble import ble_scan_slow, ble_disconnect
 from ble.ble_linux import (
-    ble_linux_get_bluez_version,
-    ble_linux_is_adapter_up_by_index,
-    ble_linux_is_there_any_mac_left_connected,
-    ble_linux_disconnect_all, ble_linux_find_best_adapter_index,
-    ble_linux_get_adapter_type_by_index, ble_linux_reset_adapter_by_index,
-    ble_linux_disconnect_by_mac, ble_linux_is_mac_already_connected
+    ble_linux_get_bluez_version, ble_linux_adapter_find_best_index_by_app, ble_linux_adapter_get_type_by_index,
+    ble_linux_adapter_reset_by_index, ble_linux_adapter_is_it_up_by_index, ble_linux_logger_disconnect_by_mac,
+    ble_linux_logger_was_any_left_connected, ble_linux_logger_disconnect_all,
 )
 from ddh.ble_dox import ble_download_dox
 from ddh_gps import (
@@ -80,21 +73,6 @@ using_dummy_gps = ddh_gps_know_we_are_using_dummy()
 g_prev_ble = 0
 g_ls_macs_mon = [i.upper() for i in ddh_config_get_list_of_monitored_macs()]
 _g_logger_errors = {}
-g_killed = False
-
-
-
-def _cb_kill(n, _):
-    print(f'{p_name}: captured signal kill', flush=True)
-    global g_killed
-    g_killed = True
-
-
-
-def _cb_ctrl_c(n, _):
-    print(f'{p_name}: captured signal ctrl + c', flush=True)
-    global g_killed
-    g_killed = True
 
 
 
@@ -119,9 +97,9 @@ def _ddh_ble_hardware_error_notify_via_email(g, antenna_idx, rv_error_ble_hw):
 
 def _ddh_ble_hardware_describe_antenna_type():
 
-    antenna_idx = ble_linux_find_best_adapter_index('ddh')
+    antenna_idx = ble_linux_adapter_find_best_index_by_app('ddh')
     if antenna_idx != -1:
-        antenna_desc = ble_linux_get_adapter_type_by_index(antenna_idx)
+        antenna_desc = ble_linux_adapter_get_type_by_index(antenna_idx)
     else:
         antenna_desc = 'error'
 
@@ -139,8 +117,8 @@ def _ddh_ble_hardware_describe_antenna_type():
 def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
 
     brr = r.get(RD_DDH_BLE_RESET_REQ)
-    aur = ble_linux_is_adapter_up_by_index(antenna_idx)
-    nlc = ble_linux_is_there_any_mac_left_connected()
+    aur = ble_linux_adapter_is_it_up_by_index(antenna_idx)
+    nlc = ble_linux_logger_was_any_left_connected()
     need_hw_reset = brr or aur
     rv = 0
 
@@ -155,7 +133,7 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
             lg.a(f"warning, hci{antenna_idx} is NOT up and running")
         if nlc:
             lg.a(f"warning, detected {nlc} devices left connected")
-            rv = ble_linux_disconnect_all()
+            rv = ble_linux_logger_disconnect_all()
             if rv == 0:
                 lg.a('OK, disconnected devices left connected gracefully')
             else:
@@ -165,15 +143,15 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
 
         if linux_is_rpi() and need_hw_reset:
             lg.a("warning, starting hci0 reset")
-            ble_linux_reset_adapter_by_index(0)
+            ble_linux_adapter_reset_by_index(0)
             time.sleep(1)
             lg.a("warning, starting hci1 reset")
-            ble_linux_reset_adapter_by_index(1)
+            ble_linux_adapter_reset_by_index(1)
             time.sleep(1)
 
 
         # linux BLE system health check: again
-        aur = ble_linux_is_adapter_up_by_index(antenna_idx)
+        aur = ble_linux_adapter_is_it_up_by_index(antenna_idx)
         if aur:
             lg.a('error, cannot get a good BLE antenna')
             rv = 1
@@ -239,6 +217,7 @@ def _ble_logger_is_rn4020(mac, info):
         return True
     if "MATP-2W" in info:
         return True
+    return False
 
 
 
@@ -279,7 +258,7 @@ async def _ble_logger_id_and_download(d):
         lg.a(f'error, ble_id_and_download_logger -> {ex}')
         rv = 1
         await ble_disconnect()
-        ble_linux_disconnect_by_mac(mac)
+        ble_linux_logger_disconnect_by_mac(mac)
 
 
     return rv
@@ -570,8 +549,7 @@ def _ddh_ble(ignore_gui):
     r.set(RD_DDH_BLE_ANTENNA, antenna_s)
 
 
-    # know your GPS antenna
-
+    # clock sync at boot
     _ddh_ble_boot_gps_clock_sync()
 
 
@@ -580,7 +558,7 @@ def _ddh_ble(ignore_gui):
     rv_prev_run = 0
     while 1:
 
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name, g_killed):
+        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
             sys.exit(0)
 
 
@@ -654,9 +632,6 @@ def _ddh_ble(ignore_gui):
 
 
 def main_ddh_ble(ignore_gui=False):
-
-    signal.signal(signal.SIGINT, _cb_ctrl_c)
-    signal.signal(signal.SIGTERM, _cb_kill)
 
     while 1:
         try:

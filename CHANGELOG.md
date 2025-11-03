@@ -14,3 +14,7 @@
         fixed bug not deleting history
         fixed bug not deleting dl_files
 
+5.0.04  11/03/25
+
+        refactor to understand processes output
+

@@ -1,12 +1,8 @@
 import json
-import signal
 import sys
-
 import setproctitle
 import redis
 import time
-
-from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
     RD_DDH_NET_PROCESS_OUTPUT
 )
@@ -30,21 +26,6 @@ from ddh_log import lg_net as lg
 IP = "8.8.8.8"
 r = redis.Redis('localhost', port=6379)
 p_name = NAME_EXE_NET
-g_killed = False
-
-
-
-def _cb_kill(n, _):
-    print(f'{p_name}: captured signal kill', flush=True)
-    global g_killed
-    g_killed = True
-
-
-
-def _cb_ctrl_c(n, _):
-    print(f'{p_name}: captured signal ctrl + c', flush=True)
-    global g_killed
-    g_killed = True
 
 
 
@@ -101,7 +82,7 @@ def _ddh_net(ignore_gui):
     # forever loop set internet via to redis, do not hog CPU
     while 1:
 
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name, g_killed):
+        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
             sys.exit(0)
 
 
@@ -115,10 +96,6 @@ def _ddh_net(ignore_gui):
 
 
 def main_ddh_net(ignore_gui=False):
-
-    signal.signal(signal.SIGINT, _cb_ctrl_c)
-    signal.signal(signal.SIGTERM, _cb_kill)
-
     try:
         _ddh_net(ignore_gui)
     except (Exception,) as ex:

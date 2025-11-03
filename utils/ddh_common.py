@@ -53,14 +53,14 @@ def ddh_is_gui_running():
 
 
 
-def ddh_this_process_needs_to_quit(ignore_gui, p_name, killed):
-    if not ignore_gui and not ddh_is_gui_running():
-        print(f"debug, process '{p_name}' ends because no GUI")
-        return True
-    if killed:
-        print(f"debug, process '{p_name}' told to quit")
-        return True
-    return False
+def ddh_this_process_needs_to_quit(ignore_gui, p_name):
+    if ignore_gui:
+        return False
+    if ddh_is_gui_running():
+        return False
+    print(f"debug, process '{p_name}' ends because no GUI")
+    return True
+
 
 
 

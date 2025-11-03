@@ -1,4 +1,3 @@
-import signal
 import sys
 import setproctitle
 import time
@@ -33,21 +32,6 @@ Path(d).mkdir(parents=True, exist_ok=True)
 log_file = f'{d}/{vn}_{ymd}.log'
 f = open(log_file, 'a')
 g_last_now = ''
-g_killed = False
-
-
-
-def _cb_kill(n, _):
-    print(f'{p_name}: captured signal kill', flush=True)
-    global g_killed
-    g_killed = True
-
-
-
-def _cb_ctrl_c(n, _):
-    print(f'{p_name}: captured signal ctrl + c', flush=True)
-    global g_killed
-    g_killed = True
 
 
 
@@ -72,7 +56,6 @@ class LogDDHByModule:
 lg_ble = LogDDHByModule("ble")
 lg_aws = LogDDHByModule("aws")
 lg_cnv = LogDDHByModule("cnv")
-lg_sns = LogDDHByModule("sns")
 lg_sqs = LogDDHByModule("sqs")
 lg_gps = LogDDHByModule("gps")
 lg_gui = LogDDHByModule("gui")
@@ -110,7 +93,11 @@ def _write_to_log_file(s):
 
 
 
+# -------------------------------------------
 # LOG_HANDLES things queued by using lg.a()
+# from DDH subprocesses, not print()
+# -------------------------------------------
+
 def _dequeue_n_log():
     global g_last_now
 
@@ -128,7 +115,7 @@ def _dequeue_n_log():
         # bunch of text to file
         _write_to_log_file(f'{b.decode()}\n')
 
-        # colored bunch of text to console
+        # PRINTS a bunch of colored text to console
         _color_write_to_console(b)
 
 
@@ -142,10 +129,10 @@ def _ddh_log(ignore_gui):
     print(f"LOG: process '{p_name}' is running")
 
 
-    # forever loop collecting messages to print
+    # forever loop collecting messages to log
     while 1:
 
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name, g_killed):
+        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
             sys.exit(0)
 
         time.sleep(1)
@@ -156,9 +143,6 @@ def _ddh_log(ignore_gui):
 
 
 def main_ddh_log(ignore_gui=False):
-    signal.signal(signal.SIGINT, _cb_ctrl_c)
-    signal.signal(signal.SIGTERM, _cb_kill)
-
     while 1:
         try:
             _ddh_log(ignore_gui)

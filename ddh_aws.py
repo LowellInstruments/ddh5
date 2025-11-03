@@ -3,9 +3,7 @@ import glob
 import json
 import os
 import pathlib
-import signal
 import sys
-
 import setproctitle
 import time
 import redis
@@ -49,21 +47,6 @@ q = RD_DDH_AWS_COPY_QUEUE
 vessel = (ddh_config_get_vessel_name()
           .replace("'", "").replace(" ", "_").upper())
 dev = not linux_is_rpi()
-g_killed = False
-
-
-
-def _cb_kill(n, _):
-    print(f'{p_name}: captured signal kill', flush=True)
-    global g_killed
-    g_killed = True
-
-
-
-def _cb_ctrl_c(n, _):
-    print(f'{p_name}: captured signal ctrl + c', flush=True)
-    global g_killed
-    g_killed = True
 
 
 
@@ -322,7 +305,7 @@ def _ddh_aws(ignore_gui):
     # forever loop waiting requests
     while 1:
 
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name, g_killed):
+        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
             sys.exit(0)
 
         # prevent CPU hog
@@ -361,9 +344,6 @@ def _ddh_aws(ignore_gui):
 
 
 def main_ddh_aws(ignore_gui=False):
-    signal.signal(signal.SIGINT, _cb_ctrl_c)
-    signal.signal(signal.SIGTERM, _cb_kill)
-
     while 1:
         try:
             _ddh_aws(ignore_gui)
