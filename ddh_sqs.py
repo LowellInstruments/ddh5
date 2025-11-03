@@ -1,6 +1,4 @@
-import signal
 import sys
-
 import setproctitle
 import time
 import redis
@@ -73,22 +71,7 @@ p_name = NAME_EXE_SQS
 vessel = (ddh_config_get_vessel_name()
           .replace("'", "").replace(" ", "_").upper())
 dev = not linux_is_rpi()
-g_killed = False
 g_sqs_error_credentials = 0
-
-
-
-def _cb_kill(n, _):
-    print(f'{p_name}: captured signal kill', flush=True)
-    global g_killed
-    g_killed = True
-
-
-
-def _cb_ctrl_c(n, _):
-    print(f'{p_name}: captured signal ctrl + c', flush=True)
-    global g_killed
-    g_killed = True
 
 
 
@@ -184,7 +167,7 @@ def _ddh_sqs(ignore_gui):
 
     # forever loop serving local SQS files, do not hog CPU
     while 1:
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name, g_killed):
+        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
             sys.exit(0)
 
         time.sleep(1)
@@ -197,10 +180,6 @@ def _ddh_sqs(ignore_gui):
 
 
 def main_ddh_sqs(ignore_gui=False):
-
-    signal.signal(signal.SIGINT, _cb_ctrl_c)
-    signal.signal(signal.SIGTERM, _cb_kill)
-
     while 1:
         try:
             _ddh_sqs(ignore_gui)

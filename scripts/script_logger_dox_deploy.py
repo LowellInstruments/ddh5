@@ -7,7 +7,7 @@ import subprocess as sp
 import os
 import toml
 
-from ble.ble_linux import ble_linux_disconnect_all
+from ble.ble_linux import ble_linux_logger_disconnect_all
 from mat.utils import PrintColors as _Pc, linux_is_rpi
 from script_logger_dox_deploy_utils import (
     set_script_cfg_file,
@@ -214,7 +214,7 @@ def _menu_execute(_m, _c, cfg):
 
 
 def main_logger_dox_deploy():
-    ble_linux_disconnect_all()
+    ble_linux_logger_disconnect_all()
     _screen_clear()
     d_macs_file = get_ddh_toml_all_macs_content()
     d_macs_file = dict((k.lower(), v) for k, v in d_macs_file.items())

@@ -1,6 +1,4 @@
-import signal
 import sys
-
 import setproctitle
 from tzlocal import get_localzone
 from gps.gps_adafruit import gps_adafruit_init
@@ -38,7 +36,6 @@ from utils.ddh_common import (
     ddh_config_get_speed_considered_as_trawling,
     ddh_config_get_list_of_monitored_macs, \
 )
-from ddh_log import lg_ble as lg
 
 
 
@@ -63,21 +60,6 @@ s_lo, s_hi = ddh_config_get_speed_considered_as_trawling()
 s_lo = float(s_lo)
 s_hi = float(s_hi)
 g_ls_macs_mon = ddh_config_get_list_of_monitored_macs()
-g_killed = False
-
-
-
-def _cb_kill(n, _):
-    print(f'{p_name}: captured signal kill', flush=True)
-    global g_killed
-    g_killed = True
-
-
-
-def _cb_ctrl_c(n, _):
-    print(f'{p_name}: captured signal ctrl + c', flush=True)
-    global g_killed
-    g_killed = True
 
 
 
@@ -387,7 +369,7 @@ def _ddh_gps(ignore_gui):
     # GPS infinite loop
     while 1:
 
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name, g_killed):
+        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
             sys.exit(0)
 
 
@@ -433,9 +415,6 @@ def _ddh_gps(ignore_gui):
 
 
 def main_ddh_gps(ignore_gui=False):
-    signal.signal(signal.SIGINT, _cb_ctrl_c)
-    signal.signal(signal.SIGTERM, _cb_kill)
-
     while 1:
         try:
             _ddh_gps(ignore_gui)

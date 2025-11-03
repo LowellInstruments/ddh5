@@ -2,7 +2,7 @@ import os
 
 import toml
 from ble.ble import *
-from ble.ble_linux import ble_linux_find_best_adapter_index
+from ble.ble_linux import ble_linux_adapter_find_best_index_by_app
 from mat.utils import PrintColors as _Pc
 
 
@@ -183,7 +183,7 @@ async def deploy_logger_tdo(mac, sn, cfg_from_menu):
 
 
 async def ble_scan_for_tdo_loggers(t=5.0):
-    ad_i = ble_linux_find_best_adapter_index('')
+    ad_i = ble_linux_adapter_find_best_index_by_app('')
     ad_s = f'hci{ad_i}'
     print(f"scanning {int(t)} seconds for TDO loggers on {ad_s}")
     ls_dev = await BleakScanner(adapter=ad_s).discover(

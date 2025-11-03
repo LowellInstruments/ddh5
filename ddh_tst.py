@@ -1,7 +1,4 @@
-import sys
-
 import time
-import signal
 import setproctitle
 from ddh_log import lg_tst as lg
 
@@ -15,18 +12,6 @@ from ddh_log import lg_tst as lg
 
 
 p_name = 'TST'
-
-
-
-def _cb_kill(n, _):
-    print(f'{p_name}: captured signal kill', flush=True)
-    sys.exit(1)
-
-
-
-def _cb_ctrl_c(n, _):
-    print(f'{p_name}: captured signal ctrl + c', flush=True)
-    sys.exit(1)
 
 
 
@@ -50,10 +35,6 @@ def _ddh_tst(ignore_gui):
 
 
 def main_ddh_tst(ignore_gui=False):
-
-    signal.signal(signal.SIGINT, _cb_ctrl_c)
-    signal.signal(signal.SIGTERM, _cb_kill)
-
     while 1:
         try:
             _ddh_tst(ignore_gui)

@@ -122,31 +122,34 @@ d_process_states = {
     QProcess.ProcessState.Starting: 'Starting',
     QProcess.ProcessState.Running: 'Running',
 }
-ls_processes = (
-    NAME_EXE_LOG,
-    NAME_EXE_AWS,
-    NAME_EXE_BLE,
-    NAME_EXE_CNV,
-    NAME_EXE_GPS,
-    NAME_EXE_NET,
-    NAME_EXE_SQS
-)
+d_processes = {
+    NAME_EXE_LOG: None,
+    NAME_EXE_AWS: None,
+    NAME_EXE_BLE: None,
+    NAME_EXE_CNV: None,
+    NAME_EXE_GPS: None,
+    NAME_EXE_NET: None,
+    NAME_EXE_SQS: None,
+}
 
 
 
 
 def gui_kill_all_processes():
-    for p_name in ls_processes:
-        sp.run(f'killall {p_name}', shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        sp.run(f'kill -9 $(pidof {p_name})', shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    lg.a(f'killing all processes')
+    # ensure process log finds this
+    time.sleep(1.1)
+    for p in d_processes.keys():
+        sp.run(f'killall {p}', shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        sp.run(f'kill -9 $(pidof {p})', shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     time.sleep(.1)
 
 
 
 def gui_check_all_processes():
-    for p_name in ls_processes:
-        if not linux_is_process_running_strict(p_name):
-            lg.a(f'warning, process {p_name} not present')
+    for p in d_processes.keys():
+        if not linux_is_process_running_strict(p):
+            lg.a(f'warning, process {p} not present')
 
 
 
@@ -392,7 +395,8 @@ def gui_tabs_populate_history(my_app):
         except (Exception,) as ex:
             lg.a(f"error, history frame {h} -> {ex}")
 
-    # redistribute columns with
+
+    # redistribute columns width
     a.tbl_his.horizontalHeader().resizeSection(0, 150)
     a.tbl_his.horizontalHeader().resizeSection(1, 300)
     a.tbl_his.horizontalHeader().setStretchLastSection(True)
@@ -745,32 +749,44 @@ def gui_get_my_current_wlan_ssid() -> str:
 
 class DDH(QMainWindow, d_m.Ui_MainWindow):
 
-
-    @staticmethod
-    def _he(bb):
-        s = bytes(bb).decode()
-        print(s, end='', flush=True)
-
-    def handle_stderr_aws(self): self._he(self.process_aws.readAllStandardError())
-    def handle_stderr_ble(self): self._he(self.process_ble.readAllStandardError())
-    def handle_stderr_cnv(self): self._he(self.process_cnv.readAllStandardError())
-    def handle_stderr_gps(self): self._he(self.process_gps.readAllStandardError())
-    def handle_stderr_log(self): self._he(self.process_log.readAllStandardError())
-    def handle_stderr_net(self): self._he(self.process_net.readAllStandardError())
-    def handle_stderr_sqs(self): self._he(self.process_sqs.readAllStandardError())
+    # ------------------------------------------------------
+    # this function handles the print() from subprocesses
+    # we don't have one for standardError because we never
+    # use print("<err_blahblah>", file=sys.stderr)
+    # ------------------------------------------------------
 
     @staticmethod
     def _ho(bb):
         s = bytes(bb).decode()
         print(s, end='', flush=True)
 
-    def handle_stdout_aws(self): self._ho(self.process_aws.readAllStandardOutput())
-    def handle_stdout_ble(self): self._ho(self.process_ble.readAllStandardOutput())
-    def handle_stdout_cnv(self): self._ho(self.process_cnv.readAllStandardOutput())
-    def handle_stdout_gps(self): self._ho(self.process_gps.readAllStandardOutput())
-    def handle_stdout_log(self): self._ho(self.process_log.readAllStandardOutput())
-    def handle_stdout_net(self): self._ho(self.process_net.readAllStandardOutput())
-    def handle_stdout_sqs(self): self._ho(self.process_sqs.readAllStandardOutput())
+
+    def handle_stdout_aws(self):
+        self._ho(self.d_processes[NAME_EXE_AWS].readAllStandardOutput())
+
+
+    def handle_stdout_ble(self):
+        self._ho(self.d_processes[NAME_EXE_BLE].readAllStandardOutput())
+
+
+    def handle_stdout_cnv(self):
+        self._ho(self.d_processes[NAME_EXE_CNV].readAllStandardOutput())
+
+
+    def handle_stdout_gps(self):
+        self._ho(self.d_processes[NAME_EXE_GPS].readAllStandardOutput())
+
+
+    def handle_stdout_log(self):
+        self._ho(self.d_processes[NAME_EXE_LOG].readAllStandardOutput())
+
+
+    def handle_stdout_net(self):
+        self._ho(self.d_processes[NAME_EXE_NET].readAllStandardOutput())
+
+
+    def handle_stdout_sqs(self):
+        self._ho(self.d_processes[NAME_EXE_SQS].readAllStandardOutput())
 
 
     def handle_state_ble(self, state):
@@ -1153,7 +1169,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     @staticmethod
     def close_my_ddh():
-        lg.a("closed by upper-right X in OS window or context_menu")
+        lg.a("closed by upper-right X in OS window or context_menu or saving config")
         sys.stderr.close()
         gui_kill_all_processes()
         # so DDH GUI is the last to be in OS
@@ -1585,38 +1601,32 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # we want new processes
+        self.d_processes = {}
         gui_kill_all_processes()
-        self.process_log = QProcess()
-        self.process_aws = QProcess()
-        self.process_ble = QProcess()
-        self.process_cnv = QProcess()
-        self.process_gps = QProcess()
-        self.process_net = QProcess()
-        self.process_sqs = QProcess()
+        self.d_processes[NAME_EXE_LOG] = QProcess()
+        self.d_processes[NAME_EXE_AWS] = QProcess()
+        self.d_processes[NAME_EXE_BLE] = QProcess()
+        self.d_processes[NAME_EXE_CNV] = QProcess()
+        self.d_processes[NAME_EXE_GPS] = QProcess()
+        self.d_processes[NAME_EXE_NET] = QProcess()
+        self.d_processes[NAME_EXE_SQS] = QProcess()
 
-        # LOG_HANDLES things queued by using print()
-        self.process_aws.readyReadStandardOutput.connect(self.handle_stdout_aws)
-        self.process_ble.readyReadStandardOutput.connect(self.handle_stdout_ble)
-        self.process_cnv.readyReadStandardOutput.connect(self.handle_stdout_cnv)
-        self.process_gps.readyReadStandardOutput.connect(self.handle_stdout_gps)
-        self.process_log.readyReadStandardOutput.connect(self.handle_stdout_log)
-        self.process_net.readyReadStandardOutput.connect(self.handle_stdout_net)
-        self.process_sqs.readyReadStandardOutput.connect(self.handle_stdout_sqs)
-        self.process_aws.readyReadStandardError.connect(self.handle_stderr_aws)
-        self.process_ble.readyReadStandardError.connect(self.handle_stderr_ble)
-        self.process_cnv.readyReadStandardError.connect(self.handle_stderr_cnv)
-        self.process_gps.readyReadStandardError.connect(self.handle_stderr_gps)
-        self.process_log.readyReadStandardError.connect(self.handle_stderr_log)
-        self.process_net.readyReadStandardError.connect(self.handle_stderr_net)
-        self.process_sqs.readyReadStandardError.connect(self.handle_stderr_sqs)
-        self.process_ble.stateChanged.connect(self.handle_state_ble)
-        self.process_log.start('python3', [f'{NAME_EXE_LOG}.py'])
-        self.process_aws.start('python3', [f'{NAME_EXE_AWS}.py'])
-        self.process_ble.start('python3', [f'{NAME_EXE_BLE}.py'])
-        self.process_cnv.start('python3', [f'{NAME_EXE_CNV}.py'])
-        self.process_gps.start('python3', [f'{NAME_EXE_GPS}.py'])
-        self.process_net.start('python3', [f'{NAME_EXE_NET}.py'])
-        self.process_sqs.start('python3', [f'{NAME_EXE_SQS}.py'])
+        # prints of subprocesses are handled by pyqt
+        self.d_processes[NAME_EXE_LOG].readyReadStandardOutput.connect(self.handle_stdout_log)
+        self.d_processes[NAME_EXE_AWS].readyReadStandardOutput.connect(self.handle_stdout_aws)
+        self.d_processes[NAME_EXE_BLE].readyReadStandardOutput.connect(self.handle_stdout_ble)
+        self.d_processes[NAME_EXE_CNV].readyReadStandardOutput.connect(self.handle_stdout_cnv)
+        self.d_processes[NAME_EXE_GPS].readyReadStandardOutput.connect(self.handle_stdout_gps)
+        self.d_processes[NAME_EXE_NET].readyReadStandardOutput.connect(self.handle_stdout_net)
+        self.d_processes[NAME_EXE_SQS].readyReadStandardOutput.connect(self.handle_stdout_sqs)
+        self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
+        self.d_processes[NAME_EXE_LOG].start('python3', [f'{NAME_EXE_LOG}.py'])
+        self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
+        self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
+        self.d_processes[NAME_EXE_CNV].start('python3', [f'{NAME_EXE_CNV}.py'])
+        self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
+        self.d_processes[NAME_EXE_NET].start('python3', [f'{NAME_EXE_NET}.py'])
+        self.d_processes[NAME_EXE_SQS].start('python3', [f'{NAME_EXE_SQS}.py'])
 
 
         # create variables
