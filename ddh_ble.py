@@ -307,31 +307,34 @@ def _ddh_ble_scan_loggers(antenna_idx):
     ls_devs_all = ael.run_until_complete(ble_scan_slow(adapter, timeout=5))
 
 
-    # get all devices around (mac, name) and intersect with 'monitored' list
+    # todo: string methods upper() vs casefold()
+    # get ALL devices around (mac, name) and intersect with 'monitored' list
     ls_devs = [d for d in ls_devs_all if d.address in g_ls_macs_mon]
     if not ls_devs:
         return []
     ls_macs = [d.address for d in ls_devs]
 
 
-    # prevent ignoring loggers that failed
+    # ignore orange logger macs that failed recently
     ls_macs_orange = [i.upper().replace('-', ':') for i in macs_orange()]
+    # and be sure they are not in smart lock-out
     for m in ls_macs_orange:
         slo_delete(m)
 
 
-    # also get blacklisted macs
+    # ignore black logger macs
     ls_macs_black = [i.upper().replace('-', ':') for i in macs_black()]
 
 
-    # first obtain the smart lock-out list, then update for next runs
+    # ignore smart lock-out logger macs
     ls_macs_slo = slo_get_all()
     for m in ls_macs:
+        # a detected mac also in smart lock-out is refreshed
         if m in ls_macs_slo:
             slo_add(m)
 
 
-    # proceed with macs not present in bad lists
+    # create summary list of ignored macs and works with detected ones NOT in it
     ls_macs_nope = list(set(ls_macs_black + ls_macs_orange + ls_macs_slo))
     ls_devs = [d for d in ls_devs if d.address not in ls_macs_nope]
     return ls_devs
