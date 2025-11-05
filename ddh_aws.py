@@ -8,7 +8,7 @@ import setproctitle
 import time
 import redis
 import subprocess as sp
-from ddh.emolt import this_box_has_grouped_s3_uplink
+from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 from ddh.notifications_v2 import notify_error_sw_aws_s3
 from ddh_net import ddh_net_calculate_via
 from mat.utils import linux_is_rpi
@@ -152,7 +152,7 @@ def _aws_sync(past_year=False):
         um = m.split('/')[-1]
         y = yyyy
         sy = str(y)[2:]
-        if this_box_has_grouped_s3_uplink():
+        if ddh_this_box_has_grouped_s3_uplink():
             lg.a(f'S3 upload-sync GROUPed for folder {um}, year {y}, dry-run = {dev}')
             um = f"{str(y)}/{vessel}/{um}"
         else:
@@ -235,7 +235,7 @@ def _aws_cp(path):
     um = path.split('/')[-2]
     f_bn = os.path.basename(path)
     y = datetime.datetime.utcnow().year
-    if this_box_has_grouped_s3_uplink():
+    if ddh_this_box_has_grouped_s3_uplink():
         lg.a(f'S3 upload-cp GROUPed for folder {um}, year {y}, dry-run = {dev}')
         um = f"{str(y)}/{vessel}/{um}"
     else:

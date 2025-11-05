@@ -283,7 +283,6 @@ def get_ddh_platform():
 
 FILE_ALL_MACS_TOML = f"{str(ddh_get_path_to_folder_settings())}/all_macs.toml"
 FILE_DO_NOT_RERUN_TOML = "/tmp/ddh_do_not_rerun_flag.toml"
-FILE_LANGUAGE_TOML = f"{str(ddh_get_path_to_folder_settings())}/language.toml"
 
 
 
@@ -314,28 +313,6 @@ def ddh_clear_do_not_rerun_file_flag():
         os.unlink(FILE_DO_NOT_RERUN_TOML)
     except (Exception, ) as ex:
         print(f'error clr_ddh_rerun_flag_li -> {ex}')
-
-
-
-def ddh_get_contents_of_language_file():
-    if not os.path.exists(FILE_LANGUAGE_TOML):
-        return 'en'
-    with open(FILE_LANGUAGE_TOML) as f:
-        c = toml.load(f)
-        try:
-            lang = c['language']
-            if lang in ['en', 'fr', 'pt', 'ca']:
-                return lang
-        except (Exception, ) as ex:
-            print(f'error, get_ddh_language_file_content {ex}')
-            return 'en'
-
-
-
-def ddh_set_contents_of_language_file(lang):
-    with open(FILE_LANGUAGE_TOML, 'w') as f:
-        f.write('language = ' + lang)
-
 
 
 
@@ -511,9 +488,19 @@ def ddh_config_get_logger_mac_from_sn(sn):
 
 
 
-def ddh_config_get_gear_type():
-    # 0 normal 1 trawling
-    return cfg['behavior']['gear_type']
+def ddh_config_get_language_index():
+    # 0 en 1 pt 2 fr 3 ca
+    try:
+        return cfg['behavior']['language']
+    except KeyError:
+        # print('\033[33mwarning, defaulting to language english\033[0m')
+        return 0
+
+
+
+def ddh_config_get_language_str_by_index(i):
+    d_lang = {0: 'en', 1: 'pt', 2: 'fr', 3: 'ca'}
+    return d_lang.get(i, 'en')
 
 
 
@@ -556,7 +543,6 @@ def ddh_config_check_file_is_ok():
     if len(aux):
         print(f'warning, ddh_config_check_file_is_ok extra flags {aux}')
 
-    assert type(b['behavior']['moving_speed']) is list
     assert type(b['behavior']['fake_gps_position']) is list
 
     sn = cfg['credentials']['cred_ddh_serial_number']
@@ -572,11 +558,6 @@ def ddh_config_check_file_is_ok():
         print('********************************')
         os._exit(1)
 
-
-
-
-def ddh_config_get_speed_considered_as_trawling():
-    return cfg['behavior']['moving_speed']
 
 
 
@@ -740,7 +721,6 @@ STR_NO_ASSIGNED_LOGGERS = 'no loggers assigned'
 STR_EV_GUI_BOOT = 'DDH starting'
 STR_EV_GPS_WAITING_BOOT = 'boot GPS, up to'
 STR_EV_BLE_SCAN = 'searching for loggers'
-STR_EV_BLE_SCAN_2 = 'not fishing'
 STR_EV_GPS_SYNC_CLOCK = 'syncing GPS time'
 STR_EV_BLE_DL_RETRY = 'retrying'
 STR_EV_BLE_HW_ERROR = 'no BLE service'
@@ -748,8 +728,8 @@ STR_EV_BLE_HW_ERROR = 'no BLE service'
 
 
 
-g_lang = ddh_get_contents_of_language_file()
-
+g_lang_idx = ddh_config_get_language_index()
+g_lang = ddh_config_get_language_str_by_index(g_lang_idx)
 
 
 lang_msg_db = {
@@ -837,14 +817,6 @@ lang_msg_db = {
 
 
 
-def locales_change_language(s):
-    ddh_set_contents_of_language_file(s)
-    global g_lang
-    g_lang = ddh_get_contents_of_language_file()
-    return g_lang
-
-
-
 def t_str(s):
     # putting this here allows for dynamic changing of language
     if s not in lang_msg_db.keys():
@@ -920,8 +892,6 @@ if __name__ == '__main__':
     print('ft', ddh_config_get_forget_time_seconds())
     print('monitored_macs', ddh_config_get_list_of_monitored_macs())
     print('mac_from_sn_json_file', ddh_config_get_logger_mac_from_sn('1234567'))
-    print('gear_type', ddh_config_get_gear_type())
-    print('get_moving_speed', ddh_config_get_speed_considered_as_trawling())
     print('ddh_config_is_sqs_enabled', ddh_config_is_sqs_enabled())
     print('conf_dox', exp_get_conf_dox())
     print('has lowell logger', ddh_config_contains_monitored_lowell_loggers())
