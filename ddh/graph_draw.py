@@ -241,10 +241,8 @@ def _graph_process_n_draw(a, plot_reason=''):
     fol: str
 
     # get current haul type
-    _haul_time_view = a.cb_g_cycle_haul.currentText()
-
-    # get zones on / off
-    _zt = a.cb_g_paint_zones.currentText()
+    d = {0: 'last', 1: 'all', 2: 'single'}
+    _haul_time_view = d[a.cb_g_cycle_haul.currentIndex()]
 
     # ------------------------------
     # get reason passed for graph
@@ -333,7 +331,8 @@ def _graph_process_n_draw(a, plot_reason=''):
     # ---------
     # 3rd line
     # ---------
-    tdo_graph_type = a.cb_g_switch_tp.currentText()
+    d_tdo_graph_type = {0: 'x-time', 1: 'x-Temp'}
+    tdo_graph_type = d_tdo_graph_type[a.cb_g_switch_tp.currentIndex()]
     if 'x-time' in tdo_graph_type:
         p3 = pg.ViewBox()
         ax3 = pg.AxisItem('right')
@@ -470,8 +469,6 @@ def _graph_process_n_draw(a, plot_reason=''):
 
         # alpha, for zones, the lower, the more transparent
         alpha = 85
-        if _zt == 'zones OFF':
-            return
         g.addItem(FiniteLinearRegionItem(values=(0, 2),
                                          limits=4,
                                          orientation="horizontal",
@@ -513,7 +510,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     # ------------------
     if met == 'TDO':
         a.cb_g_switch_tp.setVisible(True)
-        tdo_graph_type = a.cb_g_switch_tp.currentText()
+        tdo_graph_type = d_tdo_graph_type[a.cb_g_switch_tp.currentIndex()]
 
         # type of TDO plot 1/2: D (y1) & T (y2) vs time
         if 'x-time' in tdo_graph_type:

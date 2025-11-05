@@ -30,7 +30,7 @@ EmoltMsgShortHaul = namedtuple(
 )
 
 
-def this_box_has_grouped_s3_uplink():
+def ddh_this_box_has_grouped_s3_uplink():
     return exists(LI_PATH_GROUPED_S3_FILE_FLAG)
 
 

@@ -56,7 +56,7 @@ from utils.ddh_common import (
     ddh_config_get_list_of_monitored_serial_numbers,
     ddh_config_get_forget_time_seconds, ddh_config_get_monitored_pairs,
     ddh_config_load_file, ddh_config_save_to_file,
-    ddh_config_get_gear_type, ddh_get_path_to_folder_scripts,
+    ddh_get_path_to_folder_scripts,
     ddh_config_get_logger_mac_from_sn,
     ddh_config_get_list_of_monitored_macs,
     ddh_config_get_logger_sn_from_mac, NAME_EXE_SQS, NAME_EXE_BLE,
@@ -77,7 +77,7 @@ from utils.ddh_common import (
     EV_BLE_LOW_BATTERY, EV_BLE_DL_RETRY, PATH_MAIN_BLE_CONNECTING, PATH_MAIN_BLE_DL_OK, PATH_MAIN_BLE_DL_ERROR,
     PATH_MAIN_BLE_DL_OK_NO_RERUN, PATH_MAIN_BLE_DL_NO_NEED, PATH_MAIN_BLE_DL_LOW_BATTERY, PATH_MAIN_BLE_DL_RETRY,
     PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, EV_GPS_HW_ERROR,
-    PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK,
+    PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK, ddh_config_get_language_index,
 )
 import datetime
 import os
@@ -93,7 +93,7 @@ from ddh.preferences import (
     preferences_get_models_index, preferences_set_brightness_clicks
 )
 from ddh.utils_models import gui_populate_models_tab
-from ddh.emolt import this_box_has_grouped_s3_uplink
+from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 from ddh.timecache import is_it_time_to
 import subprocess as sp
 import pyqtgraph as pg
@@ -273,15 +273,14 @@ def gui_setup_view(my_win):
     # dl statistics
     a.lbl_summary_dl.setVisible(False)
 
-    # edit tab dropdowns
-    a.cbox_gear_type.addItems(["fixed", "mobile"])
+    # edit tab language dropdown
+    a.combo_language.addItems(["en", "pt", "fr", "ca"])
+
+    # edit tab configuration dropdowns
     a.cb_s3_uplink_type.addItems(["raw", "group"])
     a.cb_skip_in_port.addItems(["False", "True"])
 
-    # allow to have more room
-    a.cb_g_paint_zones.setVisible(False)
-
-    if this_box_has_grouped_s3_uplink():
+    if ddh_this_box_has_grouped_s3_uplink():
         a.cb_s3_uplink_type.setCurrentIndex(1)
     if ddh_config_is_skip_in_port_enabled():
         a.cb_skip_in_port.setCurrentIndex(1)
@@ -506,7 +505,6 @@ def gui_setup_buttons(my_app):
     a.btn_g_next_haul.clicked.connect(a.click_graph_btn_next_haul)
     a.cb_g_sn.activated.connect(a.click_graph_listview_logger_sn)
     a.cb_g_cycle_haul.activated.connect(a.click_graph_lbl_haul_types)
-    a.cb_g_paint_zones.activated.connect(a.click_graph_btn_paint_zones)
     a.cb_g_switch_tp.activated.connect(a.click_graph_cb_switch_tp)
 
 
@@ -955,7 +953,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             return
 
 
-        lhf = self.cbox_gear_type.currentIndex()
+        lang = self.combo_language.currentIndex()
 
         # skip in port
         sk = self.cb_skip_in_port.currentIndex()
@@ -969,7 +967,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         save_cfg = ddh_config_load_file()
         save_cfg['behavior']["forget_time"] = t
         save_cfg['behavior']['ship_name'] = ves
-        save_cfg['behavior']['gear_type'] = lhf
+        save_cfg['behavior']['language'] = lang
         save_cfg['monitored_macs'] = pairs
         save_cfg['flags']['skip_dl_in_port_en'] = sk
         ddh_config_save_to_file(save_cfg)
@@ -1061,11 +1059,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         """ updates EDIT tab from current config file """
         ves = ddh_config_get_vessel_name()
         f_t = gui_get_cfg_forget_time_secs()
-        lhf = ddh_config_get_gear_type()
+        lang = ddh_config_get_language_index()
         self.lne_vessel.setText(ves)
         self.lne_forget.setText(str(f_t))
-        # set index of the JSON dropdown list
-        self.cbox_gear_type.setCurrentIndex(lhf)
+        self.combo_language.setCurrentIndex(lang)
         # set index of TDO SCF profiling
         scf_index = 0
         for i, v in enumerate(('slow', 'mid', 'fast', )):
@@ -1228,11 +1225,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_chk_s3_uplink_type(self, _):
-        s = self.cb_s3_uplink_type.currentText()
+        i = self.cb_s3_uplink_type.currentIndex()
         flag_file = LI_PATH_GROUPED_S3_FILE_FLAG
-        if s == 'raw':
+        if i == 0:
+            # raw
             os.unlink(flag_file)
-        if s == 'group':
+        else:
+            # grouped
             Path(flag_file).touch(exist_ok=True)
 
 
@@ -1322,7 +1321,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_chk_scf(self):
-        v = self.cbox_scf.currentText()
+        j = self.cbox_scf.currentIndex()
+        d = {
+            0: 'none',
+            1: 'slow',
+            2: 'mid',
+            3: 'fast',
+            4: 'fixed5min'
+        }
+        v = d[j]
         fol = ddh_get_path_to_folder_scripts()
         fol_ddh = f'{fol}/..'
 
@@ -1373,19 +1380,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     @staticmethod
-    def click_graph_btn_paint_zones(_):
-        graph_request(reason='user')
-
-
-
-    @staticmethod
     def click_graph_cb_switch_tp(_):
+        # todo: is this working?
         graph_request(reason='user')
 
 
 
     def _cb_timer_gui_one_second(self):
-
 
         # update DATE and UPTIME fields, also a COUNTER for incremental stuff
         self.lbl_date_txt.setText(datetime.datetime.now().strftime("%b %d %H:%M:%S"))

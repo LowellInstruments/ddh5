@@ -19,7 +19,9 @@ from utils.ddh_common import (
     NAME_EXE_GPS, ddh_config_is_gps_error_forced_enabled, LI_PATH_GPS_DUMMY,
     LI_PATH_CELL_FW, EV_GPS_WAITING_BOOT, app_state_set, t_str,
     EV_GPS_IN_PORT,
-    STR_EV_GPS_IN_PORT, STR_EV_BLE_SCAN_2, EV_BLE_SCAN, ddh_this_process_needs_to_quit, TMP_PATH_GPS_LAST_JSON
+    STR_EV_GPS_IN_PORT,
+    ddh_this_process_needs_to_quit,
+    TMP_PATH_GPS_LAST_JSON
 )
 import datetime
 import json
@@ -32,8 +34,6 @@ import time
 from ddh.in_ports_geo import ddh_ask_in_port_to_ddn
 from utils.ddh_common import (
     ddh_get_path_to_app_override_flag_file,
-    ddh_config_get_gear_type, \
-    ddh_config_get_speed_considered_as_trawling,
     ddh_config_get_list_of_monitored_macs, \
 )
 
@@ -55,10 +55,6 @@ PERIOD_GPS_NOTI_NUM_GPS_SAT = 1800
 p_name = NAME_EXE_GPS
 _skip_satellite_notification = 1
 using_dummy_gps = os.path.exists(LI_PATH_GPS_DUMMY)
-app_gear_type = ddh_config_get_gear_type()
-s_lo, s_hi = ddh_config_get_speed_considered_as_trawling()
-s_lo = float(s_lo)
-s_hi = float(s_hi)
 g_ls_macs_mon = ddh_config_get_list_of_monitored_macs()
 
 
@@ -127,13 +123,6 @@ def ddh_app_check_operational_conditions(gps_pos):
         r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 10, 1)
         return False
 
-
-    # check type of DDH application is mobile and we out of speed range
-    lat, lon, tg, speed_knots = gps_pos
-    speed_knots = float(speed_knots)
-    if app_gear_type == 1 and not (s_lo <= speed_knots <= s_hi):
-        app_state_set(EV_BLE_SCAN, t_str(STR_EV_BLE_SCAN_2))
-        return False
 
     return True
 

@@ -41,7 +41,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <property name="sizePolicy">
@@ -889,73 +889,14 @@
             </property>
             <item>
              <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,0">
-              <item row="0" column="1">
-               <widget class="QPushButton" name="btn_load_current">
-                <property name="text">
-                 <string>load</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>forget (s)</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="0">
-               <widget class="QLabel" name="label_11">
-                <property name="text">
-                 <string>skip in port</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="1">
+              <item row="4" column="1">
                <widget class="QComboBox" name="cb_skip_in_port"/>
               </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="label_8">
-                <property name="text">
-                 <string>S3 uplink</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_5">
-                <property name="text">
-                 <string>load values</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string>vessel</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
+              <item row="3" column="1">
                <widget class="QComboBox" name="cb_s3_uplink_type"/>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLineEdit" name="lne_forget"/>
-              </item>
-              <item row="6" column="0">
-               <widget class="QLabel" name="label_4">
-                <property name="text">
-                 <string>save values</string>
-                </property>
-               </widget>
               </item>
               <item row="1" column="1">
                <widget class="QLineEdit" name="lne_vessel"/>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>gear type</string>
-                </property>
-               </widget>
               </item>
               <item row="6" column="1">
                <layout class="QHBoxLayout" name="horizontalLayout_15" stretch="1,1">
@@ -975,8 +916,67 @@
                 </item>
                </layout>
               </item>
-              <item row="3" column="1">
-               <widget class="QComboBox" name="cbox_gear_type"/>
+              <item row="6" column="0">
+               <widget class="QLabel" name="label_4">
+                <property name="text">
+                 <string>save values</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>forget (s)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QComboBox" name="combo_language"/>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>load values</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_8">
+                <property name="text">
+                 <string>S3 uplink</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLineEdit" name="lne_forget"/>
+              </item>
+              <item row="5" column="0">
+               <widget class="QLabel" name="lbl_language_2">
+                <property name="text">
+                 <string>language</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>vessel</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QPushButton" name="btn_load_current">
+                <property name="text">
+                 <string>load</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_11">
+                <property name="text">
+                 <string>skip in port</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -1591,7 +1591,7 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_7" stretch="1,0,8">
         <item>
-         <layout class="QHBoxLayout" name="lay_g_h1" stretch="1,2,1,2,1,1,1">
+         <layout class="QHBoxLayout" name="lay_g_h1" stretch="1,0,1,2,0,1,1,1">
           <property name="spacing">
            <number>18</number>
           </property>
@@ -1603,18 +1603,17 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="cb_g_paint_zones">
-            <item>
-             <property name="text">
-              <string>zones ON</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>zones OFF</string>
-             </property>
-            </item>
-           </widget>
+           <spacer name="horizontalSpacer_16">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <widget class="QComboBox" name="cb_g_switch_tp">
@@ -1648,6 +1647,19 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
              </size>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_21">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <widget class="QLabel" name="label_9">
