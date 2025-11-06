@@ -270,8 +270,10 @@ def gui_setup_view(my_win):
     if ddh_config_does_flag_file_download_test_mode_exist():
         a.lbl_testmode.setVisible(True)
 
+
     # dl statistics
     a.lbl_summary_dl.setVisible(False)
+
 
     # edit tab language dropdown
     a.combo_language.addItems(["en", "pt", "fr", "ca", "pl", "sp"])
@@ -447,9 +449,11 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
         if h['SN'] not in h_sn:
             h_sn.append(h['SN'].lower())
 
+
     # from CONFIGURATION file, grab serial numbers
     c_sn = ddh_config_get_list_of_monitored_serial_numbers()
-    c_sn = [i.lower() for i in c_sn]
+    c_sn = [i.upper() for i in c_sn]
+
 
     # add first HISTORY ones, next CONFIGURATION ones
     for i in h_sn:

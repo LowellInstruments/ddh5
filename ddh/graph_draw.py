@@ -175,7 +175,7 @@ class FiniteLinearRegionItem(LinearRegionItem):
 
 def _graph_check_mac_has_dl_files(mac, fol_ls):
     for i in fol_ls:
-        if mac.lower() in i.lower():
+        if mac.upper() in i.upper():
             return True
     return False
 

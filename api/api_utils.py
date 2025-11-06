@@ -512,7 +512,7 @@ def _api_get_mac_address(iface: str):
     if rv.returncode:
         return
     # it is lower case e4:5f:01:66:08:23
-    return rv.stdout.decode().replace('\n', '')
+    return rv.stdout.decode().upper().replace('\n', '')
 
 
 def api_get_mac_address_eth0():

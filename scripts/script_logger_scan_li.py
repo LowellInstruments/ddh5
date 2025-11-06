@@ -46,12 +46,12 @@ asyncio.set_event_loop(ael)
 def main():
     _screen_clear()
     d_macs_sn = get_ddh_toml_all_macs_content()
-    d_macs_sn = {k.lower(): v for k, v in d_macs_sn.items()}
+    d_macs_sn = {k.upper(): v for k, v in d_macs_sn.items()}
 
     sr = ael.run_until_complete(ble_scan_for_dox_loggers())
     for i in sr:
         mac, rssi = i
-        mac = mac.lower()
+        mac = mac.upper()
         if mac in d_macs_sn.keys():
             sn = d_macs_sn[mac]
             print(f'{mac}\t{sn}\t{rssi}')
@@ -61,7 +61,7 @@ def main():
     sr = ael.run_until_complete(ble_scan_for_tdo_loggers())
     for i in sr:
         mac, rssi = i
-        mac = mac.lower()
+        mac = mac.upper()
         if mac in d_macs_sn.keys():
             sn = d_macs_sn[mac]
             print(f'{mac}\t{sn}\t {rssi}')
