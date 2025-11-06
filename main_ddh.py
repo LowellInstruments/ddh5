@@ -274,7 +274,8 @@ def gui_setup_view(my_win):
     a.lbl_summary_dl.setVisible(False)
 
     # edit tab language dropdown
-    a.combo_language.addItems(["en", "pt", "fr", "ca"])
+    a.combo_language.addItems(["en", "pt", "fr", "ca", "pl", "sp"])
+
 
     # edit tab configuration dropdowns
     a.cb_s3_uplink_type.addItems(["raw", "group"])

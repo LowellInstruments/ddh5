@@ -2,6 +2,8 @@ import glob
 import os
 import pathlib
 import time
+
+from ddh.slo import slo_add
 from utils.ddh_common import (
     ddh_get_path_to_folder_macs, ddh_config_get_forget_time_seconds,
 )
@@ -17,14 +19,14 @@ PERIOD_MACS_ORANGE_SECS = 15
 
 
 def macs_color_show_at_boot():
-    b = macs_black()
-    o = macs_orange()
+    b = macs_get_them_by_color('black')
+    o = macs_get_them_by_color('orange')
     lg.a(f"upon boot, macs_black  = {b}")
     lg.a(f"upon boot, macs_orange = {o}")
 
 
 
-def _macs_get_them_by_color(s) -> list:
+def macs_get_them_by_color(s) -> list:
     assert s in ("orange", "black")
     now = int(time.time())
     fol = str(ddh_get_path_to_folder_macs() / s)
@@ -38,19 +40,16 @@ def _macs_get_them_by_color(s) -> list:
         if now > int(t):
             bn = os.path.basename(f)
             dn = os.path.dirname(f).split('/')[-1]
-            lg.a(f"macs {s} purge {dn}/{bn}")
+            lg.a(f"macs purge {dn}/{bn}")
             os.unlink(f)
+            if s == 'black':
+                mac = mac.replace('-', ':')
+                lg.a(f"mac {mac} added to black list post-purge")
+                slo_add(mac)
         else:
             ls.append(mac)
     return ls
 
-
-def macs_black():
-    return _macs_get_them_by_color("black")
-
-
-def macs_orange():
-    return _macs_get_them_by_color("orange")
 
 
 def _add_mac(c, mac):
@@ -91,15 +90,3 @@ def rm_mac_black(m):
 
 def rm_mac_orange(m):
     _rm_mac("orange", m)
-
-
-def is_mac_in_black(m):
-    b = macs_black()
-    m = m.replace(":", "-")
-    return m in str(b)
-
-
-def is_mac_in_orange(m):
-    o = macs_orange()
-    m = m.replace(":", "-")
-    return m in str(o)
