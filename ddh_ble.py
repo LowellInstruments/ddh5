@@ -334,6 +334,11 @@ def _ddh_ble_scan_loggers(antenna_idx):
     for m in ls_macs:
         # a detected mac already in smart lock-out is refreshed
         if m in ls_macs_slo:
+            # todo: do better key naming
+            k = f"_ddh_smart_lock_out_tell_{m.replace(':', '')}"
+            if not r.exists(k):
+                lg.a(f'debug: smart-lock-out contains {m}')
+                r.setex(k, 300, 1)
             slo_add(m)
 
 
