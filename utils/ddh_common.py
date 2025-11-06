@@ -489,7 +489,7 @@ def ddh_config_get_logger_mac_from_sn(sn):
 
 
 def ddh_config_get_language_index():
-    # 0 en 1 pt 2 fr 3 ca
+    # 0 en 1 pt 2 fr 3 ca 4 pl 5 sp
     try:
         return cfg['behavior']['language']
     except KeyError:
@@ -499,7 +499,7 @@ def ddh_config_get_language_index():
 
 
 def ddh_config_get_language_str_by_index(i):
-    d_lang = {0: 'en', 1: 'pt', 2: 'fr', 3: 'ca'}
+    d_lang = {0: 'en', 1: 'pt', 2: 'fr', 3: 'ca', 4: 'pl', 5: 'sp'}
     return d_lang.get(i, 'en')
 
 
@@ -734,84 +734,116 @@ g_lang = ddh_config_get_language_str_by_index(g_lang_idx)
 
 lang_msg_db = {
     STR_EV_BLE_SCAN: {
-        'pt': '--',
         'fr': 'cherchant sondes',
-        'ca': 'buscant loggers'
+        'ca': 'buscant loggers',
+        'pl': 'earchingsay orfay ogerslay',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_BLE_CONNECTING: {
-        'pt': '--',
         'fr': 'en cours de connexion',
-        'ca': 'connectant'
+        'ca': 'connectant',
+        'pl': 'onnectinglay oggerlay',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_GPS_SYNC_CLOCK: {
-        'pt': '--',
         'fr': 'synchronisation GPS',
-        'ca': 'esperant GPS'
+        'ca': 'esperant GPS',
+        'pl': 'ycningay GPA imetay',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_GUI_BOOT: {
-        'pt': '--',
         'fr': "--",
-        'ca': '--'
+        'ca': '--',
+        'pl': 'ootingbay',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_BLE_DL_PROGRESS: {
-        'pt': '--',
         'fr': "téléchargement en cours",
-        'ca': '--'
+        'ca': '--',
+        'pl': "ownloadingday oggerlay",
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_BLE_DL_OK: {
-        'pt': '--',
         'fr': "complété",
-        'ca': '--'
+        'ca': '--',
+        'pl': "kosay",
+        'sp': '--',  # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_BLE_DL_NO_NEED: {
-        'pt': '--',
         'fr': "complété",
-        'ca': '--'
+        'ca': '--',
+        'pl': 'ownloadinglay oggerlay oneday',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_BLE_DL_OK_NO_RERUN: {
-        'pt': '--',
         'fr': "arrêté, auto-réveille éteint",
-        'ca': '--'
+        'ca': '--',
+        'pl': 'oppedstay autowakeyay offyay',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_BLE_DL_RETRY: {
-        'pt': '--',
         'fr': "nouvel essai",
-        'ca': '--'
+        'ca': '--',
+        'pl': 'etryingray oggerlay',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_GPS_HW_ERROR: {
-        'pt': '--',
         'fr': "aucun signal GPS",
-        'ca': '--'
+        'ca': '--',
+        'pl': 'eednay GPS',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_GPS_WAITING_BOOT: {
-        'pt': '--',
         'fr': "en attente du GPS",
-        'ca': '--'
+        'ca': '--',
+        'pl': 'yncingay GPS imetay illstay aitingway ootbay',
+        'sp': '--',  # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_BLE_HW_ERROR: {
         'pt': '--',
-        'fr': "service BLE manquant",
-        'ca': '--'
+        'fr': "erreur du signal radio",
+        'ca': '--',
+        'pl': 'oggerlay errorlay adioray',
+        'sp': '--',  # spanish
     },
     STR_EV_CONF_BAD: {
-        'pt': '--',
         'fr': "erreur de config, voir log",
-        'ca': '--'
+        'ca': '--',
+        'pl': "DDS adbay onfcay",
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_GPS_IN_PORT: {
-        'pt': '--',
         'fr': "dans port",
-        'ca': '--'
+        'ca': '--',
+        'pl': "eway arelay inlay ortpay",
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_EV_BLE_LOW_BATTERY: {
-        'pt': '--',
         'fr': "batterie faible!",
-        'ca': '--'
+        'ca': '--',
+        'pl': 'oggerlay owlay atterybay!',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
     STR_NO_ASSIGNED_LOGGERS: {
-        'pt': '--',
         'fr': "aucune sonde attribué",
-        'ca': '--'
+        'ca': '--',
+        'pl': 'onay oggerlay assignedlay',
+        'sp': '--', # spanish
+        'pt': '--'  # portuguese
     },
 }
 
@@ -826,7 +858,7 @@ def t_str(s):
         return s
     d_s = lang_msg_db[s]
     if g_lang not in d_s.keys():
-        print(f"error: no language '{g_lang}' for text '{s}'")
+        print(f"\033[31merror: no language '{g_lang}' for text '{s}'\033[0m")
         return s
     return lang_msg_db[s][g_lang]
 

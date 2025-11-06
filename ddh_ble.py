@@ -22,9 +22,9 @@ from ddh_gps import (
 )
 from ddh.ble_tdo import ble_download_tdo
 from ddh.macs import (
-    macs_color_show_at_boot, macs_black, macs_orange,
+    macs_color_show_at_boot,
     add_mac_black, rm_mac_orange, add_mac_orange,
-    rm_mac_black
+    rm_mac_black, macs_get_them_by_color
 )
 from ddh.notifications_v2 import (
     notify_error_gps_clock_sync,
@@ -316,20 +316,22 @@ def _ddh_ble_scan_loggers(antenna_idx):
 
 
     # ignore orange logger macs that failed recently
-    ls_macs_orange = [i.upper().replace('-', ':') for i in macs_orange()]
+    ls_macs_orange = macs_get_them_by_color('orange')
+    ls_macs_orange = [i.upper().replace('-', ':') for i in ls_macs_orange]
     # and be sure they are not in smart lock-out
     for m in ls_macs_orange:
         slo_delete(m)
 
 
     # ignore black logger macs
-    ls_macs_black = [i.upper().replace('-', ':') for i in macs_black()]
+    ls_macs_black = macs_get_them_by_color('black')
+    ls_macs_black = [i.upper().replace('-', ':') for i in ls_macs_black]
 
 
     # ignore smart lock-out logger macs
     ls_macs_slo = slo_get_all()
     for m in ls_macs:
-        # a detected mac also in smart lock-out is refreshed
+        # a detected mac already in smart lock-out is refreshed
         if m in ls_macs_slo:
             slo_add(m)
 
@@ -337,6 +339,16 @@ def _ddh_ble_scan_loggers(antenna_idx):
     # create summary list of ignored macs and works with detected ones NOT in it
     ls_macs_nope = list(set(ls_macs_black + ls_macs_orange + ls_macs_slo))
     ls_devs = [d for d in ls_devs if d.address not in ls_macs_nope]
+
+    for d in ls_devs:
+        m = d.address
+        if m not in ls_macs_nope:
+            lg.a(f'debug: it seems {m} is good to go')
+            lg.a(f'debug: ls_orange = {ls_macs_orange}')
+            lg.a(f'debug: ls_black  = {ls_macs_black}')
+            lg.a(f'debug: ls_slo    = {ls_macs_slo}')
+
+
     return ls_devs
 
 

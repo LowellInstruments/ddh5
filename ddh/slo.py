@@ -8,6 +8,12 @@ r = redis.Redis('localhost', port=6379)
 
 
 def slo_add(mac):
+    # added to smart lock-out in these cases:
+    #       - refreshed slo
+    #       - just purged from black macs list
+    #       - downloaded OK
+    #       - HBW told us no need to download
+    #       - too many errors
     k = f"{RD_DDH_SLO_LS}{mac.replace(':', '')}"
     r.set(k, 1)
     r.expire(k, 120)
