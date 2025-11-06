@@ -337,7 +337,7 @@ def _ddh_ble_scan_loggers(antenna_idx):
             # todo: do better key naming according to rd_ctt
             k = f"_ddh_smart_lock_out_tell_{m}"
             if not r.exists(k):
-                lg.a(f'debug: smart-lock-out contains {m}')
+                lg.a(f'debug: smart-lock-out prevents downloading {m}')
                 r.setex(k, 300, 1)
             slo_add(m)
 
@@ -348,13 +348,13 @@ def _ddh_ble_scan_loggers(antenna_idx):
 
 
     # debug:
-    lg.a(f'debug, ls_macs = {ls_macs}')
-    if ls_macs_orange:
-        lg.a(f'debug, ls_macs_orange = {ls_macs_orange}')
-    if ls_macs_black:
-        lg.a(f'debug, ls_macs_black = {ls_macs_black}')
-    if ls_macs_slo:
-        lg.a(f'debug, ls_macs_slo = {ls_macs_slo}')
+    # lg.a(f'debug, ls_macs = {ls_macs}')
+    # if ls_macs_orange:
+    #     lg.a(f'debug, ls_macs_orange = {ls_macs_orange}')
+    # if ls_macs_black:
+    #     lg.a(f'debug, ls_macs_black = {ls_macs_black}')
+    # if ls_macs_slo:
+    #     lg.a(f'debug, ls_macs_slo = {ls_macs_slo}')
 
 
     for d in ls_devs:
