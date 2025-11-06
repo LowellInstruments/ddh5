@@ -18,3 +18,6 @@
 
         refactor to understand processes output
 
+5.0.05  11/06/25
+
+        improved smart lock-out with katrina
