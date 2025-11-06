@@ -14,20 +14,20 @@ def slo_add(mac):
     #       - downloaded OK
     #       - HBW told us no need to download
     #       - too many errors
-    k = f"{RD_DDH_SLO_LS}{mac.replace(':', '')}"
+    k = f"{RD_DDH_SLO_LS}{mac}"
     r.set(k, 1)
     r.expire(k, 120)
 
 
 
 def slo_delete(mac):
-    k = f"{RD_DDH_SLO_LS}{mac.replace(':', '')}"
+    k = f"{RD_DDH_SLO_LS}{mac}"
     r.delete(k)
 
 
 
 def slo_contains(mac):
-    k = f"{RD_DDH_SLO_LS}{mac.replace(':', '')}"
+    k = f"{RD_DDH_SLO_LS}{mac}"
     return r.exists(k)
 
 
@@ -47,6 +47,7 @@ def slo_print_all_ttl():
 
 
 def slo_delete_all():
+    # todo: do the iteration properly, not using keys()
     ls_slo_keys = r.keys(RD_DDH_SLO_LS + '*')
     for k in ls_slo_keys:
         r.delete(k.decode())

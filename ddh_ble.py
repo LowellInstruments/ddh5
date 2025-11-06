@@ -334,7 +334,7 @@ def _ddh_ble_scan_loggers(antenna_idx):
     for m in ls_macs:
         # a detected mac already in smart lock-out is refreshed
         if m in ls_macs_slo:
-            # todo: do better key naming
+            # todo: do better key naming according to rd_ctt
             k = f"_ddh_smart_lock_out_tell_{m}"
             if not r.exists(k):
                 lg.a(f'debug: smart-lock-out contains {m}')
@@ -346,14 +346,22 @@ def _ddh_ble_scan_loggers(antenna_idx):
     ls_macs_nope = list(set(ls_macs_black + ls_macs_orange + ls_macs_slo))
     ls_devs = [d for d in ls_devs if d.address not in ls_macs_nope]
 
+
+    # debug:
+    lg.a(f'debug, ls_macs = {ls_macs}')
+    if ls_macs_orange:
+        lg.a(f'debug, ls_macs_orange = {ls_macs_orange}')
+    if ls_macs_black:
+        lg.a(f'debug, ls_macs_black = {ls_macs_black}')
+    if ls_macs_slo:
+        lg.a(f'debug, ls_macs_slo = {ls_macs_slo}')
+
+
     for d in ls_devs:
         m = d.address
         if m not in ls_macs_nope:
             # m: '11:22:33:44:55:66'
-            lg.a(f'debug: it seems {m} is good to go')
-            lg.a(f'debug: ls_orange = {ls_macs_orange}')
-            lg.a(f'debug: ls_black  = {ls_macs_black}')
-            lg.a(f'debug: ls_slo    = {ls_macs_slo}')
+            lg.a(f'debug: it seems {m} is good to be downloaded')
 
 
     return ls_devs
