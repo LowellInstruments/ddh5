@@ -192,7 +192,7 @@ def calculate_mac_address_from_folder_within_dl_files(fol):
 def calculate_path_to_folder_within_dl_files_from_mac_address(mac):
     """returns 'dl_files/11-22-33' from '11:22:33'"""
     fol = ddh_get_path_to_folder_dl_files()
-    fol = fol / f'{mac.replace(":", "-").lower()}/'
+    fol = fol / f'{mac.replace(":", "-").upper()}/'
     return fol
 
 
@@ -201,7 +201,7 @@ def calculate_path_to_folder_within_dl_files_from_mac_address(mac):
 def create_path_to_folder_dl_files_from_mac(mac):
     """mkdir folder based on MAC address, replaces ':' with '-'"""
     fol = ddh_get_path_to_folder_dl_files()
-    fol = fol / f'{mac.replace(":", "-").lower()}/'
+    fol = fol / f'{mac.replace(":", "-").upper()}/'
     os.makedirs(fol, exist_ok=True)
     return fol
 
@@ -409,7 +409,7 @@ def ddh_config_get_list_of_monitored_serial_numbers():
 
 def ddh_config_get_list_of_monitored_macs():
     ls = list(cfg['monitored_macs'].keys())
-    return [i.lower() for i in ls]
+    return [i.upper() for i in ls]
 
 
 
@@ -447,7 +447,7 @@ def ddh_config_get_forget_time_seconds():
 
 
 def ddh_config_get_logger_sn_from_mac(mac):
-    mac = mac.lower()
+    mac = mac.upper()
 
     # happens when g_graph_test_mode()
     test_graph_d = {
@@ -462,13 +462,13 @@ def ddh_config_get_logger_sn_from_mac(mac):
 
     # do it like this to avoid case errors
     for k, v in cfg['monitored_macs'].items():
-        if mac == k.lower():
-            return v.lower()
+        if mac == k.upper():
+            return v.upper()
 
 
 
 def ddh_config_get_logger_mac_from_sn(sn):
-    sn = sn.lower()
+    sn = sn.upper()
 
     # happens when g_graph_test_mode()
     test_graph_d = {
@@ -483,8 +483,8 @@ def ddh_config_get_logger_mac_from_sn(sn):
 
     # do it like this to avoid case errors
     for k, v in cfg['monitored_macs'].items():
-        if sn == v.lower():
-            return k.lower()
+        if sn == v.upper():
+            return k.upper()
 
 
 

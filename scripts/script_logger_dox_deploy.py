@@ -75,8 +75,8 @@ def _menu_build(_sr: dict, n: int):
         print(_Pc.FAIL + e + _Pc.ENDC)
         return None
 
-    # convert to lower-case
-    ddh_d = dict((k.lower(), v) for k, v in ddh_d.items())
+    # convert to upper-case
+    ddh_d = dict((k.upper(), v) for k, v in ddh_d.items())
 
     # --------------------------------------------------
     # filters scan results: only MACS in our dictionary
@@ -217,7 +217,7 @@ def main_logger_dox_deploy():
     ble_linux_logger_disconnect_all()
     _screen_clear()
     d_macs_file = get_ddh_toml_all_macs_content()
-    d_macs_file = dict((k.lower(), v) for k, v in d_macs_file.items())
+    d_macs_file = dict((k.upper(), v) for k, v in d_macs_file.items())
     menu_size = 10
     if not d_macs_file:
         e = "error -> all_macs list is empty"
@@ -235,7 +235,7 @@ def main_logger_dox_deploy():
         i = 0
         for r in sr:
             mac, rssi = r
-            mac = mac.lower()
+            mac = mac.upper()
             if mac not in d_macs_file.keys():
                 continue
             sn = str(d_macs_file[mac])
