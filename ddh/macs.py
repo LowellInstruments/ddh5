@@ -44,10 +44,14 @@ def macs_get_them_by_color(s) -> list:
             os.unlink(f)
             if s == 'black':
                 mac = mac.replace('-', ':')
-                lg.a(f"mac {mac} added to black list post-purge")
+                lg.a(f"mac {mac} goes to smart lock-out upon its black list entry expiration")
                 slo_add(mac)
         else:
             ls.append(mac)
+
+
+    # outside this function, we usually do
+    # [i.upper().replace('-', ':') for i in ls]
     return ls
 
 
