@@ -7,12 +7,17 @@ import json
 import time
 import setproctitle
 import redis
-from ble.ble import ble_scan_slow, ble_disconnect
 from ble.ble_linux import (
-    ble_linux_get_bluez_version, ble_linux_adapter_find_best_index_by_app, ble_linux_adapter_get_type_by_index,
-    ble_linux_adapter_reset_by_index, ble_linux_adapter_is_it_up_by_index, ble_linux_logger_disconnect_by_mac,
-    ble_linux_logger_was_any_left_connected, ble_linux_logger_disconnect_all,
+    ble_linux_get_bluez_version,
+    ble_linux_adapter_find_best_index_by_app,
+    ble_linux_adapter_get_type_by_index,
+    ble_linux_adapter_reset_by_index,
+    ble_linux_adapter_is_it_up_by_index,
+    ble_linux_logger_disconnect_by_mac,
+    ble_linux_logger_was_any_left_connected,
+    ble_linux_logger_disconnect_all,
 )
+from ble.ble_oop import ble_scan_slow, LoggerBle
 from ddh.ble_dox import ble_download_dox
 from ddh_gps import (
     ddh_gps_get_fix_upon_cold_boot,
@@ -54,7 +59,6 @@ from utils.ddh_common import (
     STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit
 )
 from ddh_log import lg_ble as lg
-
 
 
 
@@ -258,7 +262,6 @@ async def _ble_logger_id_and_download(d):
     except (Exception, ) as ex:
         lg.a(f'error, ble_id_and_download_logger -> {ex}')
         rv = 1
-        await ble_disconnect()
         ble_linux_logger_disconnect_by_mac(mac)
 
 
