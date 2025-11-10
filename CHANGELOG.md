@@ -21,3 +21,7 @@
 5.0.05  11/06/25
 
         improved smart lock-out with katrina
+
+5.0.06  11/10/25
+
+        getting rid of ble.py

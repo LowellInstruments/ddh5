@@ -1,6 +1,15 @@
-from ble.ble import *
+import asyncio
+import json
+
+from bleak import BleakScanner
+
 from ble.ble_linux import ble_linux_adapter_find_best_index_by_app
+from ble.ble_oop import LoggerBle
 from mat.utils import PrintColors as _Pc
+
+
+
+lc = LoggerBle()
 
 
 
@@ -30,79 +39,79 @@ async def deploy_logger_dox(mac, sn, flag_run, flag_sensor, dn):
     rv = 0
 
     try:
-        rv = await ble_connect_by_mac(mac)
+        rv = await lc.ble_connect_by_mac(mac)
         _e(not rv, "connecting TDO logger")
 
-        rv, v = await cmd_gfv()
+        rv, v = await lc.cmd_gfv()
         _e(rv, "gfv")
         ver = v
         print(f'firmware version = {ver}')
 
 
         g = ("-3.333333", "-4.444444", None, None)
-        rv = await cmd_sws(g)
+        rv = await lc.cmd_sws(g)
         _e(rv, "sws")
 
 
         print(f'blinking LEDs')
-        rv = await cmd_led()
+        rv = await lc.cmd_led()
         _e(rv, "led")
 
 
-        rv = await cmd_sts()
+        rv = await lc.cmd_sts()
         _e(rv[0], "sts")
 
         print('synchronizing time')
-        rv, t = await cmd_gtm()
+        rv, t = await lc.cmd_gtm()
         _e(rv, "gtm")
 
-        rv = await cmd_stm()
+        rv = await lc.cmd_stm()
         _e(rv, "stm")
 
 
         print('formatting logger file-system')
-        rv = await cmd_frm()
+        rv = await lc.cmd_frm()
         _e(rv, "frm")
 
 
         print(f'setting deployment name to {dn}')
-        rv = await cmd_dns(dn)
+        rv = await lc.cmd_dns(dn)
         _e(rv, "dns")
 
 
         d = get_script_cfg_file()
-        rv = await cmd_cfg(d)
+        rv = await lc.cmd_cfg(d)
         _e(rv, "cfg")
 
 
-        rv = await cmd_wli("BA8007")
+        rv = await lc.cmd_wli("BA8007")
         _e(rv, "wli_ba")
         await asyncio.sleep(.1)
 
-        rv = await cmd_wli("MA1234ABC")
+        rv = await lc.cmd_wli("MA1234ABC")
         _e(rv, "wli_ma")
         await asyncio.sleep(.1)
 
 
-        rv = await cmd_wli("CA1234")
+        rv = await lc.cmd_wli("CA1234")
         _e(rv, "wli_ca")
         await asyncio.sleep(.1)
 
-        rv = await cmd_wli(f"SN{sn}")
+        rv = await lc.cmd_wli(f"SN{sn}")
         _e(rv, "wli_sn")
         await asyncio.sleep(.1)
 
-        rv, info = await cmd_rli()
+        rv, info = await lc.cmd_rli()
 
 
         print('measuring battery')
-        rv, b = await cmd_bat()
+        rv, b = await lc.cmd_bat()
         _e(rv == 1, "bat")
         print(f'battery is {b} mV')
 
 
         print('measuring oxygen sensor')
-        rv = await cmd_gdo()
+        rv = await lc.cmd_gdo()
         print(f'oxygen value is {rv}')
         bad_rv = not rv or (rv and rv[0] in ("0000", -1))
         if flag_sensor:
@@ -115,11 +124,11 @@ async def deploy_logger_dox(mac, sn, flag_run, flag_sensor, dn):
         if flag_run:
             await asyncio.sleep(1)
             g = (1.111111, 2.222222, None, None)
-            rv = await cmd_rws(g)
+            rv = await lc.cmd_rws(g)
             _e(rv, "rws")
             print('DOX logger is running')
 
-            rv = await cmd_wak("on")
+            rv = await lc.cmd_wak("on")
             _e(rv, "wak")
             print('DOX logger set wake mode 1')
 
@@ -138,7 +147,7 @@ async def deploy_logger_dox(mac, sn, flag_run, flag_sensor, dn):
         rv = 1
 
     finally:
-        await ble_disconnect()
+        await lc.ble_disconnect()
         return rv
 
 

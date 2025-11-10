@@ -1,11 +1,11 @@
+import asyncio
 import os
-import sys
-
 import toml
-from ble.ble import *
+from ble.ble_oop import LoggerBle
 from ddh.lef import lef_create_file
 from ddh.notifications_v2 import (
-    LoggerNotification, notify_logger_error_low_battery,
+    LoggerNotification,
+    notify_logger_error_low_battery,
     notify_logger_error_sensor_pressure
 )
 from mat.utils import linux_is_rpi
@@ -14,14 +14,22 @@ from utils.ddh_common import (
     create_path_to_folder_dl_files_from_mac,
     ddh_ble_logger_needs_a_reset,
     ddh_get_template_of_path_of_hbw_flag_file,
-    ddh_get_path_to_folder_scripts, EV_BLE_LOW_BATTERY,
-    STR_EV_BLE_LOW_BATTERY, app_state_set, t_str,
-    ddh_does_do_not_rerun_file_flag_exist, EV_BLE_DL_ERROR,
+    ddh_get_path_to_folder_scripts,
+    EV_BLE_LOW_BATTERY,
+    STR_EV_BLE_LOW_BATTERY,
+    app_state_set,
+    t_str,
+    ddh_does_do_not_rerun_file_flag_exist,
     TESTMODE_FILENAME_PREFIX,
     calculate_path_to_folder_within_dl_files_from_mac_address,
-    ddh_config_does_flag_file_download_test_mode_exist, exp_debug_skip_hbw,
+    ddh_config_does_flag_file_download_test_mode_exist,
+    exp_debug_skip_hbw,
 )
 from ddh_log import lg_ble as lg
+
+
+
+lc = LoggerBle()
 
 
 
@@ -74,7 +82,7 @@ async def _tdo_reconfigure_profiling(ver):
         lg.a('no SCF dictionary from file, not configuring TDO on-the-fly')
         return
 
-    rv, str_gcf = await cmd_gcf()
+    rv, str_gcf = await lc.cmd_gcf()
     if rv:
         lg.a('GCF failed, not configuring TDO on-the-fly')
         return
@@ -100,7 +108,7 @@ async def _tdo_reconfigure_profiling(ver):
         i_prf += 5
         if v_prf != v:
             lg.a(f'warning, sent SCF {tag} {v}, old value was {v_prf}')
-            rv = await cmd_scf(tag, v)
+            rv = await lc.cmd_scf(tag, v)
             bad_rv = rv == 1
             _rae(bad_rv, f"scf {tag}")
         else:
@@ -131,7 +139,7 @@ async def ble_download_tdo(d):
     create_path_to_folder_dl_files_from_mac(mac)
 
 
-    rv = await ble_connect_by_dev(dev)
+    rv = await lc.ble_connect_by_dev(dev)
     _une(not rv, d, "comm.")
     _rae(not rv, "connecting")
     lg.a(f"connected to {mac}")
@@ -139,18 +147,18 @@ async def ble_download_tdo(d):
 
     if ddh_ble_logger_needs_a_reset(mac):
         lg.a(f"warning, logger reset file {mac} found, deleting it")
-        await cmd_rst()
+        await lc.cmd_rst()
         # out of here for sure
         raise BLEAppException("TDO interact logger reset file")
 
 
-    rv, v = await cmd_gfv()
+    rv, v = await lc.cmd_gfv()
     _rae(rv, "gfv")
     lg.a(f"GFV | {v}")
     d['gfv'] = v
     
 
-    rv, state = await cmd_sts()
+    rv, state = await lc.cmd_sts()
     _rae(rv, "sts")
     lg.a(f"STS | logger was {state}")
 
@@ -166,12 +174,12 @@ async def ble_download_tdo(d):
                 else:
                     # normal HBW command
                     lg.a('sending command Has-Been-in-Water')
-                    rv, v = await cmd_hbw()
+                    rv, v = await lc.cmd_hbw()
                     _rae(rv, "hbw")
                     lg.a(f"HBW | {v}")
                     if v == 0:
                         lg.a('logger has NOT been in water, no need to download it')
-                        await ble_disconnect()
+                        await lc.ble_disconnect()
                         return 2
                     lg.a("logger has been in water, we download it")
         else:
@@ -179,15 +187,15 @@ async def ble_download_tdo(d):
     else:
         lg.a("not sending command Has-Been-in-Water, it's disabled in configuration file")
 
-    rv = await cmd_sws(g)
+    rv = await lc.cmd_sws(g)
     _rae(rv, "sws")
     lg.a("SWS | OK")
 
-    rv, t = await cmd_utm()
+    rv, t = await lc.cmd_utm()
     _rae(rv, "utm")
     lg.a(f"UTM | {t}")
 
-    rv, b = await cmd_bat()
+    rv, b = await lc.cmd_bat()
     _rae(rv, "bat")
     adc_b = b
     b /= BAT_FACTOR_TDO
@@ -204,32 +212,32 @@ async def ble_download_tdo(d):
         _rae(rv_bad_bat, "bat")
 
 
-    rv, v = await cmd_gtm()
+    rv, v = await lc.cmd_gtm()
     _rae(rv, "gtm")
     lg.a(f"GTM | {v}")
 
 
-    rv = await cmd_stm()
+    rv = await lc.cmd_stm()
     _rae(rv, "stm")
     lg.a("STM | OK")
 
 
     # disable log for lower power consumption
-    rv, v = await cmd_log()
+    rv, v = await lc.cmd_log()
     _rae(rv, "log")
     if linux_is_rpi():
         if v != 0:
-            rv, v = await cmd_log()
+            rv, v = await lc.cmd_log()
             _rae(rv, "log")
     else:
         # we want logs while developing
         if v != 1:
-            rv, v = await cmd_log()
+            rv, v = await lc.cmd_log()
             _rae(rv, "log")
 
 
 
-    rv, ls = await cmd_dir()
+    rv, ls = await lc.cmd_dir()
     _rae(rv, "dir error " + str(rv))
     lg.a(f"DIR | {ls}")
 
@@ -240,19 +248,19 @@ async def ble_download_tdo(d):
 
         # delete zero-bytes files
         if size == 0:
-            rv = await cmd_del(name)
+            rv = await lc.cmd_del(name)
             _rae(rv, "del")
             continue
 
 
         # target file to download
         lg.a(f"downloading file {name}")
-        rv = await cmd_dwg(name)
+        rv = await lc.cmd_dwg(name)
         _rae(rv, "dwg")
 
 
         # download file
-        rv, file_data = await cmd_dwl(int(size))
+        rv, file_data = await lc.cmd_dwl(int(size))
         _rae(rv, "dwl")
         # todo: DWL or DWF
         lg.a(f"OK downloaded file {name}")
@@ -271,7 +279,7 @@ async def ble_download_tdo(d):
         d['dl_files'].append(path)
 
         # delete file in logger
-        rv = await cmd_del(del_name)
+        rv = await lc.cmd_del(del_name)
         _rae(rv, "del")
         lg.a(f"deleted file {del_name}")
 
@@ -284,14 +292,14 @@ async def ble_download_tdo(d):
 
     # format file-system
     await asyncio.sleep(.1)
-    rv = await cmd_frm()
+    rv = await lc.cmd_frm()
     _rae(rv, "frm")
     lg.a("FRM | OK")
 
 
 
     # check sensor Temperature
-    rv = await cmd_gst()
+    rv = await lc.cmd_gst()
     # rv: (0, 46741)
     bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
     if bad_rv:
@@ -303,7 +311,7 @@ async def ble_download_tdo(d):
 
 
     # check sensor Pressure
-    rv = await cmd_gsp()
+    rv = await lc.cmd_gsp()
     # rv: (0, 1241)
     bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
     if bad_rv:
@@ -323,7 +331,7 @@ async def ble_download_tdo(d):
     # wake mode
     rerun_flag = not ddh_does_do_not_rerun_file_flag_exist()
     w = "on" if rerun_flag else "off"
-    rv = await cmd_wak(w)
+    rv = await lc.cmd_wak(w)
     _rae(rv, "wak")
     lg.a(f"WAK | {w} OK")
 
@@ -331,12 +339,12 @@ async def ble_download_tdo(d):
     # re-run the logger or not
     d['rerun'] = rerun_flag
     if rerun_flag:
-        rv = await cmd_rws(g)
+        rv = await lc.cmd_rws(g)
         if rv:
             d['error'] = 'running'
         _rae(rv, "rws")
         lg.a("RWS | OK")
 
 
-    await ble_disconnect()
+    await lc.ble_disconnect()
     return 0
