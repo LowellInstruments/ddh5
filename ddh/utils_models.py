@@ -6,9 +6,8 @@ import requests
 from PyQt6.QtGui import QMovie
 
 from ddh.preferences import preferences_get_models_index
-from mat.utils import linux_is_rpi
 from utils.ddh_common import (
-    ddh_get_path_to_folder_gui_res,
+    ddh_get_path_to_folder_gui_res, linux_is_rpi,
 )
 from ddh_log import lg_gui as lg
 

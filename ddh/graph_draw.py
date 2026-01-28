@@ -1,10 +1,10 @@
+import random
+
 import redis
 import math
 import time
 from datetime import datetime
-
-from PyQt6 import QtCore
-from PyQt6.QtCore import QCoreApplication
+from PyQt6.QtCore import QCoreApplication, Qt
 from math import ceil
 import numpy as np
 import pyqtgraph as pg
@@ -15,12 +15,11 @@ from ddh.graph_utils import (
     utils_graph_get_abs_fol_list,
     utils_graph_fetch_csv_data,
 )
-from mat.utils import linux_is_rpi
 from rd_ctt.ddh import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_GRAPH_STATISTICS
 from utils.ddh_common import (
     calculate_path_to_folder_within_dl_files_from_mac_address,
     get_total_number_of_hauls,
-    ddh_config_get_logger_mac_from_sn
+    ddh_config_get_logger_mac_from_sn, linux_is_rpi
 )
 from ddh_log import lg_gra as lg
 
@@ -38,7 +37,6 @@ just_booted = True
 # this one is dynamic so it needs a backup
 p3 = None
 p3_bak = None
-
 
 
 r = redis.Redis('localhost', port=6379)
@@ -400,6 +398,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     # --------------
     lbl1, lbl2, lbl3 = '', '', ''
     y1, y2, y3 = [], [], []
+
     if met == 'TP':
         lbl1 = 'Depth (fathoms) TP'
         lbl2 = 'Temperature (F) TP'
@@ -413,8 +412,27 @@ def _graph_process_n_draw(a, plot_reason=''):
         y3 = data['Ax TDO']
         y4 = data['Ay TDO']
         y5 = data['Az TDO']
+
+
+    # grab the data
     y1 = data[lbl1]
     y2 = data[lbl2]
+
+
+    # transform to proper units if needed
+    if a.btn_plt_units.text() == "Metric" and met == "TDO":
+        lbl1 = 'Depth (m) TDO'
+        lbl2 = 'Temperature (C) TDO'
+        # fathoms to meters
+        y1 = [y * 1.8288 for y in y1]
+        # Fahrenheit to Celsius
+        y2 = [((y -32) * (5/9)) for y in y2]
+    elif a.btn_plt_units.text() == "Metric" and met == "DO":
+        lbl2 = 'Temperature (C) TDO'
+        # Fahrenheit to Celsius
+        y2 = [((y -32) * (5/9)) for y in y2]
+
+
 
     # see if we need Depth-axis inverted
     p1.invertY('Depth' in lbl1)
@@ -439,6 +457,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     pen2 = pg.mkPen(color=clr_2, width=2)
     pen3 = pg.mkPen(color=clr_3, width=1)
     pen4 = pg.mkPen(color=clr_4, width=2)
+    pen5 = pg.mkPen(color=clr_2, width=2, style=Qt.PenStyle.DotLine)
     p1.getAxis('left').setTextPen(clr_1)
     p1.getAxis('right').setTextPen(clr_2)
     p1.getAxis('bottom').setTextPen('black')
@@ -505,6 +524,7 @@ def _graph_process_n_draw(a, plot_reason=''):
         p2.setYRange(min(y2), max(y2), padding=0)
         p1.getAxis('bottom').setLabel(title, **_sty('black'))
 
+
     # ------------------
     # graph TDO loggers
     # ------------------
@@ -516,7 +536,9 @@ def _graph_process_n_draw(a, plot_reason=''):
         if 'x-time' in tdo_graph_type:
             p1.setLabel("left", lbl1, **_sty(clr_1))
             p1.getAxis('right').setLabel(lbl2, **_sty(clr_2))
+
             # display any pressure value < 0 as 0
+            print('y1', y1)
             arr = np.array(y1)
             arr[arr < 0] = 0
             y1 = list(arr)
@@ -537,6 +559,26 @@ def _graph_process_n_draw(a, plot_reason=''):
 
             # bottom-axis label
             p1.getAxis('bottom').setLabel(title, **_sty('black'))
+
+
+            # calculate bottom temperature for interesting depths and plot it
+            x_bottom = []
+            y2_bottom = []
+            max_depth_80 = max(y1) * 0.80
+            mean_t_80 = np.nanmean(y2)
+            if a.btn_plt_units.text() == "Imperial":
+                # 2 meter = 1.09361 fathom
+                max_depth_80 = max_depth_80 + 1.09361
+            else:
+                max_depth_80 = max_depth_80 + 2
+            for i,_ in enumerate(y1):
+                if y1[i] >= max_depth_80:
+                    x_bottom.append(x[i])
+                    y2_bottom.append(mean_t_80)
+            p2.addItem(pg.PlotCurveItem(x_bottom, y2_bottom, pen=pen5,
+                                        hoverable=True, connect='finite'))
+
+
 
             # ------------------------
             # 3rd line: accelerometer
@@ -584,6 +626,8 @@ def _graph_process_n_draw(a, plot_reason=''):
         elif 'x-Temp' in tdo_graph_type:
             p1.getAxis('left').setTextPen(clr_4)
             p1.setLabel("left", 'Depth (fathoms)' + ' ─', **_sty(clr_4))
+            if a.btn_plt_units.text() == "Metric":
+                p1.setLabel("left", 'Depth (m)' + ' ─', **_sty(clr_4))
 
             # remove whole right axis
             g.getPlotItem().hideAxis('right')
@@ -609,7 +653,10 @@ def _graph_process_n_draw(a, plot_reason=''):
             p1.setYRange(.1, np.nanmax(y1), padding=0)
 
             # title and bottom axis
-            title = f'Temperature (F) {title}'
+            if a.btn_plt_units.text() == "Imperial":
+                title = f'Temperature (F) {title}'
+            else:
+                title = f'Temperature (C) {title}'
             p1.getAxis('bottom').setLabel(title, **_sty('black'))
 
             # patch for bottom ticks, y2 are floats
@@ -658,8 +705,18 @@ def _graph_process_n_draw(a, plot_reason=''):
                 s = 'haul summary\nTDO\n'
                 if been_water:
                     s += f'{t1}\n{t2}\n'
-                    s += '{:5.2f} fathoms\n'.format(np.nanmean(ls_p))
-                    s += '{:5.2f} °F'.format(np.nanmean(ls_t))
+                    stats_p = np.nanmean(ls_p)
+                    stats_t = np.nanmean(ls_t)
+                    if a.btn_plt_units.text() == "Imperial":
+                        s += '{:5.2f} fathoms\n'.format(stats_p)
+                        s += '{:5.2f} °F'.format(stats_t)
+                    else:
+                        # fathoms to meters, Fahrenheit to Celsius
+                        stats_p = float(stats_p) * 1.8288
+                        stats_t = (stats_t * -32) * (5/9)
+                        s += '{:5.2f} meters\n'.format(stats_p)
+                        s += '{:5.2f} °C'.format(stats_t)
+
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
                 r.set(RD_DDH_GUI_GRAPH_STATISTICS, s)
@@ -692,7 +749,13 @@ def _graph_process_n_draw(a, plot_reason=''):
                 if been_water:
                     s += f'{t1}\n{t2}\n'
                     s += '{:5.2f} mg_l\n'.format(np.nanmean(ls_do))
-                    s += '{:5.2f} °F'.format(np.nanmean(ls_dt))
+                    stats_dt = np.nanmean(ls_dt)
+                    if a.btn_plt_units.text() == "Imperial":
+                        s += '{:5.2f} °F'.format(stats_dt)
+                    else:
+                        # Fahrenheit to Celsius
+                        stats_dt = (stats_dt * -32) * (5/9)
+                        s += '{:5.2f} °C'.format(stats_dt)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
                 r.set(RD_DDH_GUI_GRAPH_STATISTICS, s)

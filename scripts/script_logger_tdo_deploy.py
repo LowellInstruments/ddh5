@@ -8,12 +8,12 @@ import os
 import toml
 
 from ble.ble_linux import ble_linux_logger_disconnect_all
-from mat.utils import PrintColors as _Pc, linux_is_rpi
+from mat.utils import PrintColors as _Pc
 from script_logger_tdo_deploy_utils import (
     deploy_logger_tdo,
     ble_scan_for_tdo_loggers,
 )
-
+from utils.ddh_common import linux_is_rpi
 
 # don't move this from here
 FILE_ALL_MACS_TOML = f'../settings/all_macs.toml'

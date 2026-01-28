@@ -40,7 +40,6 @@ from ddh.slo import slo_get_all, slo_add, slo_delete
 from ddh.timecache import is_it_time_to
 from ddh.tracking import ddh_log_tracking_add, get_path_current_track_file
 from main_ddh import gui_add_to_history_database
-from mat.utils import linux_is_rpi
 from rd_ctt.ddh import *
 from utils.ddh_common import (
     NAME_EXE_BLE,
@@ -56,7 +55,7 @@ from utils.ddh_common import (
     EV_BLE_DL_PROGRESS, STR_EV_BLE_DL_PROGRESS,
     STR_EV_BLE_DL_RETRY, EV_GPS_HW_ERROR, STR_EV_GPS_HW_ERROR,
     EV_NO_ASSIGNED_LOGGERS,
-    STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit
+    STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit, linux_is_rpi
 )
 from ddh_log import lg_ble as lg
 

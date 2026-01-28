@@ -25,3 +25,8 @@
 5.0.06  11/10/25
 
         getting rid of ble.py
+
+5.0.07  01/28/26
+
+        plots: added units toggle metric / imperial
+        plots: added bottom temperature

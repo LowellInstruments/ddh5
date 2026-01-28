@@ -1,11 +1,11 @@
 from collections import namedtuple
-from mat.utils import linux_is_rpi
 from ddh_log import lg_emo as lg
 import pandas as pd
 import os
 from os.path import exists
 
-from utils.ddh_common import ddh_config_get_vessel_name, ddh_config_get_box_sn, LI_PATH_GROUPED_S3_FILE_FLAG
+from utils.ddh_common import ddh_config_get_vessel_name, ddh_config_get_box_sn, LI_PATH_GROUPED_S3_FILE_FLAG, \
+    linux_is_rpi
 
 # ----------------------------------------------------------------------
 # RAW CSV file -> emolt CSV file 'zt_*' -> header-less file %85 -> msg

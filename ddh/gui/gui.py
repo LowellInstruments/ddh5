@@ -708,6 +708,9 @@ class Ui_MainWindow(object):
         self.lay_g_h1.addWidget(self.cb_g_sn)
         spacerItem31 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.lay_g_h1.addItem(spacerItem31)
+        self.btn_plt_units = QtWidgets.QPushButton(parent=self.tab_graph)
+        self.btn_plt_units.setObjectName("btn_plt_units")
+        self.lay_g_h1.addWidget(self.btn_plt_units)
         self.label_9 = QtWidgets.QLabel(parent=self.tab_graph)
         self.label_9.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTrailing|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.label_9.setObjectName("label_9")
@@ -728,6 +731,7 @@ class Ui_MainWindow(object):
         self.lay_g_h1.setStretch(5, 1)
         self.lay_g_h1.setStretch(6, 1)
         self.lay_g_h1.setStretch(7, 1)
+        self.lay_g_h1.setStretch(8, 1)
         self.verticalLayout_7.addLayout(self.lay_g_h1)
         self.lay_g_h1_2 = QtWidgets.QHBoxLayout()
         self.lay_g_h1_2.setSpacing(0)
@@ -796,7 +800,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.tabs.setCurrentIndex(1)
+        self.tabs.setCurrentIndex(5)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -841,6 +845,7 @@ class Ui_MainWindow(object):
         self.cb_g_switch_tp.setCurrentText(_translate("MainWindow", "x-time"))
         self.cb_g_switch_tp.setItemText(0, _translate("MainWindow", "x-time"))
         self.cb_g_switch_tp.setItemText(1, _translate("MainWindow", "x-Temp"))
+        self.btn_plt_units.setText(_translate("MainWindow", "Imperial"))
         self.label_9.setText(_translate("MainWindow", "hauls"))
         self.cb_g_cycle_haul.setItemText(0, _translate("MainWindow", "last"))
         self.cb_g_cycle_haul.setItemText(1, _translate("MainWindow", "all"))

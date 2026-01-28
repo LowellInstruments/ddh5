@@ -6,6 +6,7 @@ import time
 import redis
 from ddh.graph_draw import graph_request
 from ddh.graph_utils import utils_graph_classify_file_wc_mode
+from lix.lix import parse_lid_v2_data_file
 from mat.data_converter import (
     default_parameters,
     DataConverter
@@ -16,7 +17,6 @@ from mat.lix import (
     LID_FILE_V1, LID_FILE_V2,
     lid_file_v2_has_sensor_data_type
 )
-from mat.lix_pr import convert_lix_file
 from rd_ctt.ddh import (
     RD_DDH_CNV_QUEUE,
     RD_DDH_AWS_COPY_QUEUE, RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER
@@ -89,7 +89,7 @@ def _convert_lid_file_v2(f, suf):
     bn = os.path.basename(f)
     dn = os.path.dirname(f).split('/')[-1]
     lg.a(f"converting LID file v2 {dn}/{bn} suffix {suf}")
-    rv = convert_lix_file(f)
+    rv = parse_lid_v2_data_file(f)
     lg.a(f"OK: converted LID file v2 {dn}/{bn} suffix {suf}")
     return rv
 

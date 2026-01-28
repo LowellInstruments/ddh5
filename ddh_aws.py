@@ -11,7 +11,6 @@ import subprocess as sp
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 from ddh.notifications_v2 import notify_error_sw_aws_s3
 from ddh_net import ddh_net_calculate_via
-from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
     RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
@@ -24,7 +23,7 @@ from utils.ddh_common import (
     ddh_get_path_to_db_aws_status_file,
     ddh_config_get_vessel_name,
     ddh_config_get_one_aws_credential_value,
-    LI_PATH_LAST_YEAR_AWS_TEMPLATE, ddh_this_process_needs_to_quit)
+    LI_PATH_LAST_YEAR_AWS_TEMPLATE, ddh_this_process_needs_to_quit, linux_is_rpi)
 from ddh_log import lg_aws as lg
 
 

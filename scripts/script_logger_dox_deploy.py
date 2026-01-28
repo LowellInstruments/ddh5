@@ -8,14 +8,14 @@ import os
 import toml
 
 from ble.ble_linux import ble_linux_logger_disconnect_all
-from mat.utils import PrintColors as _Pc, linux_is_rpi
+from mat.utils import PrintColors as _Pc
 from script_logger_dox_deploy_utils import (
     set_script_cfg_file,
     deploy_logger_dox,
     get_script_cfg_file,
     ble_scan_for_dox_loggers,
 )
-
+from utils.ddh_common import linux_is_rpi
 
 # don't move this from here
 FILE_ALL_MACS_TOML = f'../settings/all_macs.toml'
