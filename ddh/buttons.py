@@ -1,14 +1,13 @@
 import threading
 import time
 from signal import pause
-from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
     RD_DDH_GUI_BOX_SIDE_BUTTON_TOP,
     RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
     RD_DDH_GUI_BOX_SIDE_BUTTON_LOW
 )
 from utils.ddh_common import (
-    exp_get_custom_side_buttons_debounce_time,
+    exp_get_custom_side_buttons_debounce_time, linux_is_rpi,
 )
 import redis
 

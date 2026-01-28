@@ -8,7 +8,6 @@ from ddh.notifications_v2 import (
     notify_logger_error_low_battery,
     notify_logger_error_sensor_pressure
 )
-from mat.utils import linux_is_rpi
 from utils.ddh_common import (
     ddh_config_get_logger_sn_from_mac,
     create_path_to_folder_dl_files_from_mac,
@@ -23,7 +22,7 @@ from utils.ddh_common import (
     TESTMODE_FILENAME_PREFIX,
     calculate_path_to_folder_within_dl_files_from_mac_address,
     ddh_config_does_flag_file_download_test_mode_exist,
-    exp_debug_skip_hbw,
+    exp_debug_skip_hbw, linux_is_rpi,
 )
 from ddh_log import lg_ble as lg
 

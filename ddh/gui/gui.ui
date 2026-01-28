@@ -41,7 +41,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <property name="sizePolicy">
@@ -1591,7 +1591,7 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_7" stretch="1,0,8">
         <item>
-         <layout class="QHBoxLayout" name="lay_g_h1" stretch="1,0,1,2,0,1,1,1">
+         <layout class="QHBoxLayout" name="lay_g_h1" stretch="1,0,1,2,0,1,1,1,1">
           <property name="spacing">
            <number>18</number>
           </property>
@@ -1660,6 +1660,13 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_plt_units">
+            <property name="text">
+             <string>Imperial</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QLabel" name="label_9">

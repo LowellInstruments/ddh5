@@ -21,12 +21,12 @@ from utils.ddh_common import (
     EV_GPS_IN_PORT,
     STR_EV_GPS_IN_PORT,
     ddh_this_process_needs_to_quit,
-    TMP_PATH_GPS_LAST_JSON
+    TMP_PATH_GPS_LAST_JSON, linux_is_rpi
 )
 import datetime
 import json
 from ddh.timecache import is_it_time_to
-from mat.utils import linux_is_rpi, linux_set_datetime
+from mat.utils import linux_set_datetime
 from ddh_log import lg_gps as lg
 import os
 import redis

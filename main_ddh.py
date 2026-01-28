@@ -23,7 +23,6 @@ from ddh.buttons import ddh_create_thread_buttons
 from ddh.notifications_v2 import notify_via_sms, notify_ddh_alive, notify_error_sw_crash
 from ddh.slo import slo_delete, slo_delete_all
 from mat.linux import linux_is_process_running_strict
-from mat.utils import linux_is_rpi
 from rd_ctt.ddh import (
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_REFRESH_HISTORY_TABLE,
     RD_DDH_BLE_ANTENNA, \
@@ -77,7 +76,7 @@ from utils.ddh_common import (
     EV_BLE_LOW_BATTERY, EV_BLE_DL_RETRY, PATH_MAIN_BLE_CONNECTING, PATH_MAIN_BLE_DL_OK, PATH_MAIN_BLE_DL_ERROR,
     PATH_MAIN_BLE_DL_OK_NO_RERUN, PATH_MAIN_BLE_DL_NO_NEED, PATH_MAIN_BLE_DL_LOW_BATTERY, PATH_MAIN_BLE_DL_RETRY,
     PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, EV_GPS_HW_ERROR,
-    PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK, ddh_config_get_language_index,
+    PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK, ddh_config_get_language_index, linux_is_rpi,
 )
 import datetime
 import os
@@ -511,6 +510,7 @@ def gui_setup_buttons(my_app):
     a.cb_g_sn.activated.connect(a.click_graph_listview_logger_sn)
     a.cb_g_cycle_haul.activated.connect(a.click_graph_lbl_haul_types)
     a.cb_g_switch_tp.activated.connect(a.click_graph_cb_switch_tp)
+    a.btn_plt_units.clicked.connect(a.click_btn_plt_units)
 
 
     # advanced stuff
@@ -1366,6 +1366,17 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def click_graph_btn_reset(self):
         self.g.getPlotItem().enableAutoRange()
         graph_request(reason='user')
+
+
+    def click_btn_plt_units(self):
+        s = self.btn_plt_units.text()
+        if s == "Imperial":
+            s = "Metric"
+        else:
+            s = "Imperial"
+        self.btn_plt_units.setText(s)
+        graph_request(reason='user')
+
 
 
     @staticmethod
