@@ -15,4 +15,3 @@ redis~=6.4.0
 
 ble@git+https://github.com/LowellInstruments/ble.git
 gps@git+https://github.com/LowellInstruments/gps.git
-rd_ctt@git+https://github.com/LowellInstruments/rd_ctt.git
