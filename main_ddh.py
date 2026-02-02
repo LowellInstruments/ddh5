@@ -76,7 +76,8 @@ from utils.ddh_common import (
     EV_BLE_LOW_BATTERY, EV_BLE_DL_RETRY, PATH_MAIN_BLE_CONNECTING, PATH_MAIN_BLE_DL_OK, PATH_MAIN_BLE_DL_ERROR,
     PATH_MAIN_BLE_DL_OK_NO_RERUN, PATH_MAIN_BLE_DL_NO_NEED, PATH_MAIN_BLE_DL_LOW_BATTERY, PATH_MAIN_BLE_DL_RETRY,
     PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, EV_GPS_HW_ERROR,
-    PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK, ddh_config_get_language_index, linux_is_rpi,
+    PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK, ddh_config_get_language_index, linux_is_rpi, STR_EV_ERROR_REDIS,
+    EV_GUI_ERROR_REDIS, EV_GUI_ERROR_POWER_SAH, STR_EV_ERROR_POWER_SAH, EV_GUI_ERROR_POWER_J4H, STR_EV_ERROR_POWER_J4H,
 )
 import datetime
 import os
@@ -1402,6 +1403,38 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
+    def _cb_timer_gui_sixty_seconds(self):
+        c = "systemctl is-active redis"
+        rv = sp.run(c, shell=True)
+        if rv.returncode:
+            lg.a("error, redis server")
+            app_state_set(EV_GUI_ERROR_REDIS, STR_EV_ERROR_REDIS, 5)
+
+        if not linux_is_rpi():
+            return
+
+        # check power systems
+        path_flag_j4h = '/home/pi/li/.ddt_j4h_shield.flag'
+        path_flag_sah = '/home/pi/li/.ddt_sailor_shield.flag'
+        if os.path.exists(path_flag_j4h):
+            c = 'ps -aux | grep -v grep | grep "shutdown_script"'
+            rv = sp.run(c, shell=True)
+            if rv.returncode:
+                lg.a("error, power juice4halt")
+                app_state_set(EV_GUI_ERROR_POWER_J4H,
+                              STR_EV_ERROR_POWER_J4H, 5)
+
+
+        if os.path.exists(path_flag_sah):
+            c = "systemctl is-active shrpid"
+            rv = sp.run(c, shell=True)
+            if rv.returncode:
+                lg.a("error, power sailorhat")
+                app_state_set(EV_GUI_ERROR_POWER_SAH,
+                              STR_EV_ERROR_POWER_SAH, 5)
+
+
+
     def _cb_timer_gui_one_second(self):
 
         # update DATE and UPTIME fields, also a COUNTER for incremental stuff
@@ -1572,6 +1605,12 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             pi = PATH_MAIN_GPS_HW_ERROR
         elif code in (EV_BLE_SCAN, ):
             pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
+        elif code in (
+                EV_GUI_ERROR_REDIS,
+                EV_GUI_ERROR_POWER_J4H,
+                EV_GUI_ERROR_POWER_SAH
+        ):
+            pi = PATH_MAIN_BLE_DL_ERROR
         else:
             print('*1* unknown state code', code)
             print('*1* unknown state text', text)
@@ -1588,8 +1627,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if pi:
                 self.lbl_main_img.setPixmap(QPixmap(pi))
             else:
-                print('*2* unknown state code', code)
-                print('*2* unknown state text', text)
+                print('*2* unknown path_image', pi)
 
 
         # show or not the statistics box
@@ -1695,13 +1733,16 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # GUI timers
         self.timer_gui_one_second = QTimer()
+        self.timer_gui_sixty_seconds = QTimer()
         self.timer_six_hours = QTimer()
         self.timer_cpu_hot = QTimer()
         self.timer_plot = QTimer()
+        self.timer_gui_sixty_seconds.timeout.connect(self._cb_timer_gui_sixty_seconds)
         self.timer_gui_one_second.timeout.connect(self._cb_timer_gui_one_second)
         self.timer_six_hours.timeout.connect(self._cb_timer_six_hours)
         self.timer_cpu_hot.timeout.connect(self._cb_timer_cpu_temperature)
         self.timer_plot.timeout.connect(self._cb_timer_plot)
+        self.timer_gui_sixty_seconds.start(60 * 1000)
         self.timer_gui_one_second.start(1 * 1000)
         # well, the first will be less than 6 hours, more like 10 seconds
         self.timer_six_hours.start(10 * 1000)

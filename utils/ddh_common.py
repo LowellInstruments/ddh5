@@ -704,6 +704,9 @@ EV_BLE_SCAN = '13'
 EV_GPS_SYNC_CLOCK = '14'
 EV_BLE_DL_RETRY = '15'
 EV_BLE_HW_ERROR = '16'
+EV_GUI_ERROR_REDIS = '17'
+EV_GUI_ERROR_POWER_SAH = '18'
+EV_GUI_ERROR_POWER_J4H = '19'
 
 
 
@@ -724,6 +727,9 @@ STR_EV_BLE_SCAN = 'searching for loggers'
 STR_EV_GPS_SYNC_CLOCK = 'syncing GPS time'
 STR_EV_BLE_DL_RETRY = 'retrying'
 STR_EV_BLE_HW_ERROR = 'no BLE service'
+STR_EV_ERROR_REDIS = 'error redis'
+STR_EV_ERROR_POWER_SAH = 'error power SAH'
+STR_EV_ERROR_POWER_J4H = 'error power J4H'
 
 
 

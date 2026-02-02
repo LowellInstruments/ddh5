@@ -30,3 +30,8 @@
 
         plots: added units toggle metric / imperial
         plots: added bottom temperature
+
+5.0.08  02/01/26
+
+        now GUI detects running redis
+        now GUI detects running power shield
