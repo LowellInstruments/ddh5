@@ -4,7 +4,7 @@ redis
 numpy
 pyqtgraph
 python-dateutil
-pandas
+pandas~=2.0
 GitPython
 toml
 tzlocal
@@ -13,7 +13,7 @@ pynmea2
 gpiozero
 requests
 strip.pysondb
-bleak
+bleak~=1.0
 humanize
 boto3
 h5py
