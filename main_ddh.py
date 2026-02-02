@@ -1405,7 +1405,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def _cb_timer_gui_sixty_seconds(self):
         c = "systemctl is-active redis"
-        rv = sp.run(c, shell=True)
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode:
             lg.a("error, redis server")
             app_state_set(EV_GUI_ERROR_REDIS, STR_EV_ERROR_REDIS, 5)
@@ -1418,7 +1418,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         path_flag_sah = '/home/pi/li/.ddt_sailor_shield.flag'
         if os.path.exists(path_flag_j4h):
             c = 'ps -aux | grep -v grep | grep "shutdown_script"'
-            rv = sp.run(c, shell=True)
+            rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
             if rv.returncode:
                 lg.a("error, power juice4halt")
                 app_state_set(EV_GUI_ERROR_POWER_J4H,
@@ -1427,7 +1427,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         if os.path.exists(path_flag_sah):
             c = "systemctl is-active shrpid"
-            rv = sp.run(c, shell=True)
+            rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
             if rv.returncode:
                 lg.a("error, power sailorhat")
                 app_state_set(EV_GUI_ERROR_POWER_SAH,
