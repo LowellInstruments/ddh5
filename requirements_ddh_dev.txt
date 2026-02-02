@@ -31,4 +31,3 @@ lsb@git+https://github.com/LowellInstruments/lsb.git
 # ble@git+https://github.com/LowellInstruments/ble.git
 # gps@git+https://github.com/LowellInstruments/gps.git
 # mat@git+https://github.com/LowellInstruments/mat.git
-# rd_ctt@git+https://github.com/LowellInstruments/rd_ctt.git

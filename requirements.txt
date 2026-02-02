@@ -32,6 +32,5 @@ lsb@git+https://github.com/LowellInstruments/lsb.git
 
 gps@git+https://github.com/LowellInstruments/gps.git
 ble@git+https://github.com/LowellInstruments/ble.git
-rd_ctt@git+https://github.com/LowellInstruments/rd_ctt.git
 # mat is installed differently
 
