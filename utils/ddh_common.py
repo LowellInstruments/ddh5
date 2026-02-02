@@ -11,7 +11,7 @@ from pathlib import Path
 from git import InvalidGitRepositoryError
 import toml
 import subprocess as sp
-from rd_ctt.ddh import (
+from utils.redis import (
     RD_DDH_GUI_STATE_EVENT_CODE,
     RD_DDH_GUI_STATE_EVENT_TEXT,
 )

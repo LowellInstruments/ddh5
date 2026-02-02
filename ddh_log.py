@@ -2,7 +2,7 @@ import sys
 import setproctitle
 import time
 import redis
-from rd_ctt.ddh import RD_DDH_LOG_QUEUE
+from utils.redis import RD_DDH_LOG_QUEUE
 from datetime import datetime, timezone
 from utils.ddh_common import (
     ddh_get_path_to_folder_logs,

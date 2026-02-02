@@ -1,7 +1,7 @@
 import threading
 import time
 from signal import pause
-from rd_ctt.ddh import (
+from utils.redis import (
     RD_DDH_GUI_BOX_SIDE_BUTTON_TOP,
     RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
     RD_DDH_GUI_BOX_SIDE_BUTTON_LOW

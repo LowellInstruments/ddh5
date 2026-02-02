@@ -1,5 +1,5 @@
 import redis
-from rd_ctt.ddh import RD_DDH_SLO_LS
+from utils.redis import RD_DDH_SLO_LS
 
 
 

@@ -17,7 +17,7 @@ from mat.lix import (
     LID_FILE_V1, LID_FILE_V2,
     lid_file_v2_has_sensor_data_type
 )
-from rd_ctt.ddh import (
+from utils.redis import (
     RD_DDH_CNV_QUEUE,
     RD_DDH_AWS_COPY_QUEUE, RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER
 )

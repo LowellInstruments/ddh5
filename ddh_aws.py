@@ -11,7 +11,7 @@ import subprocess as sp
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 from ddh.notifications_v2 import notify_error_sw_aws_s3
 from ddh_net import ddh_net_calculate_via
-from rd_ctt.ddh import (
+from utils.redis import (
     RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
     RD_DDH_AWS_SYNC_REQUEST, RD_DDH_AWS_PROCESS_STATE, RD_DDH_AWS_RV

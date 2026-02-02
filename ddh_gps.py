@@ -4,7 +4,7 @@ from tzlocal import get_localzone
 from gps.gps_adafruit import gps_adafruit_init
 from gps.gps_puck import gps_puck_detect_usb_port
 from gps.gps_quectel import gps_hat_get_firmware_version, gps_hat_init
-from rd_ctt.ddh import *
+from utils.redis import *
 from gps.gps import (
     gps_find_any_usb_port,
     gps_hardware_read,
@@ -14,7 +14,7 @@ from gpiozero import LED
 from ddh.notifications_v2 import (
     notify_ddh_number_of_gps_satellites, notify_ddh_error_hw_gps,
 )
-from rd_ctt.ddh import RD_DDH_GPS_HAT_GFV, RD_DDH_GPS_FIX_POSITION, RD_DDH_GPS_FIX_SPEED
+from utils.redis import RD_DDH_GPS_HAT_GFV, RD_DDH_GPS_FIX_POSITION, RD_DDH_GPS_FIX_SPEED
 from utils.ddh_common import (
     NAME_EXE_GPS, ddh_config_is_gps_error_forced_enabled, LI_PATH_GPS_DUMMY,
     LI_PATH_CELL_FW, EV_GPS_WAITING_BOOT, app_state_set, t_str,
