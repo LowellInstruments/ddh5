@@ -3,7 +3,7 @@ import sys
 import setproctitle
 import redis
 import time
-from rd_ctt.ddh import (
+from utils.redis import (
     RD_DDH_NET_PROCESS_OUTPUT
 )
 from utils.ddh_common import (

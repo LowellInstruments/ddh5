@@ -40,7 +40,7 @@ from ddh.slo import slo_get_all, slo_add, slo_delete
 from ddh.timecache import is_it_time_to
 from ddh.tracking import ddh_log_tracking_add, get_path_current_track_file
 from main_ddh import gui_add_to_history_database
-from rd_ctt.ddh import *
+from utils.redis import *
 from utils.ddh_common import (
     NAME_EXE_BLE,
     ddh_create_needed_folders,

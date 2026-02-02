@@ -23,7 +23,7 @@ from ddh.buttons import ddh_create_thread_buttons
 from ddh.notifications_v2 import notify_via_sms, notify_ddh_alive, notify_error_sw_crash
 from ddh.slo import slo_delete, slo_delete_all
 from mat.linux import linux_is_process_running_strict
-from rd_ctt.ddh import (
+from utils.redis import (
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_REFRESH_HISTORY_TABLE,
     RD_DDH_BLE_ANTENNA, \
     RD_DDH_GPS_ANTENNA, RD_DDH_AWS_PROCESS_STATE,

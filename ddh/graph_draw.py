@@ -15,7 +15,7 @@ from ddh.graph_utils import (
     utils_graph_get_abs_fol_list,
     utils_graph_fetch_csv_data,
 )
-from rd_ctt.ddh import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_GRAPH_STATISTICS
+from utils.redis import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_GRAPH_STATISTICS
 from utils.ddh_common import (
     calculate_path_to_folder_within_dl_files_from_mac_address,
     get_total_number_of_hauls,
