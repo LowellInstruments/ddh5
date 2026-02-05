@@ -1398,13 +1398,12 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     @staticmethod
     def click_graph_cb_switch_tp(_):
-        # todo: is this working?
         graph_request(reason='user')
 
 
 
     def _cb_timer_gui_sixty_seconds(self):
-        c = "systemctl is-active redis"
+        c = "redis-cli ping"
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode:
             lg.a("error, redis server")
