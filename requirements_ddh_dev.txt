@@ -18,7 +18,7 @@ humanize
 boto3
 h5py
 PyQt6
-
+gsw~=3.6.20
 
 
 # for BRT tool

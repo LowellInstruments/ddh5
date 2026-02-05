@@ -17,6 +17,7 @@ bleak~=1.0
 humanize
 boto3
 h5py
+gsw~=3.6.20
 
 
 # on RPi, install PyQt6 via apt
