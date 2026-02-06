@@ -275,6 +275,8 @@ def _menu_cb_gps_signal_quality():
         _p_e('could not detect quectel USB ports to get GPS signal quality')
         time.sleep(3)
         return
+    print('port_gps', p_gps)
+    print('port_ctrl', p_ctl)
 
 
     # let the user decide
@@ -302,8 +304,13 @@ def _menu_cb_gps_signal_quality():
         # get a lot of GPS bytes
         os.system('clear')
         print('GPS quality test running, wait some seconds\n')
-        d_gps_err = {}
-        bb = gps_hardware_read(p_gps, br, d_gps_err, debug=False)
+        d_gps = {}
+        gps_hardware_read(p_gps, br, d_gps, debug=False)
+        bb = []
+        if 'bb' in d_gps.keys():
+            bb = d_gps['bb']
+
+
 
         # we only keep GPRMC / GPGSV lines
         ls_gps = bb.split(b'\r\n')
@@ -898,8 +905,8 @@ def main_ddc():
             'o': (f"o) deploy logger DOX", _menu_cb_run_deploy_dox),
             't': (f"t) deploy logger TDO", _menu_cb_run_deploy_tdo),
             'b': (f"b) detect LI loggers around", _menu_cb_run_scan_li),
-            's': (f"s) get cell signal quality (beta)", _menu_cb_cell_signal_quality),
-            'g': (f"g) get GPS  signal quality (beta)", _menu_cb_gps_signal_quality),
+            's': (f"s) get cell signal quality", _menu_cb_cell_signal_quality),
+            'g': (f"g) get GPS  signal quality (new)", _menu_cb_gps_signal_quality),
             'i': (f"i) ~ see issues detected by DDC ~", _menu_cb_show_ddh_issues),
             'h': (f"h) help", _menu_cb_show_help),
             'q': (f"q) quit", _menu_cb_quit)
