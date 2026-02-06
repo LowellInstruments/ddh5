@@ -267,83 +267,84 @@ def _menu_cb_cell_signal_quality():
 
 
 def _menu_cb_gps_signal_quality():
-    port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
-    if not port_type:
-        _p_e('could not detect quectel USB ports to get GPS signal quality')
-        return
+    
+    # port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
+    # if not port_type:
+    #     _p_e('could not detect quectel USB ports to get GPS signal quality')
+    #     return
 
-    os.system('clear')
-    br = 115200
-    if port_type == 'hat':
-        gps_hat_init(port_ctrl)
-    elif port_type == 'adafruit':
-        gps_adafruit_init(port_nmea)
-    else:
-        # gps puck
-        br = 4800
+    # os.system('clear')
+    # br = 115200
+    # if port_type == 'hat':
+    #     gps_hat_init(port_ctrl)
+    # elif port_type == 'adafruit':
+    #     gps_adafruit_init(port_nmea)
+    # else:
+    #     # gps puck
+    #     br = 4800
 
-    # starts GPS signal quality loop
-    print('GPS quality test, running')
-    till = time.perf_counter() + 30
-    while time.perf_counter() < till:
-        d = {}
-        gps_hardware_read(port_nmea, br, d, debug=False)
-        bb = d['bb']
-        if not bb:
-            continue
-        bb = bb.split(b'\r\n')
-        bb_gsv = [i for i in bb if i.startswith(b'$GPGSV') and chr(i[-3]) == '*']
+    # # starts GPS signal quality loop
+    # print('GPS quality test, running')
+    # till = time.perf_counter() + 30
+    # while time.perf_counter() < till:
+    #     d = {}
+    #     gps_hardware_read(port_nmea, br, d, debug=False)
+    #     bb = d['bb']
+    #     if not bb:
+    #         continue
+    #     bb = bb.split(b'\r\n')
+    #     bb_gsv = [i for i in bb if i.startswith(b'$GPGSV') and chr(i[-3]) == '*']
 
-        d_gsv = {}
-        for _ in bb_gsv:
-            line = _.decode()
-            # lose the checksum
-            line = line[:-3]
-            f = line.split(',')
-            # f: ['$GPGSV', '2', '1', '07', '15', '79', '221', ... '24*78']
-            tm = f[1]
-            mn = f[2]
-            sv = f[3]
+    #     d_gsv = {}
+    #     for _ in bb_gsv:
+    #         line = _.decode()
+    #         # lose the checksum
+    #         line = line[:-3]
+    #         f = line.split(',')
+    #         # f: ['$GPGSV', '2', '1', '07', '15', '79', '221', ... '24*78']
+    #         tm = f[1]
+    #         mn = f[2]
+    #         sv = f[3]
 
-            if mn == "1":
-                os.system('clear')
-                print(f'\n satellites in view = {sv}')
-                print(f' theoretical SNR max is 99')
-                rem = till - time.perf_counter()
-                print(f' test will end in {int(rem)} seconds\n')
+    #         if mn == "1":
+    #             os.system('clear')
+    #             print(f'\n satellites in view = {sv}')
+    #             print(f' theoretical SNR max is 99')
+    #             rem = till - time.perf_counter()
+    #             print(f' test will end in {int(rem)} seconds\n')
 
-            # 1    = Total number of messages of this type in this cycle
-            # 2    = Message number
-            # 3    = Total number of SVs in view
-            # 4    = SV PRN number
-            # 5    = Elevation in degrees, 90 maximum
-            # 6    = Azimuth, degrees from true north, 000 to 359
-            # 7    = SNR, 00-99 dB (null when not tracking)
-            # 8-11 = Information about second SV, same as field 4-7
-            # 12-15= Information about third SV, same as field 4-7
-            # 16-19= Information about fourth SV, same as field 4-7
+    #         # 1    = Total number of messages of this type in this cycle
+    #         # 2    = Message number
+    #         # 3    = Total number of SVs in view
+    #         # 4    = SV PRN number
+    #         # 5    = Elevation in degrees, 90 maximum
+    #         # 6    = Azimuth, degrees from true north, 000 to 359
+    #         # 7    = SNR, 00-99 dB (null when not tracking)
+    #         # 8-11 = Information about second SV, same as field 4-7
+    #         # 12-15= Information about third SV, same as field 4-7
+    #         # 16-19= Information about fourth SV, same as field 4-7
 
-            for i in range(4, 17, 4):
-                try:
-                    s_id = f[i]
-                    s_snr = f[i + 3]
-                    d_gsv[s_id] = s_snr
-                except (Exception, ):
-                    pass
+    #         for i in range(4, 17, 4):
+    #             try:
+    #                 s_id = f[i]
+    #                 s_snr = f[i + 3]
+    #                 d_gsv[s_id] = s_snr
+    #             except (Exception, ):
+    #                 pass
 
-            # order final dictionary
-            d_gsv = dict(sorted(d_gsv.items()))
-            if mn == tm:
-                for k, v in d_gsv.items():
-                    if not v:
-                        print(f' [ {k} ] n/a')
-                        continue
-                    n = int(v)
-                    s = '#' * n
-                    print(f' [ {k} ] {s} {v}')
-                time.sleep(1)
+    #         # order final dictionary
+    #         d_gsv = dict(sorted(d_gsv.items()))
+    #         if mn == tm:
+    #             for k, v in d_gsv.items():
+    #                 if not v:
+    #                     print(f' [ {k} ] n/a')
+    #                     continue
+    #                 n = int(v)
+    #                 s = '#' * n
+    #                 print(f' [ {k} ] {s} {v}')
+    #             time.sleep(1)
 
-    print('\nGPS quality test end, press ENTER to go back to DDC menu')
+    print('\nTODO: copy this from DDHv4 + enabling different GPS receivers, we did a better job')
     input()
 
 
