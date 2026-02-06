@@ -6,7 +6,8 @@ from os.path import exists
 import serial
 from gps.gps import gps_find_any_usb_port, gps_hardware_read
 from gps.gps_adafruit import gps_adafruit_init
-from gps.gps_quectel import gps_hat_detect_list_of_usb_ports, gps_hat_init, gps_hat_get_firmware_version
+from gps.gps_quectel import gps_hat_detect_list_of_usb_ports, gps_hat_init, gps_hat_get_firmware_version, \
+    gps_power_cycle_ddc
 from scripts.script_nadv import main_nadv
 from utils.ddh_common import (
     ddh_get_path_to_folder_settings, ddh_config_load_file,
@@ -267,85 +268,118 @@ def _menu_cb_cell_signal_quality():
 
 
 def _menu_cb_gps_signal_quality():
-    
-    # port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
-    # if not port_type:
-    #     _p_e('could not detect quectel USB ports to get GPS signal quality')
-    #     return
 
-    # os.system('clear')
-    # br = 115200
-    # if port_type == 'hat':
-    #     gps_hat_init(port_ctrl)
-    # elif port_type == 'adafruit':
-    #     gps_adafruit_init(port_nmea)
-    # else:
-    #     # gps puck
-    #     br = 4800
 
-    # # starts GPS signal quality loop
-    # print('GPS quality test, running')
-    # till = time.perf_counter() + 30
-    # while time.perf_counter() < till:
-    #     d = {}
-    #     gps_hardware_read(port_nmea, br, d, debug=False)
-    #     bb = d['bb']
-    #     if not bb:
-    #         continue
-    #     bb = bb.split(b'\r\n')
-    #     bb_gsv = [i for i in bb if i.startswith(b'$GPGSV') and chr(i[-3]) == '*']
+    # get the USB ports
+    p_gps, p_ctl, port_type = gps_find_any_usb_port()
+    if not port_type:
+        _p_e('could not detect quectel USB ports to get GPS signal quality')
+        time.sleep(3)
+        return
 
-    #     d_gsv = {}
-    #     for _ in bb_gsv:
-    #         line = _.decode()
-    #         # lose the checksum
-    #         line = line[:-3]
-    #         f = line.split(',')
-    #         # f: ['$GPGSV', '2', '1', '07', '15', '79', '221', ... '24*78']
-    #         tm = f[1]
-    #         mn = f[2]
-    #         sv = f[3]
 
-    #         if mn == "1":
-    #             os.system('clear')
-    #             print(f'\n satellites in view = {sv}')
-    #             print(f' theoretical SNR max is 99')
-    #             rem = till - time.perf_counter()
-    #             print(f' test will end in {int(rem)} seconds\n')
+    # let the user decide
+    if port_type == 'hat':
+        print('\nQUESTION: Do you want to power-cycle GPS shield? (y/n) -> ', end='')
+        question = input().lower()
+        if question in ('y', 'yes'):
+            gps_power_cycle_ddc(p_ctl)
 
-    #         # 1    = Total number of messages of this type in this cycle
-    #         # 2    = Message number
-    #         # 3    = Total number of SVs in view
-    #         # 4    = SV PRN number
-    #         # 5    = Elevation in degrees, 90 maximum
-    #         # 6    = Azimuth, degrees from true north, 000 to 359
-    #         # 7    = SNR, 00-99 dB (null when not tracking)
-    #         # 8-11 = Information about second SV, same as field 4-7
-    #         # 12-15= Information about third SV, same as field 4-7
-    #         # 16-19= Information about fourth SV, same as field 4-7
 
-    #         for i in range(4, 17, 4):
-    #             try:
-    #                 s_id = f[i]
-    #                 s_snr = f[i + 3]
-    #                 d_gsv[s_id] = s_snr
-    #             except (Exception, ):
-    #                 pass
+    # figure out the baudrate
+    br = 115200
+    if port_type == 'hat':
+        gps_hat_init(p_ctl)
+    elif port_type == 'adafruit':
+        gps_adafruit_init(p_gps)
+    else:
+        # gps puck
+        br = 4800
 
-    #         # order final dictionary
-    #         d_gsv = dict(sorted(d_gsv.items()))
-    #         if mn == tm:
-    #             for k, v in d_gsv.items():
-    #                 if not v:
-    #                     print(f' [ {k} ] n/a')
-    #                     continue
-    #                 n = int(v)
-    #                 s = '#' * n
-    #                 print(f' [ {k} ] {s} {v}')
-    #             time.sleep(1)
 
-    print('\nTODO: copy this from DDHv4 + enabling different GPS receivers, we did a better job')
-    input()
+    # starts GPS signal quality loop
+    while 1:
+
+        # get a lot of GPS bytes
+        os.system('clear')
+        print('GPS quality test running, wait some seconds\n')
+        d_gps_err = {}
+        bb = gps_hardware_read(p_gps, br, d_gps_err, debug=False)
+
+        # we only keep GPRMC / GPGSV lines
+        ls_gps = bb.split(b'\r\n')
+        ls_rmc = [i for i in ls_gps if i and i.startswith(b'$GPRMC') and i[-3] == 42]
+        ls_gsv = [i for i in ls_gps if i and i.startswith(b'$GPGSV') and i[-3] == 42]
+        line_rmc = ''
+        if ls_rmc:
+            line_rmc = ls_rmc[-1].decode()
+        print(ls_rmc)
+        print(ls_gsv)
+
+        # parse line GPRMC
+        s = '\n'
+        last_lat_lon = ''
+        last_time = ''
+        if not line_rmc:
+            s += "RMC --> none\n"
+        else:
+            g = line_rmc.split(',')
+            # g: ['$GPRMC', '145557.00', 'A', '4136.603719', 'N', '07036.560277', 'W', ...]
+            if g[2] == 'A':
+                def toDD(s):
+                    d = float(s[:-7])
+                    m = float(s[-7:]) / 60
+                    return d + m
+
+                last_lat_lon = (toDD(g[3]), g[4], toDD(g[5]), g[6])
+                last_time = f'{g[1][0:2]}:{g[1][2:4]}:{g[1][4:6]}'
+                s += f'RMC --> {last_lat_lon}    {last_time}\n'
+            else:
+                s += "RMC --> ,,,,\n"
+
+        print(s, end='')
+        s = ''
+
+        # wait for the first frame of the GPGSV set
+        d = {}
+        for i in ls_gsv:
+            f = i.decode().split(',')
+            # 1    = Total number of messages of this type in this cycle
+            # 2    = Message number
+            # 3    = Total number of SVs in view
+            # 4    = SV PRN number
+            # 5    = Elevation in degrees, 90 maximum
+            # 6    = Azimuth, degrees from true north, 000 to 359
+            # 7    = SNR, 00-99 dB (null when not tracking)
+            # 8-11 = Information about second SV, same as field 4-7
+            # 12-15= Information about third SV, same as field 4-7
+            # 16-19= Information about fourth SV, same as field 4-7
+            mn = f[2]
+            for j in range(4, 17, 4):
+                try:
+                    s_id = f[j]
+                    s_snr = f[j + 3]
+                    d[s_id] = s_snr
+                except:
+                    pass
+
+        n = len(d)
+        if d:
+            # d: {'1': {'04': '26', '05': '35', '06': '34', '09': '32'},
+            #     '2': {'11': '30', '12': '35', '19': '30', '21': '34'},
+            #     '3': {'25': '30', '29': '30', '13': '', '17': ''}}
+            d = {k: v for k, v in d.items() if v}
+            m = len(d)
+            s += f'GSV --> {n} satellites, {n - m} of which reporting no SNR\n'
+            s += '\n[ id ] snr     (max 99)\n'
+            s += '-----------------------\n'
+            for k, v in d.items():
+                s += f'[ {k} ] snr {v} '
+                s += ('#' * int(v)) + '\n'
+
+        print(s)
+        time.sleep(3)
+
 
 
 
