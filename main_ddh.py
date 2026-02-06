@@ -51,7 +51,6 @@ from utils.ddh_common import (
     ddh_config_get_box_sn,
     ddh_config_does_flag_file_download_test_mode_exist,
     ddh_config_is_skip_in_port_enabled,
-    ddh_config_does_flag_file_graph_test_mode_exist,
     ddh_config_get_list_of_monitored_serial_numbers,
     ddh_config_get_forget_time_seconds, ddh_config_get_monitored_pairs,
     ddh_config_load_file, ddh_config_save_to_file,
@@ -324,33 +323,6 @@ def gui_setup_center_window(my_app):
 
 
 
-def gui_setup_manage_graph_test_demo_files():
-    a = str(ddh_get_path_to_root_application_folder())
-    d0 = a + '/dl_files/00-00-00-00-00-00'
-    d1 = a + '/dl_files/11-22-33-44-55-66'
-    d2 = a + '/dl_files/99-99-99-99-99-99'
-    d3 = a + '/dl_files/55-55-55-55-55-55'
-    d4 = a + '/dl_files/33-33-33-33-33-33'
-    t0 = a + '/tests/00-00-00-00-00-00'
-    t1 = a + '/tests/11-22-33-44-55-66'
-    t2 = a + '/tests/99-99-99-99-99-99'
-    t3 = a + '/tests/55-55-55-55-55-55'
-    t4 = a + '/tests/33-33-33-33-33-33'
-    shutil.rmtree(d0, ignore_errors=True)
-    shutil.rmtree(d1, ignore_errors=True)
-    shutil.rmtree(d2, ignore_errors=True)
-    shutil.rmtree(d3, ignore_errors=True)
-    shutil.rmtree(d4, ignore_errors=True)
-    if ddh_config_does_flag_file_graph_test_mode_exist():
-        shutil.copytree(t0, d0)
-        shutil.copytree(t1, d1)
-        shutil.copytree(t2, d2)
-        shutil.copytree(t3, d3)
-        shutil.copytree(t4, d4)
-        lg.a('copied logger graph test folders')
-
-
-
 def gui_tabs_populate_history(my_app):
     """
     fills history table on history tab
@@ -429,14 +401,6 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
 
     a = my_app
     a.cb_g_sn.clear()
-
-    if ddh_config_does_flag_file_graph_test_mode_exist():
-        a.cb_g_sn.addItem('SNtest000')
-        a.cb_g_sn.addItem('SNtest111')
-        a.cb_g_sn.addItem('SNtest999')
-        a.cb_g_sn.addItem('SNtest555')
-        a.cb_g_sn.addItem('SNtest333')
-        return
 
     # from HISTORY database, grab serial numbers, most recent first
     db = DbHis(ddh_get_path_to_db_history_file())
@@ -1727,7 +1691,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.btn_g_next_haul.setVisible(False)
         self.lbl_graph_busy.setVisible(False)
         self.cb_g_switch_tp.setVisible(False)
-        gui_setup_manage_graph_test_demo_files()
 
 
         # GUI timers

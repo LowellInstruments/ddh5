@@ -12,7 +12,6 @@ from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
     calculate_path_to_folder_within_dl_files_from_mac_address,
     TESTMODE_FILENAME_PREFIX, ddh_do_we_graph_out_of_water_data,
-    ddh_config_does_flag_file_graph_test_mode_exist
 )
 from ddh_log import lg_gra as lg
 from utils.units import dbar_to_fathoms
@@ -115,16 +114,6 @@ def utils_graph_get_abs_fol_list() -> list:
     get list of absolute paths of "dl_files/<mac>" folders
     """
     d = str(ddh_get_path_to_folder_dl_files())
-    if ddh_config_does_flag_file_graph_test_mode_exist():
-        fol_ls = [
-            d + '/11-22-33-44-55-66',
-            d + '/00-00-00-00-00-00',
-            d + '/99-99-99-99-99-99',
-            d + '/55-55-55-55-55-55',
-            d + '/33-33-33-33-33-33',
-        ]
-        return fol_ls
-
     if os.path.isdir(d):
         f_l = [f.path for f in os.scandir(d) if f.is_dir()]
         # remove 'ddh_vessel' folders
