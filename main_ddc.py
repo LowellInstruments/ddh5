@@ -13,7 +13,7 @@ from utils.ddh_common import (
     ddh_get_path_to_folder_settings, ddh_config_load_file,
     ddh_get_path_to_config_file, \
     LI_PATH_GPS_DUMMY,
-    TMP_PATH_GRAPH_TEST_MODE_JSON, LI_PATH_TEST_MODE,
+    LI_PATH_TEST_MODE,
     DDH_USES_SHIELD_JUICE4HALT, DDH_USES_SHIELD_SAILOR,
     ddh_get_local_software_version
 )
@@ -100,18 +100,17 @@ def _show_issues_info():
 
 
 def _menu_cb_gps_dummy():
-    p = LI_PATH_GPS_DUMMY
-    os.unlink(p) if exists(p) else pathlib.Path(p).touch()
+    if exists(LI_PATH_GPS_DUMMY):
+        os.unlink(LI_PATH_GPS_DUMMY)
+    else:
+        pathlib.Path(LI_PATH_GPS_DUMMY).touch()
 
 
 def _menu_cb_test_mode():
-    p = LI_PATH_TEST_MODE
-    os.unlink(p) if exists(p) else pathlib.Path(p).touch()
-
-
-def _menu_cb_graph_demo():
-    p = TMP_PATH_GRAPH_TEST_MODE_JSON
-    os.unlink(p) if exists(p) else pathlib.Path(p).touch()
+    if exists(LI_PATH_TEST_MODE):
+        os.unlink(LI_PATH_TEST_MODE)
+    else:
+        pathlib.Path(LI_PATH_TEST_MODE).touch()
 
 
 def _menu_cb_get_flag_j4h():
@@ -318,20 +317,18 @@ def _menu_cb_gps_signal_quality():
 
         # parse line GPRMC
         s = '\n'
-        last_lat_lon = ''
-        last_time = ''
         if not line_rmc:
             s += "RMC --> none\n"
         else:
             g = line_rmc.split(',')
             # g: ['$GPRMC', '145557.00', 'A', '4136.603719', 'N', '07036.560277', 'W', ...]
             if g[2] == 'A':
-                def toDD(s):
-                    d = float(s[:-7])
-                    m = float(s[-7:]) / 60
-                    return d + m
+                def to_deg(deg_s):
+                    deg_f = float(deg_s[:-7])
+                    deg_m = float(deg_s[-7:]) / 60
+                    return deg_f + deg_m
 
-                last_lat_lon = (toDD(g[3]), g[4], toDD(g[5]), g[6])
+                last_lat_lon = (to_deg(g[3]), g[4], to_deg(g[5]), g[6])
                 last_time = f'{g[1][0:2]}:{g[1][2:4]}:{g[1][4:6]}'
                 s += f'RMC --> {last_lat_lon}    {last_time}\n'
             else:
@@ -354,13 +351,12 @@ def _menu_cb_gps_signal_quality():
             # 8-11 = Information about second SV, same as field 4-7
             # 12-15= Information about third SV, same as field 4-7
             # 16-19= Information about fourth SV, same as field 4-7
-            mn = f[2]
             for j in range(4, 17, 4):
                 try:
                     s_id = f[j]
                     s_snr = f[j + 3]
                     d[s_id] = s_snr
-                except:
+                except (Exception, ):
                     pass
 
         n = len(d)
@@ -398,6 +394,15 @@ def _menu_cb_test_buttons():
 
 
 def _menu_cb_run_brt():
+
+    print("\nQUESTION: Do you want to edit the BRT config file? (y/n) -> ", end='')
+    if input().lower in ('y', 'yes', 'Y'):
+        p_cfg = f'{h}/Downloads/cfg_brt_nadv.toml'
+        if not os.path.exists(p_cfg):
+            sp.run(f'cp scripts/cfg_brt_nadv_template.toml {p_cfg}')
+        sp.call(['nano', p_cfg],
+                stdin=sys.stdin, stdout=sys.stdout)
+
     c = '/home/pi/li/ddh/run_brt.sh'
     rv = sp.run(c, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
     if rv.returncode:
@@ -439,16 +444,6 @@ def _menu_cb_run_scan_li():
         sp.run(path_script_scan_li)
     except (Exception,) as ex:
         p_e(f'{ex} running scan_li')
-
-
-
-
-def _menu_cb_edit_brt_cfg_file():
-    p_cfg = f'{h}/Downloads/cfg_brt_nadv.toml'
-    if not os.path.exists(p_cfg):
-        sp.run(f'cp scripts/cfg_brt_nadv_template.toml {p_cfg}')
-    sp.call(['nano', p_cfg],
-            stdin=sys.stdin, stdout=sys.stdout)
 
 
 
@@ -627,8 +622,8 @@ def _ddc_run_check():
         s = '.ddh_version'
         c = f'timeout 2 wget {repo}/{s}'
         c += f' -q -O /tmp/{s}'
-        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        if rv.returncode:
+        rv_gfv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        if rv_gfv.returncode:
             _e('cannot obtain github remote DDH version')
             # 0 is bad
             return 0
@@ -888,27 +883,24 @@ def main_ddc():
         # get flags
         fgd = 1 if exists(LI_PATH_GPS_DUMMY) else 0
         fcd = _get_crontab('ddh')
-        fgt = 1 if exists(TMP_PATH_GRAPH_TEST_MODE_JSON) else 0
         fdk = _menu_cb_print_check_all_keys(verbose=False)
         ftm = 1 if exists(LI_PATH_TEST_MODE) else 0
 
         # create options
         d = {
-            '0': (f"0) set test mode     [{ftm}]", _menu_cb_test_mode),
+            '0': (f"0) set dl_test mode  [{ftm}]", _menu_cb_test_mode),
             '1': (f"1) set GPS dummy     [{fgd}]", _menu_cb_gps_dummy),
             '2': (f"2) set crontab       [{fcd}]", _menu_cb_toggle_crontab_ddh),
-            '3': (f"3) set graph demo    [{fgt}]", _menu_cb_graph_demo),
-            '4': (f"4) check all keys    [{fdk}]", _menu_cb_print_check_all_keys),
-            '5': (f"5) test GPS hat", _menu_cb_test_gps_quectel),
-            '6': (f"6) test side buttons", _menu_cb_test_buttons),
-            'r': (f"r) run BLE range tool", _menu_cb_run_brt),
-            'e': (f"e) edit BLE range tool", _menu_cb_edit_brt_cfg_file),
+            '3': (f"3) check all keys    [{fdk}]", _menu_cb_print_check_all_keys),
+            '4': (f"4) test GPS", _menu_cb_test_gps_quectel),
+            '5': (f"5) test side buttons", _menu_cb_test_buttons),
+            'r': (f"r) BLE range tool", _menu_cb_run_brt),
             'o': (f"o) deploy logger DOX", _menu_cb_run_deploy_dox),
             't': (f"t) deploy logger TDO", _menu_cb_run_deploy_tdo),
             'b': (f"b) detect LI loggers around", _menu_cb_run_scan_li),
             's': (f"s) get cell signal quality (beta)", _menu_cb_cell_signal_quality),
             'g': (f"g) get GPS  signal quality (beta)", _menu_cb_gps_signal_quality),
-            'i': (f"i) ~ see issues ~", _menu_cb_show_ddh_issues),
+            'i': (f"i) ~ see issues detected by DDC ~", _menu_cb_show_ddh_issues),
             'h': (f"h) help", _menu_cb_show_help),
             'q': (f"q) quit", _menu_cb_quit)
         }

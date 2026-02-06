@@ -154,10 +154,6 @@ When present, DDH simulates speed.
 
 When present, the DDH does NOT scan for Bluetooth loggers.
 
-### ddh_graph_test_mode.json
-
-When present, DDH graphs display test data, not real one. Toggled with ``DDC`` tool.
-
 ### gps_last.json
 
 Contains the last GPS position of the DDH. Used by API.

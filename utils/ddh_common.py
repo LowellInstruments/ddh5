@@ -387,11 +387,6 @@ def ddh_config_is_skip_in_port_enabled():
 
 
 
-def ddh_config_does_flag_file_graph_test_mode_exist():
-    return os.path.exists(TMP_PATH_GRAPH_TEST_MODE_JSON)
-
-
-
 def ddh_config_does_flag_file_download_test_mode_exist():
     return os.path.exists(LI_PATH_TEST_MODE)
 
@@ -447,20 +442,9 @@ def ddh_config_get_forget_time_seconds():
 
 
 def ddh_config_get_logger_sn_from_mac(mac):
+
+    # avoid case errors
     mac = mac.upper()
-
-    # happens when g_graph_test_mode()
-    test_graph_d = {
-        '00:00:00:00:00:00': 'test000',
-        '11:22:33:44:55:66': 'test111',
-        '99:99:99:99:99:99': 'test999',
-        '55:55:55:55:55:55': 'test555',
-        '33:33:33:33:33:33': 'test333'
-    }
-    if mac in test_graph_d.keys():
-        return test_graph_d[mac]
-
-    # do it like this to avoid case errors
     for k, v in cfg['monitored_macs'].items():
         if mac == k.upper():
             return v.upper()
@@ -468,20 +452,9 @@ def ddh_config_get_logger_sn_from_mac(mac):
 
 
 def ddh_config_get_logger_mac_from_sn(sn):
+
+    # avoid case errors
     sn = sn.upper()
-
-    # happens when g_graph_test_mode()
-    test_graph_d = {
-        'test000': '00:00:00:00:00:00',
-        'test111': '11:22:33:44:55:66',
-        'test999': '99:99:99:99:99:99',
-        'test555': '55:55:55:55:55:55',
-        'test333': '33:33:33:33:33:33',
-    }
-    if sn in test_graph_d.keys():
-        return test_graph_d[sn]
-
-    # do it like this to avoid case errors
     for k, v in cfg['monitored_macs'].items():
         if sn == v.upper():
             return k.upper()
@@ -627,9 +600,6 @@ def ddh_ble_logger_needs_a_reset(mac):
 # ----------------------------
 # files stored in /tmp folder
 # ----------------------------
-
-# when present, DDH graphs test data
-TMP_PATH_GRAPH_TEST_MODE_JSON = '/tmp/ddh_graph_test_mode.json'
 
 # written by real GPS to know the last GPS position
 TMP_PATH_GPS_LAST_JSON = "/tmp/gps_last.json"
@@ -923,7 +893,6 @@ PATH_MAIN_GPS_HW_ERROR = f'{_p}/gps_err.png'
 if __name__ == '__main__':
     print('vessel_name', ddh_config_get_vessel_name())
     print('aws_en', ddh_config_get_is_aws_s3_enabled())
-    print('flag_graph_test', ddh_config_does_flag_file_graph_test_mode_exist())
     print('flag_gps_error_forced', ddh_config_is_gps_error_forced_enabled())
     print('ls_sn_macs', ddh_config_get_list_of_monitored_serial_numbers())
     print('json_mac_dns', ddh_config_get_logger_sn_from_mac("11-22-33-44-55-66"))
