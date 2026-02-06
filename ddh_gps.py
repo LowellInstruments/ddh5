@@ -69,24 +69,6 @@ def ddh_gps_know_we_have_external_puck_connected():
 
 
 
-def ddh_gps_hat_power_cycle():
-    # # _u(STATE_DDH_GPS_POWER_CYCLE)
-    t = 75
-    lg.a(f"=== warning, power-cycling hat, wait ~{t} seconds ===")
-
-    # GPIO26 controls the sixfab hat power rail
-    # on() means high-level, shutdowns power to hat
-    # off() means low-level, restores power to hat
-    _pin = LED(26)
-    _pin.on()
-    time.sleep(5)
-    _pin.off()
-    time.sleep(t)
-    lg.a("=== warning, power-cycling done, hat should be ON by now ===")
-
-
-
-
 def ddh_app_check_operational_conditions(gps_pos):
 
     if not gps_pos:
