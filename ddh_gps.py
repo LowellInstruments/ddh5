@@ -149,7 +149,7 @@ def _ddh_gps_get():
     ns = r.get(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES)
     ns = int(ns.decode()) if ns else 0
     global _skip_satellite_notification
-    if 0 < ns <= 6 and is_it_time_to('SQS_gps_num_satellites', PERIOD_GPS_NOTI_NUM_GPS_SAT):
+    if 0 < ns <= 5 and is_it_time_to('SQS_gps_num_satellites', PERIOD_GPS_NOTI_NUM_GPS_SAT):
         if _skip_satellite_notification:
             _skip_satellite_notification = 0
         else:
