@@ -511,7 +511,7 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
     # --------------------------------------------
     try:
         r.setex(RD_DDH_BLE_SEMAPHORE, 120, 1)
-        app_state_set(EV_BLE_DL_PROGRESS, t_str(STR_EV_BLE_DL_PROGRESS))
+        app_state_set(EV_BLE_DL_PROGRESS, t_str(STR_EV_BLE_DL_PROGRESS) + f' {sn}')
         r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 1, 1)
         rv = ael.run_until_complete(_ble_logger_id_and_download(d_interaction))
     except (Exception, ) as ex:
