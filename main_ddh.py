@@ -444,7 +444,7 @@ def gui_setup_buttons(my_app):
 
 
     # BUTTON clicks
-    a.btn_expand.clicked.connect(a.click_btn_expand)
+    # a.btn_expand.clicked.connect(a.click_btn_expand)
     a.btn_known_clear.clicked.connect(a.click_btn_clear_known_mac_list)
     a.btn_see_all.clicked.connect(a.click_btn_see_all_macs)
     # see current macs
@@ -1522,6 +1522,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.bar_dl.setVisible(False)
 
 
+
         # debug
         # print(f'code {code} \n text {text}')
         pi = ''
@@ -1730,18 +1731,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         _w = geo.width()
         self.left_frame.setMinimumWidth(int(_w * .25))
         self.left_frame.setMaximumWidth(int(_w * .25))
-        self.frame_2of2_expanded = False
-        ls_controls_disappear = (
-            self.lbl_gps_antenna_img,
-            self.lbl_gps_antenna_txt,
-            self.lbl_ble_antenna_img,
-            self.lbl_ble_antenna_txt,
-            self.lbl_cell_wifi_img,
-            self.lbl_cell_wifi_txt
-        )
-        for i in ls_controls_disappear:
-            i.setVisible(False)
-        self.btn_expand.setText('↓')
+        self.frame_2of2_expanded = True
+        self.btn_expand.setVisible(False)
 
 
         lg.a("OK, finished booting graphical user interface")
