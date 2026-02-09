@@ -506,6 +506,8 @@ def api_send_email_crash():
         print(f'error, api_send_email_crash() -> {rsp}')
 
 
+
+
 def _api_get_mac_address(iface: str):
     c = f'cat /sys/class/net/{iface}/address'
     rv = _sh(c)
@@ -513,6 +515,7 @@ def _api_get_mac_address(iface: str):
         return
     # it is lower case e4:5f:01:66:08:23
     return rv.stdout.decode().upper().replace('\n', '')
+
 
 
 def api_get_mac_address_eth0():

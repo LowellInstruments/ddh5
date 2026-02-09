@@ -49,9 +49,6 @@ def macs_get_them_by_color(s) -> list:
         else:
             ls.append(mac)
 
-
-    # outside this function, we usually do
-    # [i.upper().replace('-', ':') for i in ls]
     return ls
 
 
