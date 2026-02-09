@@ -1471,7 +1471,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.lbl_gps_sat.setText("-")
             self.lbl_gps_antenna_txt.setText('searching')
         ns = r.get(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES)
-        ns_str = f'{ns} satellites' if ns else '-'
+        ns_str = f'{ns.decode()} satellites' if ns else '-'
         self.lbl_gps_sat.setText(ns_str)
 
 
