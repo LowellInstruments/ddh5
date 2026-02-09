@@ -75,7 +75,7 @@ def _menu_build(_sr: dict, n: int):
         print(_Pc.FAIL + e + _Pc.ENDC)
         return None
 
-    # convert to upper-case
+    # convert all_macs list content to upper-case
     ddh_d = dict((k.upper(), v) for k, v in ddh_d.items())
 
     # --------------------------------------------------

@@ -190,9 +190,10 @@ def calculate_mac_address_from_folder_within_dl_files(fol):
 
 
 def calculate_path_to_folder_within_dl_files_from_mac_address(mac):
-    """returns 'dl_files/11-22-33' from '11:22:33'"""
+    # dl_files legacy works with LOWERcase mac folders so
+    # mac: 'AA:12:CC' will return 'dl_files/aa-12-cc'
     fol = ddh_get_path_to_folder_dl_files()
-    fol = fol / f'{mac.replace(":", "-").upper()}/'
+    fol = fol / f'{mac.replace(":", "-").lower()}/'
     return fol
 
 
@@ -200,8 +201,7 @@ def calculate_path_to_folder_within_dl_files_from_mac_address(mac):
 
 def create_path_to_folder_dl_files_from_mac(mac):
     """mkdir folder based on MAC address, replaces ':' with '-'"""
-    fol = ddh_get_path_to_folder_dl_files()
-    fol = fol / f'{mac.replace(":", "-").upper()}/'
+    fol = calculate_path_to_folder_within_dl_files_from_mac_address(mac)
     os.makedirs(fol, exist_ok=True)
     return fol
 
@@ -444,19 +444,16 @@ def ddh_config_get_forget_time_seconds():
 def ddh_config_get_logger_sn_from_mac(mac):
 
     # avoid case errors
-    mac = mac.upper()
     for k, v in cfg['monitored_macs'].items():
-        if mac == k.upper():
+        if mac.upper() == k.upper():
             return v.upper()
-
 
 
 def ddh_config_get_logger_mac_from_sn(sn):
 
     # avoid case errors
-    sn = sn.upper()
     for k, v in cfg['monitored_macs'].items():
-        if sn == v.upper():
+        if sn.upper() == v.upper():
             return k.upper()
 
 
