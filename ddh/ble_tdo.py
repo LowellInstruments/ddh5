@@ -184,7 +184,7 @@ async def ble_download_tdo(d):
         else:
             lg.a('logger NOT running, not sending HBW command')
     else:
-        lg.a("not sending command Has-Been-in-Water, it's disabled in configuration file")
+        lg.a("warning: not sending command Has-Been-in-Water, it's disabled in configuration file")
 
     rv = await lc.cmd_sws(g)
     _rae(rv, "sws")
