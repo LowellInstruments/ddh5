@@ -35,7 +35,8 @@ from utils.redis import (
     RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_REFRESH_PROCESSES_PRESENT,
     RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
-    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE, RD_DDH_GUI_RV
+    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE, RD_DDH_GUI_RV,
+    RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -1419,7 +1420,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-        # show if any process is not there
+        # show if any of the DDH processes is not there
         k = RD_DDH_GUI_REFRESH_PROCESSES_PRESENT
         if not r.exists(k):
             gui_check_all_processes()
@@ -1469,6 +1470,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.lbl_gps.setText("-\n-")
             self.lbl_gps_sat.setText("-")
             self.lbl_gps_antenna_txt.setText('searching')
+        ns = r.get(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES)
+        ns_str = f'{ns} satellites' if ns else '-'
+        self.lbl_gps_sat.setText(ns_str)
+
 
 
 
@@ -1597,12 +1602,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # show or not the statistics box
         if t_str(STR_EV_BLE_DL_OK) in self.lbl_main_txt.text():
             s = r.get(RD_DDH_GUI_GRAPH_STATISTICS)
-            s = s.decode() if s else ''
+            if s:
+                s = s.decode()
+            else:
+                s = ''
             s = s.replace('mg_l', 'mg/l')
+            self.lbl_summary_dl.setVisible(s != '')
             self.lbl_summary_dl.setText(s)
-            self.lbl_summary_dl.setVisible(True)
-        else:
-            self.lbl_summary_dl.setVisible(False)
 
 
 
@@ -1735,6 +1741,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.btn_expand.setVisible(False)
 
 
+        # SMS support button
+        self.btn_sms.setVisible(False)
+
+
         lg.a("OK, finished booting graphical user interface")
 
 
@@ -1767,7 +1777,7 @@ def main_ddh_gui():
         for i in ls:
             r.delete(i)
 
-    sys.exit(app.exec())
+    sys.exit(rv)
 
 
 
