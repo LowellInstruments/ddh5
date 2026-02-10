@@ -793,6 +793,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_19 = QtWidgets.QHBoxLayout(self.tab_maps)
         self.horizontalLayout_19.setObjectName("horizontalLayout_19")
         self.lay_maps = QtWidgets.QVBoxLayout()
+        self.lay_maps.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetFixedSize)
         self.lay_maps.setObjectName("lay_maps")
         self.horizontalLayout_19.addLayout(self.lay_maps)
         self.tabs.addTab(self.tab_maps, "")
@@ -800,7 +801,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.tabs.setCurrentIndex(0)
+        self.tabs.setCurrentIndex(7)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

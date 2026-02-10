@@ -1755,6 +1755,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.browser = QWebEngineView()
         u = "https://ondeckdata.com/database/soe_hypoxic_days_2025.html"
         self.browser.setUrl(QUrl(u))
+
         self.lay_maps.addWidget(self.browser)
 
 

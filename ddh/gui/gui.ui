@@ -41,7 +41,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>7</number>
       </property>
       <widget class="QWidget" name="tab">
        <property name="sizePolicy">
@@ -1837,7 +1837,11 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_19">
         <item>
-         <layout class="QVBoxLayout" name="lay_maps"/>
+         <layout class="QVBoxLayout" name="lay_maps">
+          <property name="sizeConstraint">
+           <enum>QLayout::SetFixedSize</enum>
+          </property>
+         </layout>
         </item>
        </layout>
       </widget>
