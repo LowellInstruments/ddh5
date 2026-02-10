@@ -233,6 +233,7 @@ def gui_setup_view(my_win):
     a.tabs.setTabIcon(4, QIcon("ddh/gui/res/icon_tweak.png"))
     a.tabs.setTabIcon(5, QIcon("ddh/gui/res/icon_graph.ico"))
     a.tabs.setTabIcon(6, QIcon("ddh/gui/res/icon_waves.png"))
+    a.tabs.setTabIcon(7, QIcon("ddh/gui/res/icon_maps.png"))
     a.setWindowIcon(QIcon("ddh/gui/res/icon_lowell.ico"))
 
     # new icons
@@ -1751,15 +1752,16 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.btn_sms.setVisible(False)
 
 
-        # web engine viewer
+        # web engine viewer, tricky to display ok in raspberry
         self.browser = QWebEngineView()
         u = "https://ondeckdata.com/database/soe_hypoxic_days_2025.html"
         self.browser.setUrl(QUrl(u))
-
         self.lay_maps.addWidget(self.browser)
+        if linux_is_rpi():
+            self.resize(800, 600)
+            self.showFullScreen()
+        lg.a("OK, finished booting GUI")
 
-
-        lg.a("OK, finished booting graphical user interface")
 
 
 
