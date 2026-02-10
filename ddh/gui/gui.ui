@@ -1833,7 +1833,7 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
       </widget>
       <widget class="QWidget" name="tab_maps">
        <attribute name="title">
-        <string>Maps</string>
+        <string> Maps</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_19">
         <item>

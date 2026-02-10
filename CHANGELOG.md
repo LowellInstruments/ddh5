@@ -39,3 +39,7 @@
 5.0.09  02/08/26
 
     removed expandable left section
+
+5.0.10  02/10/26
+
+    maps tab: proof-of-concept

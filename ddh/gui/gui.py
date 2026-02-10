@@ -856,4 +856,4 @@ class Ui_MainWindow(object):
         self.tabs.setTabText(self.tabs.indexOf(self.tab_graph), _translate("MainWindow", " Graphs"))
         self.btn_map_next.setText(_translate("MainWindow", ">"))
         self.tabs.setTabText(self.tabs.indexOf(self.tab_map), _translate("MainWindow", " Models"))
-        self.tabs.setTabText(self.tabs.indexOf(self.tab_maps), _translate("MainWindow", "Maps"))
+        self.tabs.setTabText(self.tabs.indexOf(self.tab_maps), _translate("MainWindow", " Maps"))
