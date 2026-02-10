@@ -1,12 +1,18 @@
 import signal
 import sys
 from pathlib import Path
+import os
+
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+
+os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
+os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
 import psutil
 import glob
 import pathlib
 import setproctitle
 from PyQt6 import QtCore
-from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt, QPoint
+from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt, QPoint, QUrl
 from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie
 from PyQt6.QtWidgets import (
     QApplication,
@@ -1743,6 +1749,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # SMS support button
         self.btn_sms.setVisible(False)
+
+
+        # web engine viewer
+        self.browser = QWebEngineView()
+        u = "https://ondeckdata.com/database/soe_hypoxic_days_2025.html"
+        self.browser.setUrl(QUrl(u))
+        self.lay_maps.addWidget(self.browser)
 
 
         lg.a("OK, finished booting graphical user interface")
