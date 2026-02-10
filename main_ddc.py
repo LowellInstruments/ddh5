@@ -298,6 +298,9 @@ def _menu_cb_gps_signal_quality():
         br = 4800
 
 
+    # be able to interact with this thing
+    num_gps_errors = 0
+
     # starts GPS signal quality loop
     while 1:
 
@@ -322,10 +325,12 @@ def _menu_cb_gps_signal_quality():
         print(ls_rmc)
         print(ls_gsv)
 
+
         # parse line GPRMC
         s = '\n'
         if not line_rmc:
             s += "RMC --> none\n"
+            num_gps_errors += 1
         else:
             g = line_rmc.split(',')
             # g: ['$GPRMC', '145557.00', 'A', '4136.603719', 'N', '07036.560277', 'W', ...]
@@ -381,7 +386,18 @@ def _menu_cb_gps_signal_quality():
                 s += ('#' * int(v)) + '\n'
 
         print(s)
+        if num_gps_errors:
+            print('number of GPS errors:', num_gps_errors)
         time.sleep(3)
+
+
+        if num_gps_errors > 10:
+            num_gps_errors = 0
+            print("\nerror: GPS seems stuck, power cycle it? (y/n) -> ", end='')
+            a = input().lower()
+            if a in ('y', 'yes'):
+                gps_power_cycle_ddc(p_ctl)
+                print('power cycled GPS duriung test, press enter to continue -> ', end='')
 
 
 
