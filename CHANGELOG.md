@@ -43,3 +43,8 @@
 5.0.10  02/10/26
 
     maps tab: proof-of-concept
+
+5.0.11  02/11/26
+
+    fixed GUI alignment
+
