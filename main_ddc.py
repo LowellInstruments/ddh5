@@ -298,15 +298,39 @@ def _menu_cb_gps_signal_quality():
         br = 4800
 
 
-    # be able to interact with this thing
-    num_gps_errors = 0
+    # when hat, ensure GPS output activated, code is same as gps_power_cycle()
+    ser_ctl = None
+    try:
+        ser_ctl = serial.Serial(p_ctl, 115200, timeout=1)
+        print('now')
+        ser_ctl.write(b'AT+QGPSEND\r')
+        time.sleep(.1)
+        rv = ser_ctl.read_all()
+        print(rv)
+        ser_ctl.write(b'AT+QGPSDEL=1\r')
+        time.sleep(.1)
+        rv = ser_ctl.read_all()
+        print(rv)
+        ser_ctl.write(b'AT+QGPS=1\r')
+        time.sleep(.1)
+        rv = ser_ctl.read_all()
+        print(rv)
+        ser_ctl.reset_input_buffer()
+        time.sleep(1)
+    except (Exception, ) as ex:
+        print(f'error: gps_power_cycle_ddc {ex}')
+    finally:
+        if ser_ctl and ser_ctl.is_open:
+            ser_ctl.close()
+
+
 
     # starts GPS signal quality loop
     while 1:
 
         # get a lot of GPS bytes
         os.system('clear')
-        print('GPS quality test running, wait some seconds\n')
+        print('GPS quality test running\n')
         d_gps = {}
         gps_hardware_read(p_gps, br, d_gps, debug=False)
         bb = []
@@ -326,11 +350,11 @@ def _menu_cb_gps_signal_quality():
         print(ls_gsv)
 
 
+
         # parse line GPRMC
         s = '\n'
         if not line_rmc:
             s += "RMC --> none\n"
-            num_gps_errors += 1
         else:
             g = line_rmc.split(',')
             # g: ['$GPRMC', '145557.00', 'A', '4136.603719', 'N', '07036.560277', 'W', ...]
@@ -349,7 +373,9 @@ def _menu_cb_gps_signal_quality():
         print(s, end='')
         s = ''
 
-        # wait for the first frame of the GPGSV set
+
+
+        # build GPGSV set
         d = {}
         for i in ls_gsv:
             f = i.decode().split(',')
@@ -386,19 +412,7 @@ def _menu_cb_gps_signal_quality():
                 s += ('#' * int(v)) + '\n'
 
         print(s)
-        if num_gps_errors:
-            print('number of GPS errors:', num_gps_errors)
         time.sleep(3)
-
-
-        if num_gps_errors > 10:
-            num_gps_errors = 0
-            print("\nerror: GPS seems stuck, power cycle it? (y/n) -> ", end='')
-            a = input().lower()
-            if a in ('y', 'yes'):
-                gps_power_cycle_ddc(p_ctl)
-                print('power cycled GPS duriung test, press enter to continue -> ', end='')
-
 
 
 
