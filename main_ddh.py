@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QWidget, QMessageBox,
     QMainWindow, QMenu
 )
-import ddh.gui.gui as d_m
+import ddh.gui.gui_ddh as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
 from ddh.graph_draw import graph_request
 from ddh.preferences import preferences_set_models_index
@@ -343,7 +343,7 @@ def gui_tabs_populate_history(my_app):
     a.tbl_his.tableWidget = QTableWidget()
     a.tbl_his.tableWidget.setRowCount(25)
     a.tbl_his.tableWidget.setColumnCount(3)
-    a.tbl_his.tableWidget.setSortingEnabled(0)
+    a.tbl_his.tableWidget.setSortingEnabled(False)
 
 
     # get the history database and order by most recent first
@@ -1612,7 +1612,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 print('*2* unknown path_image', pi)
 
 
-        # show or not the statistics box
+        # show or not STATISTICS box
         if t_str(STR_EV_BLE_DL_OK) in self.lbl_main_txt.text():
             s = r.get(RD_DDH_GUI_GRAPH_STATISTICS)
             if s:
