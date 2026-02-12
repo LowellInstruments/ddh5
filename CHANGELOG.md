@@ -48,3 +48,9 @@
 
     fixed GUI alignment
 
+5.0.12  02/11/26
+
+    fixed GUI alignment
+    redis constants names refactor
+    added comments here and there
+

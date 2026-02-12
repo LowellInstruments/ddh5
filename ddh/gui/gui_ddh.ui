@@ -53,7 +53,7 @@
        <attribute name="title">
         <string> Information</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="0,7">
+       <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="0,0">
         <item>
          <widget class="QFrame" name="left_frame">
           <property name="minimumSize">
@@ -535,41 +535,9 @@
          </widget>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_11" stretch="1,8,0">
+         <layout class="QVBoxLayout" name="verticalLayout_11" stretch="8,0">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="15">
-            <item>
-             <widget class="QLabel" name="lbl_main_txt">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>36</pointsize>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="wordWrap">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="1,0,1">
+           <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="1,0,1,0">
             <item>
              <widget class="QLabel" name="lbl_testmode">
               <property name="maximumSize">
@@ -605,20 +573,14 @@
              </widget>
             </item>
             <item>
-             <layout class="QVBoxLayout" name="verticalLayout_10">
+             <layout class="QVBoxLayout" name="verticalLayout_10" stretch="1,7,1">
               <item>
-               <widget class="QLabel" name="lbl_main_img">
+               <widget class="QLabel" name="lbl_main_txt">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>350</width>
-                  <height>350</height>
-                 </size>
                 </property>
                 <property name="font">
                  <font>
@@ -632,12 +594,6 @@
                 <property name="text">
                  <string/>
                 </property>
-                <property name="pixmap">
-                 <pixmap>res/img_info_blue.png</pixmap>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
                 </property>
@@ -645,6 +601,82 @@
                  <bool>true</bool>
                 </property>
                </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_4">
+                <item>
+                 <spacer name="horizontalSpacer_18">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::Fixed</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>10</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_main_img">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>350</width>
+                    <height>350</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>36</pointsize>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="frameShape">
+                   <enum>QFrame::NoFrame</enum>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="pixmap">
+                   <pixmap>res/img_info_blue.png</pixmap>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_19">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::Fixed</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>10</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
               </item>
               <item>
                <widget class="QProgressBar" name="bar_dl">
@@ -700,6 +732,22 @@
                <set>Qt::AlignCenter</set>
               </property>
              </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_25">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>10</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>
