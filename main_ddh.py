@@ -30,18 +30,18 @@ from ddh.notifications_v2 import notify_via_sms, notify_ddh_alive, notify_error_
 from ddh.slo import slo_delete, slo_delete_all
 from mat.linux import linux_is_process_running_strict
 from utils.redis import (
-    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_REFRESH_HISTORY_TABLE,
+    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE,
     RD_DDH_BLE_ANTENNA, \
     RD_DDH_GPS_ANTENNA, RD_DDH_AWS_PROCESS_STATE,
     RD_DDH_NET_PROCESS_OUTPUT, \
     RD_DDH_AWS_SYNC_REQUEST, RD_DDH_BLE_SEMAPHORE, \
     RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT,
-    RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_REFRESH_BLE_ICON_AUTO, \
-    RD_DDH_GUI_REFRESH_GPS_ICON_AUTO, RD_DDH_GUI_REFRESH_CELL_WIFI_ICON_AUTO,
+    RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE, \
+    RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS, RD_DDH_GUI_PERIODIC_CHECK_ICON_NET,
     RD_DDH_GUI_PLOT_FOLDER,
-    RD_DDH_GUI_REFRESH_PROCESSES_PRESENT,
+    RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING,
     RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
-    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_MODELS_UPDATE, RD_DDH_GUI_RV,
+    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_REFRESH_MODELS, RD_DDH_GUI_RV,
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES
 )
 from utils.ddh_common import (
@@ -194,12 +194,12 @@ def _calc_app_uptime():
 
 def gui_init_redis():
     for k in (
-        RD_DDH_GUI_PLOT_REASON,
-        RD_DDH_GUI_PLOT_FOLDER,
-        RD_DDH_BLE_SEMAPHORE,
-        RD_DDH_GUI_STATE_EVENT_ICON_LOCK,
-        RD_DDH_AWS_SYNC_REQUEST,
-        RD_DDH_GUI_MODELS_UPDATE
+            RD_DDH_GUI_PLOT_REASON,
+            RD_DDH_GUI_PLOT_FOLDER,
+            RD_DDH_BLE_SEMAPHORE,
+            RD_DDH_GUI_STATE_EVENT_ICON_LOCK,
+            RD_DDH_AWS_SYNC_REQUEST,
+            RD_DDH_GUI_PERIODIC_REFRESH_MODELS
     ):
         r.delete(k)
 
@@ -1421,14 +1421,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # update MODELS tab, prevent freeze at boot
-        if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_MODELS_UPDATE):
+        if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_PERIODIC_REFRESH_MODELS):
             gui_populate_models_tab(self)
-            r.setex(RD_DDH_GUI_MODELS_UPDATE, 3600, 1)
+            r.setex(RD_DDH_GUI_PERIODIC_REFRESH_MODELS, 3600, 1)
 
 
 
         # show if any of the DDH processes is not there
-        k = RD_DDH_GUI_REFRESH_PROCESSES_PRESENT
+        k = RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING
         if not r.exists(k):
             gui_check_all_processes()
             r.setex(k, 10, 1)
@@ -1437,7 +1437,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # refresh TEXT in main tab left column
         ls_fields_to_refresh = {
-            RD_DDH_GUI_REFRESH_HISTORY_TABLE: None,
+            RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE: None,
             RD_DDH_BLE_ANTENNA: self.lbl_ble_antenna_txt,
             RD_DDH_GPS_ANTENNA: self.lbl_gps_antenna_txt,
             RD_DDH_AWS_PROCESS_STATE: self.lbl_cloud_txt,
@@ -1448,11 +1448,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             v = v.decode() if v else ''
 
             # pre-processing
-            if rd_key == RD_DDH_GUI_REFRESH_HISTORY_TABLE:
+            if rd_key == RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE:
                 if v:
                     gui_tabs_populate_history(self)
                     gui_tabs_populate_graph_dropdown_sn(self)
-                    r.delete(RD_DDH_GUI_REFRESH_HISTORY_TABLE)
+                    r.delete(RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE)
                 continue
 
             field.setText(v)
@@ -1485,15 +1485,18 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # refresh ICON GPS in main tab left column
-        k = RD_DDH_GUI_REFRESH_GPS_ICON_AUTO
+        k = RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS
         if not r.exists(k):
+            # we check the GPS position 'g'
             p = PATH_GPS_ANTENNA_ICON_OK if g else PATH_GPS_ANTENNA_ICON_ERROR
             self.lbl_gps_antenna_img.setPixmap(QPixmap(p))
+            # schedule next time we want to check GPS position
             r.setex(k, 10, 1)
 
 
+
         # refresh ICON BLE in main tab left column
-        k = RD_DDH_GUI_REFRESH_BLE_ICON_AUTO
+        k = RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE
         if not r.exists(k):
             b = self.lbl_ble_antenna_txt.text()
             p = PATH_BLE_ANTENNA_ICON_OK
@@ -1505,13 +1508,16 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             r.setex(k, 10, 1)
 
 
+
         # refresh icon cell-wifi in main tab left column
-        k = RD_DDH_GUI_REFRESH_CELL_WIFI_ICON_AUTO
+        k = RD_DDH_GUI_PERIODIC_CHECK_ICON_NET
         if not r.exists(k):
             via = r.get(RD_DDH_NET_PROCESS_OUTPUT)
             p = PATH_CELL_ICON_ERROR if via == 'none' else PATH_CELL_ICON_OK
             self.lbl_cell_wifi_img.setPixmap(QPixmap(p))
+            # schedule next time we want this NET via obtention to happen
             r.setex(k, 10, 1)
+
 
 
         # refresh DDH side box buttons
@@ -1785,13 +1791,20 @@ def main_ddh_gui():
     ex.show()
     rv = app.exec()
 
-    # see DDH is doing well
+
+    # create a timestamped entry when GUI is not doing well
     k = RD_DDH_GUI_RV
     if rv:
         r.setex(f'{k}_{int(time.time())}', 600, 1)
+
+
+    # when too many of these entries, generate an alarm
     ls = list(r.scan_iter(f'{k}_*', count=6))
     if len(ls) >= 5:
         notify_error_sw_crash()
+
+
+    # remove entries when OK or already done alarm
     if rv == 0 or len(ls) >= 5:
         for i in ls:
             r.delete(i)
