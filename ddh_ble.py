@@ -469,7 +469,7 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
     ep_utc = int(dt.timestamp())
     e = 'ok' if not rv else f"error {d['error']}"
     gui_add_to_history_database(mac, e, lat, lon, ep_loc, ep_utc, rerun, u, name)
-    r.set(RD_DDH_GUI_REFRESH_HISTORY_TABLE, 1)
+    r.set(RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE, 1)
 
 
 

@@ -719,7 +719,7 @@ def _graph_process_n_draw(a, plot_reason=''):
 
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
-                r.set(RD_DDH_GUI_GRAPH_STATISTICS, s)
+                r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
 
 
         if met == 'DO':
@@ -758,7 +758,7 @@ def _graph_process_n_draw(a, plot_reason=''):
                         s += '{:5.2f} °C'.format(stats_dt)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
-                r.set(RD_DDH_GUI_GRAPH_STATISTICS, s)
+                r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
 
 
     except (Exception, ) as ex:
