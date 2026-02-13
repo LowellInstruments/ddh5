@@ -178,24 +178,6 @@ def _menu_cb_show_ddh_issues():
 
 
 
-# simply see there is stuff coming from Quectel NMEA port
-def _menu_cb_test_gps_quectel():
-    ls_p = gps_hat_detect_list_of_usb_ports()
-    if not ls_p:
-        _p_e('could not detect quectel USB ports')
-        input()
-        return
-    port_nmea = ls_p[1]
-    port_ctrl = ls_p[-2]
-    rv = gps_hat_init(port_ctrl)
-    if rv:
-        print(f'OK! found GPS output on quectel port {port_nmea}')
-    else:
-        _p_e('cannot find GPS output for hat')
-    input()
-
-
-
 def _p_e(e):
     print(f'DDC error, {e}')
 
@@ -299,29 +281,30 @@ def _menu_cb_gps_signal_quality():
 
 
     # when hat, ensure GPS output activated, code is same as gps_power_cycle()
-    ser_ctl = None
-    try:
-        ser_ctl = serial.Serial(p_ctl, 115200, timeout=1)
-        print('now')
-        ser_ctl.write(b'AT+QGPSEND\r')
-        time.sleep(.1)
-        rv = ser_ctl.read_all()
-        print(rv)
-        ser_ctl.write(b'AT+QGPSDEL=1\r')
-        time.sleep(.1)
-        rv = ser_ctl.read_all()
-        print(rv)
-        ser_ctl.write(b'AT+QGPS=1\r')
-        time.sleep(.1)
-        rv = ser_ctl.read_all()
-        print(rv)
-        ser_ctl.reset_input_buffer()
-        time.sleep(1)
-    except (Exception, ) as ex:
-        print(f'error: gps_power_cycle_ddc {ex}')
-    finally:
-        if ser_ctl and ser_ctl.is_open:
-            ser_ctl.close()
+    if port_type == 'hat':
+        ser_ctl = None
+        try:
+            ser_ctl = serial.Serial(p_ctl, 115200, timeout=1)
+            print('now')
+            ser_ctl.write(b'AT+QGPSEND\r')
+            time.sleep(.1)
+            rv = ser_ctl.read_all()
+            print(rv)
+            ser_ctl.write(b'AT+QGPSDEL=1\r')
+            time.sleep(.1)
+            rv = ser_ctl.read_all()
+            print(rv)
+            ser_ctl.write(b'AT+QGPS=1\r')
+            time.sleep(.1)
+            rv = ser_ctl.read_all()
+            print(rv)
+            ser_ctl.reset_input_buffer()
+            time.sleep(1)
+        except (Exception, ) as ex:
+            print(f'error: gps_power_cycle_ddc {ex}')
+        finally:
+            if ser_ctl and ser_ctl.is_open:
+                ser_ctl.close()
 
 
 
@@ -538,6 +521,8 @@ def _check_aws_run(f):
 
 
 def _menu_cb_print_check_all_keys(verbose=True):
+
+    # check the VPN configuration file exists
     path_w = '/etc/wireguard/wg0.conf'
     if is_rpi():
         c = f'sudo ls {path_w}'
@@ -545,8 +530,14 @@ def _menu_cb_print_check_all_keys(verbose=True):
         w = rv.returncode == 0
     else:
         w = os.path.exists(path_w)
+
+
+    # check the SSH with public keys of incoming hosts exists
     a = os.path.exists(f'{h}/.ssh/authorized_keys')
 
+
+
+    # check the DDH config file exists
     c = ddh_config_load_file()
     f = c['credentials']
     for k, v in f.items():
@@ -557,6 +548,8 @@ def _menu_cb_print_check_all_keys(verbose=True):
     if c:
         c = _check_aws_run(f)
 
+
+    # check the DDH all_macs file exists
     m = os.path.exists(f'{ddh_get_path_to_folder_settings()}/all_macs.toml')
 
     rv = w and a and c and m
@@ -929,14 +922,13 @@ def main_ddc():
             '1': (f"1) set GPS dummy     [{fgd}]", _menu_cb_gps_dummy),
             '2': (f"2) set crontab       [{fcd}]", _menu_cb_toggle_crontab_ddh),
             '3': (f"3) check all keys    [{fdk}]", _menu_cb_print_check_all_keys),
-            '4': (f"4) test GPS", _menu_cb_test_gps_quectel),
+            '4': (f"4) test GPS", _menu_cb_gps_signal_quality),
             '5': (f"5) test side buttons", _menu_cb_test_buttons),
             'r': (f"r) BLE range tool", _menu_cb_run_brt),
             'o': (f"o) deploy logger DOX", _menu_cb_run_deploy_dox),
             't': (f"t) deploy logger TDO", _menu_cb_run_deploy_tdo),
             'b': (f"b) detect LI loggers around", _menu_cb_run_scan_li),
             's': (f"s) get cell signal quality", _menu_cb_cell_signal_quality),
-            'g': (f"g) get GPS  signal quality (new)", _menu_cb_gps_signal_quality),
             'i': (f"i) ~ see issues detected by DDC ~", _menu_cb_show_ddh_issues),
             'h': (f"h) help", _menu_cb_show_help),
             'q': (f"q) quit", _menu_cb_quit)
