@@ -353,16 +353,23 @@ def _ddh_gps(ignore_gui):
             gps_hardware_read(port_nmea, baud_rate, d, debug=False)
             bb_g = d['bb']
 
+
+        # check GPS is doing OK, otherwise, alarm
         if not bb_g:
-            # see GPS is doing OK
             rv = 'error_gps' in d.keys()
             k = RD_DDH_GPS_ERROR_NUMBER
+
+            # when GPS error, we create a timestamped entry
             if rv:
                 r.setex(f'{k}_{int(time.time())}', 60, 1)
             ls = list(r.scan_iter(f'{k}_*', count=20))
+
+            # too many of these entries mean generating a notification
             if len(ls) >= 10:
                 lg.a('warning: too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
+
+            # remove entries when OK or when generated notification
             if rv == 0 or len(ls) >= 10:
                 for i in ls:
                     r.delete(i)
