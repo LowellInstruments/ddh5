@@ -30,18 +30,18 @@ from ddh.notifications_v2 import notify_via_sms, notify_ddh_alive, notify_error_
 from ddh.slo import slo_delete, slo_delete_all
 from mat.linux import linux_is_process_running_strict
 from utils.redis import (
-    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE,
-    RD_DDH_BLE_ANTENNA, \
-    RD_DDH_GPS_ANTENNA, RD_DDH_AWS_PROCESS_STATE,
+    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE,
+    RD_DDH_BLE_NO_EXPIRES_ANTENNA, \
+    RD_DDH_GPS_NO_EXPIRES_ANTENNA, RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE,
     RD_DDH_NET_PROCESS_OUTPUT, \
-    RD_DDH_AWS_SYNC_REQUEST, RD_DDH_BLE_SEMAPHORE, \
+    RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, RD_DDH_BLE_SEMAPHORE, \
     RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT,
     RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE, \
     RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS, RD_DDH_GUI_PERIODIC_CHECK_ICON_NET,
     RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING,
-    RD_DDH_GUI_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_BOX_SIDE_BUTTON_MID,
-    RD_DDH_GUI_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_REFRESH_MODELS, RD_DDH_GUI_RV,
+    RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_MID,
+    RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_REFRESH_MODELS, RD_DDH_GUI_RV,
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES
 )
 from utils.ddh_common import (
@@ -198,7 +198,7 @@ def gui_init_redis():
             RD_DDH_GUI_PLOT_FOLDER,
             RD_DDH_BLE_SEMAPHORE,
             RD_DDH_GUI_STATE_EVENT_ICON_LOCK,
-            RD_DDH_AWS_SYNC_REQUEST,
+            RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST,
             RD_DDH_GUI_PERIODIC_REFRESH_MODELS
     ):
         r.delete(k)
@@ -1216,7 +1216,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def click_lbl_cloud_img(self, _):
         self.lbl_cloud_txt.setText("checking")
-        r.delete(RD_DDH_AWS_SYNC_REQUEST)
+        r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST)
         lg.a("user clicked cloud icon")
 
 
@@ -1437,10 +1437,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # refresh TEXT in main tab left column
         ls_fields_to_refresh = {
-            RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE: None,
-            RD_DDH_BLE_ANTENNA: self.lbl_ble_antenna_txt,
-            RD_DDH_GPS_ANTENNA: self.lbl_gps_antenna_txt,
-            RD_DDH_AWS_PROCESS_STATE: self.lbl_cloud_txt,
+            RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE: None,
+            RD_DDH_BLE_NO_EXPIRES_ANTENNA: self.lbl_ble_antenna_txt,
+            RD_DDH_GPS_NO_EXPIRES_ANTENNA: self.lbl_gps_antenna_txt,
+            RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE: self.lbl_cloud_txt,
             RD_DDH_NET_PROCESS_OUTPUT: self.lbl_cell_wifi_txt,
         }
         for rd_key, field in ls_fields_to_refresh.items():
@@ -1448,11 +1448,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             v = v.decode() if v else ''
 
             # pre-processing
-            if rd_key == RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE:
+            if rd_key == RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE:
                 if v:
                     gui_tabs_populate_history(self)
                     gui_tabs_populate_graph_dropdown_sn(self)
-                    r.delete(RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE)
+                    r.delete(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE)
                 continue
 
             field.setText(v)
@@ -1521,15 +1521,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # refresh DDH side box buttons
-        if r.exists(RD_DDH_GUI_BOX_SIDE_BUTTON_TOP):
+        if r.exists(RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP):
             self.keyPressEvent(ButtonPressEvent(Qt.Key.Key_1))
-            r.delete(RD_DDH_GUI_BOX_SIDE_BUTTON_TOP)
-        if r.exists(RD_DDH_GUI_BOX_SIDE_BUTTON_MID):
+            r.delete(RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP)
+        if r.exists(RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_MID):
             self.keyPressEvent(ButtonPressEvent(Qt.Key.Key_2))
-            r.delete(RD_DDH_GUI_BOX_SIDE_BUTTON_MID)
-        if r.exists(RD_DDH_GUI_BOX_SIDE_BUTTON_LOW):
+            r.delete(RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_MID)
+        if r.exists(RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_LOW):
             self.keyPressEvent(ButtonPressEvent(Qt.Key.Key_3))
-            r.delete(RD_DDH_GUI_BOX_SIDE_BUTTON_LOW)
+            r.delete(RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_LOW)
 
 
 
