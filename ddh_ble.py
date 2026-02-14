@@ -119,7 +119,7 @@ def _ddh_ble_hardware_describe_antenna_type():
 
 def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
 
-    brr = r.get(RD_DDH_BLE_RESET_REQ)
+    brr = r.get(RD_DDH_BLE_NO_EXPIRES_RESET_REQ)
     aur = ble_linux_adapter_is_it_up_by_index(antenna_idx)
     nlc = ble_linux_logger_was_any_left_connected()
     need_hw_reset = brr or aur
@@ -132,7 +132,7 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
         if brr:
             # on scan errors + required by some BLE dongles
             lg.a("warning, detected ble_reset_req flag")
-            r.delete(RD_DDH_BLE_RESET_REQ)
+            r.delete(RD_DDH_BLE_NO_EXPIRES_RESET_REQ)
         if aur:
             lg.a(f"warning, hci{antenna_idx} is NOT up and running")
         if nlc:
@@ -159,10 +159,10 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
         if aur:
             lg.a('error, cannot get a good BLE antenna')
             rv = 1
-            r.set(RD_DDH_BLE_ANTENNA, 'error')
+            r.set(RD_DDH_BLE_NO_EXPIRES_ANTENNA, 'error')
         else:
             antenna_idx, antenna_description = _ddh_ble_hardware_describe_antenna_type()
-            r.set(RD_DDH_BLE_ANTENNA, antenna_description)
+            r.set(RD_DDH_BLE_NO_EXPIRES_ANTENNA, antenna_description)
 
     return rv
 
@@ -469,7 +469,7 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
     ep_utc = int(dt.timestamp())
     e = 'ok' if not rv else f"error {d['error']}"
     gui_add_to_history_database(mac, e, lat, lon, ep_loc, ep_utc, rerun, u, name)
-    r.set(RD_DDH_GUI_PERIODIC_REFRESH_HISTORY_TABLE, 1)
+    r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE, 1)
 
 
 
@@ -525,7 +525,7 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
     # some BLE dongles need a reset after download
     if antenna_desc == 'external' and linux_is_rpi():
         lg.a('warning, set planned BLE reset request on redis')
-        r.set(RD_DDH_BLE_RESET_REQ, 1)
+        r.set(RD_DDH_BLE_NO_EXPIRES_RESET_REQ, 1)
 
 
 
@@ -578,7 +578,7 @@ def _ddh_ble(ignore_gui):
     # know your BLE antenna
     antenna_idx, antenna_s = _ddh_ble_hardware_describe_antenna_type()
     lg.a(f"using BLE antenna hci{antenna_idx}, type {antenna_s}")
-    r.set(RD_DDH_BLE_ANTENNA, antenna_s)
+    r.set(RD_DDH_BLE_NO_EXPIRES_ANTENNA, antenna_s)
 
 
     # clock sync at boot

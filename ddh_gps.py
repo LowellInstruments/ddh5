@@ -14,7 +14,7 @@ from gpiozero import LED
 from ddh.notifications_v2 import (
     notify_ddh_number_of_gps_satellites, notify_ddh_error_hw_gps,
 )
-from utils.redis import RD_DDH_GPS_HAT_GFV, RD_DDH_GPS_FIX_POSITION, RD_DDH_GPS_FIX_SPEED
+from utils.redis import RD_DDH_GPS_NO_EXPIRES_HAT_GFV, RD_DDH_GPS_FIX_POSITION, RD_DDH_GPS_FIX_SPEED
 from utils.ddh_common import (
     NAME_EXE_GPS, ddh_config_is_gps_error_forced_enabled, LI_PATH_GPS_DUMMY,
     LI_PATH_CELL_FW, EV_GPS_WAITING_BOOT, app_state_set, t_str,
@@ -216,7 +216,7 @@ def ddh_gps_get_clock_sync_if_so():
 def ddh_gps_get_hat_firmware_version():
     if using_dummy_gps:
         return 'dummy_gps'
-    gfv = r.get(RD_DDH_GPS_HAT_GFV)
+    gfv = r.get(RD_DDH_GPS_NO_EXPIRES_HAT_GFV)
     with open(LI_PATH_CELL_FW, 'w') as f:
         # gfv: EG25GGBR07A08M2GMay 18 2022 20:48:14Authors: QCT
         f.write(gfv)
@@ -291,7 +291,7 @@ def _set_redis_gps_speed(d: dict):
 def _ddh_gps(ignore_gui):
 
     # prepare GPS process
-    r.delete(RD_DDH_GPS_ANTENNA)
+    r.delete(RD_DDH_GPS_NO_EXPIRES_ANTENNA)
     setproctitle.setproctitle(p_name)
 
 
@@ -304,15 +304,15 @@ def _ddh_gps(ignore_gui):
     # set to redis the type of GPS antenna
     if using_dummy_gps:
         lg.a(f'using dummy')
-        r.set(RD_DDH_GPS_ANTENNA, 'dummy')
+        r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'dummy')
     elif port_type:
         lg.a(f'using type {port_type.upper()} on NMEA port {port_nmea}')
-        r.set(RD_DDH_GPS_ANTENNA, ant_type)
+        r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, ant_type)
     else:
         # None
         while 1:
             lg.a(f'error, we have no GPS at all, not even dummy')
-            r.delete(RD_DDH_GPS_ANTENNA)
+            r.delete(RD_DDH_GPS_NO_EXPIRES_ANTENNA)
             time.sleep(5)
 
 
@@ -321,13 +321,13 @@ def _ddh_gps(ignore_gui):
         gfv, gfm = gps_hat_get_firmware_version(port_ctrl)
         gfv = gfv.replace(b'AT+CVERSION\r', b'').decode()
         lg.a(f'hat firmware version is {gfv}')
-        r.set(RD_DDH_GPS_HAT_GFV, gfv)
+        r.set(RD_DDH_GPS_NO_EXPIRES_HAT_GFV, gfv)
 
         lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
         rv = gps_hat_init(port_ctrl)
         if rv:
             lg.a('OK activate hat NMEA stream')
-            r.set(RD_DDH_GPS_ANTENNA, 'internal')
+            r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'internal')
         else:
             lg.a('error activate hat NMEA stream ')
 
