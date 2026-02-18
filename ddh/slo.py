@@ -8,15 +8,14 @@ r = redis.Redis('localhost', port=6379)
 
 
 def slo_add(mac):
-    # added to smart lock-out in these cases:
+    # these cases ADD to smart lock-out:
     #       - refreshed slo
     #       - just purged from black macs list
     #       - downloaded OK
     #       - HBW told us no need to download
     #       - too many errors
     k = f"{RD_DDH_SLO_LS}{mac}"
-    r.set(k, 1)
-    r.expire(k, 120)
+    r.setex(k, 120, 1)
 
 
 
@@ -47,8 +46,9 @@ def slo_print_all_ttl():
 
 
 def slo_delete_all():
-    # todo: do the iteration properly, not using keys()
-    ls_slo_keys = r.keys(RD_DDH_SLO_LS + '*')
+    # old was with keys, test it new
+    # ls_slo_keys = r.keys(RD_DDH_SLO_LS + '*')
+    ls_slo_keys = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
     for k in ls_slo_keys:
         r.delete(k.decode())
 

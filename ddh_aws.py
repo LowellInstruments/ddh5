@@ -14,7 +14,7 @@ from ddh_net import ddh_net_calculate_via
 from utils.redis import (
     RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
-    RD_DDH_AWS_SYNC_REQUEST, RD_DDH_AWS_PROCESS_STATE, RD_DDH_AWS_RV
+    RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE, RD_DDH_AWS_NO_EXPIRES_RV
 )
 from utils.ddh_common import (
     NAME_EXE_AWS,
@@ -57,12 +57,12 @@ def _get_path_of_aws_binary():
 
 
 def _ddh_aws_set_state(s):
-    r.set(RD_DDH_AWS_PROCESS_STATE, s)
+    r.set(RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE, s)
 
 
 
 def ddh_aws_get_state():
-    return r.get(RD_DDH_AWS_PROCESS_STATE)
+    return r.get(RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE)
 
 
 
@@ -265,7 +265,7 @@ def aws_sync(past_year=False):
 
 
         # upon AWS error, we create a timestamped entry
-        k = RD_DDH_AWS_RV
+        k = RD_DDH_AWS_NO_EXPIRES_RV
         if rv:
             r.set(f'{k}_{int(time.time())}', 1)
 
@@ -293,7 +293,7 @@ def aws_sync(past_year=False):
 def _ddh_aws(ignore_gui):
 
     # prepare AWS process
-    r.delete(RD_DDH_AWS_PROCESS_STATE)
+    r.delete(RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE)
     setproctitle.setproctitle(p_name)
     _ddh_aws_set_state('boot')
 
@@ -341,10 +341,10 @@ def _ddh_aws(ignore_gui):
 
 
         # AWS SYNC upload every 12 hours or when user deletes the flag
-        if not r.exists(RD_DDH_AWS_SYNC_REQUEST):
+        if not r.exists(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST):
             aws_sync()
-            r.set(RD_DDH_AWS_SYNC_REQUEST, 1)
-            r.expire(RD_DDH_AWS_SYNC_REQUEST, 12 * 3600)
+            r.set(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, 1)
+            r.expire(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, 12 * 3600)
 
 
 
