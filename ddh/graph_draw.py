@@ -231,22 +231,27 @@ def _graph_process_n_draw(a, plot_reason=''):
     # get graph from passed app
     g = a.g
 
+
     # benchmark this graphing function
     start_ts = time.perf_counter()
 
-    # get list of absolute local 'dl_files/<mac>' folders
+
+    # get list of absolute paths of local 'dl_files/<mac>' folders
     fol_ls = utils_graph_get_abs_fol_list()
     fol: str
+
 
     # get current haul type
     d = {0: 'last', 1: 'all', 2: 'single'}
     _haul_time_view = d[a.cb_g_cycle_haul.currentIndex()]
 
+
     # ------------------------------
     # get reason passed for graph
     # ------------------------------
-
+    sn = ''
     if plot_reason == 'BLE':
+        # reason is an automatic download
         fol = r.get(RD_DDH_GUI_PLOT_FOLDER)
         if not fol:
             e = f'error, wrong folder {fol} to plot'
@@ -254,8 +259,9 @@ def _graph_process_n_draw(a, plot_reason=''):
             raise GraphException(e)
         r.delete(RD_DDH_GUI_PLOT_FOLDER)
         fol = fol.decode()
+
     else:
-        # people pressing GUI graph buttons
+        # reason is user pressing GUI graph buttons
         sn = a.cb_g_sn.currentText()
         if not sn:
             raise GraphException('no one asked for a graph?')
@@ -270,17 +276,20 @@ def _graph_process_n_draw(a, plot_reason=''):
         lg.a(f'selected dropdown SN {sn} / mac {mac}')
         fol = str(calculate_path_to_folder_within_dl_files_from_mac_address(mac))
 
-    # get number of hauls
+
+    # get number of hauls inside this folder
     bn_fol = fol.split('/')[-1]
     nh = get_total_number_of_hauls(fol)
     lg.a(f'found {nh} total hauls in dl_files/{bn_fol}')
     if nh == 0:
         raise GraphException(f'error, no hauls for {fol}')
 
+
     # reason = user changed the single file to plot with '<' button
     if plot_reason == 'hauls_next':
         # we manage this when fetching CSV data
         pass
+
 
     # reason = user changed the time in plot (single, last, all)
     if plot_reason == 'hauls_labels':
@@ -291,8 +300,10 @@ def _graph_process_n_draw(a, plot_reason=''):
             a.btn_g_next_haul.setEnabled(False)
             a.btn_g_next_haul.setVisible(False)
 
+
     # GUI buttons visible or not conditionally
     a.cb_g_switch_tp.setVisible(False)
+
 
     # ----------------------------------------
     # let's CLEAR graph and start from scratch
@@ -310,6 +321,7 @@ def _graph_process_n_draw(a, plot_reason=''):
         p3.clear()
     p1 = g.plotItem
 
+
     # patch for bottom ticks, x are floats meaning timestamps
     # solves the problem of the x-axis ticks changing
     g.setAxisItems({"bottom": pg.DateAxisItem()})
@@ -317,18 +329,20 @@ def _graph_process_n_draw(a, plot_reason=''):
     # grid or not
     g.showGrid(x=True, y=True)
 
-    # ---------
-    # 2nd line
-    # ---------
+
+    # ---------------------
+    # 2nd line in the plot
+    # ---------------------
     p2 = pg.ViewBox(enableMenu=True)
     p1.showAxis('right')
     p1.scene().addItem(p2)
     p1.getAxis('right').linkToView(p2)
     p2.setXLink(p1)
 
-    # ---------
-    # 3rd line
-    # ---------
+
+    # ---------------------
+    # 3rd line in the plot
+    # ---------------------
     d_tdo_graph_type = {0: 'x-time', 1: 'x-Temp'}
     tdo_graph_type = d_tdo_graph_type[a.cb_g_switch_tp.currentIndex()]
     if 'x-time' in tdo_graph_type:
@@ -344,9 +358,11 @@ def _graph_process_n_draw(a, plot_reason=''):
         p3_bak.setStyle(showValues=False)
         p1.scene().removeItem(p3_bak)
 
-    # connect the thing when resizing
+
+    # connect thing when resizing
     _graph_update_views()
     p1.vb.sigResized.connect(_graph_update_views)
+
 
     # font: TICKS TEXT
     font = QtGui.QFont()
@@ -375,6 +391,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     if 'ISO 8601 Time' not in data.keys():
         raise GraphException(f'error, no time data for {fol}')
 
+
     # x: time
     x = data['ISO 8601 Time']
     met = data['metric']
@@ -389,9 +406,6 @@ def _graph_process_n_draw(a, plot_reason=''):
     t2 = datetime.fromtimestamp(x[-1]).strftime(fmt)
     title = f'{t1} to {t2}'
 
-    # removed on Apr 3 2024
-    # if data['pruned']:
-    #     title += ' (data trimmed)'
 
     # --------------
     # metric labels
@@ -419,15 +433,20 @@ def _graph_process_n_draw(a, plot_reason=''):
     y2 = data[lbl2]
 
 
+    # the button says imperial
+    # lbl says Depth (fathoms) TDO
+
+
     # transform to proper units if needed
-    if a.btn_plt_units.text() == "Metric" and met == "TDO":
+    imp_or_metric = a.btn_plt_units.text()
+    if imp_or_metric == "Metric" and met == "TDO":
         lbl1 = 'Depth (m) TDO'
         lbl2 = 'Temperature (C) TDO'
         # fathoms to meters
         y1 = [y * 1.8288 for y in y1]
         # Fahrenheit to Celsius
         y2 = [((y -32) * (5/9)) for y in y2]
-    elif a.btn_plt_units.text() == "Metric" and met == "DO":
+    elif imp_or_metric == "Metric" and met == "DO":
         lbl2 = 'Temperature (C) TDO'
         # Fahrenheit to Celsius
         y2 = [((y -32) * (5/9)) for y in y2]
@@ -538,7 +557,6 @@ def _graph_process_n_draw(a, plot_reason=''):
             p1.getAxis('right').setLabel(lbl2, **_sty(clr_2))
 
             # display any pressure value < 0 as 0
-            print('y1', y1)
             arr = np.array(y1)
             arr[arr < 0] = 0
             y1 = list(arr)
@@ -561,12 +579,14 @@ def _graph_process_n_draw(a, plot_reason=''):
             p1.getAxis('bottom').setLabel(title, **_sty('black'))
 
 
-            # calculate bottom temperature for interesting depths and plot it
+            # ----------------------------------------
+            # plot horizontal line bottom temperature
+            # ----------------------------------------
             x_bottom = []
             y2_bottom = []
             max_depth_80 = max(y1) * 0.80
             mean_t_80 = np.nanmean(y2)
-            if a.btn_plt_units.text() == "Imperial":
+            if imp_or_metric == "Imperial":
                 # 2 meter = 1.09361 fathom
                 max_depth_80 = max_depth_80 + 1.09361
             else:
@@ -626,7 +646,7 @@ def _graph_process_n_draw(a, plot_reason=''):
         elif 'x-Temp' in tdo_graph_type:
             p1.getAxis('left').setTextPen(clr_4)
             p1.setLabel("left", 'Depth (fathoms)' + ' ─', **_sty(clr_4))
-            if a.btn_plt_units.text() == "Metric":
+            if imp_or_metric == "Metric":
                 p1.setLabel("left", 'Depth (m)' + ' ─', **_sty(clr_4))
 
             # remove whole right axis
@@ -653,7 +673,7 @@ def _graph_process_n_draw(a, plot_reason=''):
             p1.setYRange(.1, np.nanmax(y1), padding=0)
 
             # title and bottom axis
-            if a.btn_plt_units.text() == "Imperial":
+            if imp_or_metric == "Imperial":
                 title = f'Temperature (F) {title}'
             else:
                 title = f'Temperature (C) {title}'
@@ -683,17 +703,17 @@ def _graph_process_n_draw(a, plot_reason=''):
     # ------------------------------------
     r.delete(RD_DDH_GUI_GRAPH_STATISTICS)
     is_rpi = linux_is_rpi()
+
     try:
         been_water = False
-
         if met == 'TDO':
             if (not is_rpi) or (is_rpi and plot_reason == 'BLE'):
-                dp = data['Depth (fathoms) TDO']
-                dt = data['Temperature (F) TDO']
+                dp = y1
+                dt = y2
 
-                # calculate 80th percentile to ensure bottom sea values
+                # calculate 80th percentile to target bottom sea values
                 p80 = _percentile(dp, 80)
-                lg.a(f'statistics TDO, percentile 80 of this data is {p80}')
+                lg.a(f'statistics TDO, pressure percentile 80 = {p80} for {imp_or_metric}')
 
                 ls_p, ls_t = [], []
                 for i, p in enumerate(dp):
@@ -703,20 +723,16 @@ def _graph_process_n_draw(a, plot_reason=''):
                         ls_t.append(dt[i])
 
                 s = 'haul summary\nTDO\n'
+                units_p = 'fathoms' if imp_or_metric == 'Imperial' else 'm'
+                units_t = 'F' if imp_or_metric == 'Imperial' else 'C'
                 if been_water:
                     s += f'{t1}\n{t2}\n'
                     stats_p = np.nanmean(ls_p)
                     stats_t = np.nanmean(ls_t)
-                    if a.btn_plt_units.text() == "Imperial":
-                        s += '{:5.2f} fathoms\n'.format(stats_p)
-                        s += '{:5.2f} °F'.format(stats_t)
-                    else:
-                        # fathoms to meters, Fahrenheit to Celsius
-                        stats_p = float(stats_p) * 1.8288
-                        stats_t = (stats_t * -32) * (5/9)
-                        s += '{:5.2f} meters\n'.format(stats_p)
-                        s += '{:5.2f} °C'.format(stats_t)
-
+                    s += '{:5.2f} {}\n'.format(stats_p, units_p)
+                    s += '{:5.2f} °{}'.format(stats_t, units_t)
+                    lg.a(f"statistics TDO for SN {sn}")
+                    lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
                 r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
@@ -724,10 +740,11 @@ def _graph_process_n_draw(a, plot_reason=''):
 
         if met == 'DO':
             if (not is_rpi) or (is_rpi and plot_reason == 'BLE'):
-                _do = data['DO Concentration (mg/l) DO']
-                dt = data['Temperature (F) DO']
+                _do = y1
+                dt = y2
                 wat = data['Water Detect (%) DO']
                 ls_do, ls_dt = [], []
+
 
                 # statistics, for DO-2 we check water content
                 if len(wat):
@@ -746,23 +763,21 @@ def _graph_process_n_draw(a, plot_reason=''):
                     ls_dt = dt
 
                 s = 'haul summary\noxygen\n'
+                units_t = 'F' if imp_or_metric == 'Imperial' else 'C'
                 if been_water:
                     s += f'{t1}\n{t2}\n'
                     s += '{:5.2f} mg_l\n'.format(np.nanmean(ls_do))
                     stats_dt = np.nanmean(ls_dt)
-                    if a.btn_plt_units.text() == "Imperial":
-                        s += '{:5.2f} °F'.format(stats_dt)
-                    else:
-                        # Fahrenheit to Celsius
-                        stats_dt = (stats_dt * -32) * (5/9)
-                        s += '{:5.2f} °C'.format(stats_dt)
+                    s += '{:5.2f} °{}'.format(stats_dt, units_t)
+                    lg.a(f"statistics DOX for SN {sn}")
+                    lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
                 r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
 
 
     except (Exception, ) as ex:
-        lg.a(f'warning, exception {ex} while doing summary box')
+        lg.a(f'warning, exception {ex} while doing summary box for {imp_or_metric}')
 
 
 
