@@ -296,7 +296,7 @@ class Ui_MainWindow(object):
         self.lbl_main_txt.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.lbl_main_txt.setWordWrap(True)
         self.lbl_main_txt.setObjectName("lbl_main_txt")
-        self.gridLayout.addWidget(self.lbl_main_txt, 1, 0, 1, 3)
+        self.gridLayout.addWidget(self.lbl_main_txt, 1, 1, 1, 1)
         self.gridLayout.setColumnStretch(0, 1)
         self.gridLayout.setColumnStretch(1, 8)
         self.gridLayout.setColumnStretch(2, 3)
