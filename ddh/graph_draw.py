@@ -322,12 +322,19 @@ def _graph_process_n_draw(a, plot_reason=''):
     p1 = g.plotItem
 
 
+    # this prevents weird things in units when setting axis titles
+    p1.getAxis('left').enableAutoSIPrefix(enable=False)
+    p1.getAxis('right').enableAutoSIPrefix(enable=False)
+
+
+
     # patch for bottom ticks, x are floats meaning timestamps
     # solves the problem of the x-axis ticks changing
     g.setAxisItems({"bottom": pg.DateAxisItem()})
 
     # grid or not
     g.showGrid(x=True, y=True)
+
 
 
     # ---------------------
@@ -338,6 +345,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     p1.scene().addItem(p2)
     p1.getAxis('right').linkToView(p2)
     p2.setXLink(p1)
+
 
 
     # ---------------------
@@ -371,6 +379,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     p1.getAxis("bottom").setStyle(tickFont=font)
     p1.getAxis("left").setStyle(tickFont=font)
     p1.getAxis("right").setStyle(tickFont=font)
+
 
 
     # ==========================
@@ -432,9 +441,6 @@ def _graph_process_n_draw(a, plot_reason=''):
     y1 = data[lbl1]
     y2 = data[lbl2]
 
-
-    # the button says imperial
-    # lbl says Depth (fathoms) TDO
 
 
     # transform to proper units if needed
@@ -533,7 +539,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     # -----------------------------------------
     if met == 'TP':
         # draw T and D lines
-        p1.setLabel("left", lbl1, **_sty(clr_1))
+        p1.setLabel("left", lbl1, )
         p1.getAxis('right').setLabel(lbl2, **_sty(clr_2))
         p1.plot(x, y1, pen=pen1, hoverable=True)
         p2.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True))
@@ -553,7 +559,7 @@ def _graph_process_n_draw(a, plot_reason=''):
 
         # type of TDO plot 1/2: D (y1) & T (y2) vs time
         if 'x-time' in tdo_graph_type:
-            p1.setLabel("left", lbl1, **_sty(clr_1))
+            p1.setLabel('left', lbl1, units='', **_sty(clr_1))
             p1.getAxis('right').setLabel(lbl2, **_sty(clr_2))
 
             # display any pressure value < 0 as 0
