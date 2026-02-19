@@ -357,7 +357,7 @@ def _ddh_gps(ignore_gui):
         # check GPS is doing OK, otherwise, alarm
         if not bb_g:
             rv = 'error_gps' in d.keys()
-            k = RD_DDH_GPS_ERROR_NUMBER
+            k = RD_DDH_GPS_ERROR_STRING_INEXISTENT_NUMBER
 
             # when GPS error, we create a timestamped entry
             if rv:
@@ -389,6 +389,15 @@ def _ddh_gps(ignore_gui):
         else:
             if d_gga:
                 _set_redis_gps_fix_dict(d_gga)
+
+
+        # see need for power-cycling because of sixfab bug
+        if port_type == 'hat' and d_rmc['err_rmc_comma']:
+            k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
+            r.setex(f'{k}_{int(time.time())}', 3600, 1)
+            ls = list(r.scan_iter(f'{k}_*', count=100))
+            print(f'len of this shit = {len(ls)}')
+
 
 
 

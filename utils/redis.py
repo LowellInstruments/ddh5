@@ -52,7 +52,8 @@ RD_DDH_GPS_NO_EXPIRES_HAT_GFV = p + 'hat_gfv'
 # antenna can be hat, adafruit, puck or dummy
 RD_DDH_GPS_NO_EXPIRES_ANTENNA = p + 'antenna_gps'
 # too many GPS errors, we generate an alarm notification
-RD_DDH_GPS_ERROR_NUMBER = p + 'error_number'
+RD_DDH_GPS_ERROR_STRING_INEXISTENT_NUMBER = p + 'error_number'
+RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER = p + 'error_number'
 
 
 
