@@ -398,8 +398,8 @@ def _ddh_gps(ignore_gui):
             r.setex(f'{k}_{int(time.time())}', 3600, 1)
             max_len_ls = 1000
             ls = list(r.scan_iter(f'{k}_*', count=max_len_ls))
-            print(f'\ncurrent len(ls) = {len(ls)}\n')
-            if len(ls) >= 50:
+            print(f'\ncurrent len(ls) = {len(ls)}, port_ctrl = {port_ctrl}\n')
+            if len(ls) >= 10:
                 gps_power_cycle_ddc(port_ctrl)
                 for i in ls:
                     r.delete(i)
