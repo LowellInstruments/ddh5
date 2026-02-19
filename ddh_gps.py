@@ -338,7 +338,7 @@ def _ddh_gps(ignore_gui):
 
 
     # GPS infinite loop
-    bb_err_rmc = bytes()
+    sentence = ''
     while 1:
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name):
@@ -353,7 +353,6 @@ def _ddh_gps(ignore_gui):
         else:
             gps_hardware_read(port_nmea, baud_rate, d, debug=False)
             bb_g = d['bb']
-            bb_err_rmc = bb_g
 
 
         # check GPS is doing OK, otherwise, alarm
@@ -394,7 +393,7 @@ def _ddh_gps(ignore_gui):
 
 
         # see need for power-cycling because of sixfab bug
-        if port_type == 'hat' and bb_err_rmc and bb_err_rmc.startswith(b'$GPRMC,,V,,,,'):
+        if port_type == 'hat' and 'err_rmc_comma' in d.keys():
             k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
             r.setex(f'{k}_{int(time.time())}', 3600, 1)
             ls = list(r.scan_iter(f'{k}_*', count=100))
