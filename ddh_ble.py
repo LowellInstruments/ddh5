@@ -39,6 +39,7 @@ from ddh.notifications_v2 import (
 from ddh.slo import slo_get_all, slo_add, slo_delete
 from ddh.timecache import is_it_time_to
 from ddh.tracking import ddh_log_tracking_add, get_path_current_track_file
+from gps.gps_quectel import gps_power_cycle_ddc
 from main_ddh import gui_add_to_history_database
 from utils.redis import *
 from utils.ddh_common import (
@@ -284,6 +285,16 @@ def _ddh_ble_boot_gps_clock_sync():
     app_state_set(EV_GPS_SYNC_CLOCK, t_str(STR_EV_GPS_SYNC_CLOCK))
 
     while 1:
+
+        k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
+        max_len_ls = 1000
+        ls = list(r.scan_iter(f'{k}_*', count=max_len_ls))
+        print(f'\ncurrent len(ls) = {len(ls)}, port_ctrl = /dev/ttyUSB2\n')
+        if len(ls) >= 10:
+            gps_power_cycle_ddc('/dev/ttyUSB2')
+            for i in ls:
+                r.delete(i)
+
         g = ddh_gps_get_clock_sync_if_so()
         if g:
             # e-mail notification got GPS fix at boot
