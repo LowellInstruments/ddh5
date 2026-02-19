@@ -3,7 +3,7 @@ import setproctitle
 from tzlocal import get_localzone
 from gps.gps_adafruit import gps_adafruit_init
 from gps.gps_puck import gps_puck_detect_usb_port
-from gps.gps_quectel import gps_hat_get_firmware_version, gps_hat_init
+from gps.gps_quectel import gps_hat_get_firmware_version, gps_hat_init, gps_power_cycle_ddc
 from utils.redis import *
 from gps.gps import (
     gps_find_any_usb_port,
@@ -396,8 +396,13 @@ def _ddh_gps(ignore_gui):
         if port_type == 'hat' and 'err_rmc_comma' in d.keys():
             k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
             r.setex(f'{k}_{int(time.time())}', 3600, 1)
-            ls = list(r.scan_iter(f'{k}_*', count=100))
-            print(f'len of this shit = {len(ls)}')
+            max_len_ls = 1000
+            ls = list(r.scan_iter(f'{k}_*', count=max_len_ls))
+            print(f'\ncurrent len(ls) = {len(ls)}\n')
+            if len(ls) >= 50:
+                gps_power_cycle_ddc(port_ctrl)
+                for i in ls:
+                    r.delete(i)
 
 
 
