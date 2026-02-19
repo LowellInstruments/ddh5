@@ -14,7 +14,9 @@ from ddh_net import ddh_net_calculate_via
 from utils.redis import (
     RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
-    RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE, RD_DDH_AWS_NO_EXPIRES_RV
+    RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST,
+    RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE,
+    RD_DDH_AWS_NO_EXPIRES_RV
 )
 from utils.ddh_common import (
     NAME_EXE_AWS,
