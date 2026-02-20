@@ -126,7 +126,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>10</width>
+                   <width>5</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -187,7 +187,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>10</width>
+                   <width>5</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -251,7 +251,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>10</width>
+                   <width>5</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -312,7 +312,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>10</width>
+                   <width>5</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -373,7 +373,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>10</width>
+                   <width>5</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -437,7 +437,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>10</width>
+                   <width>5</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -498,7 +498,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>10</width>
+                   <width>5</width>
                    <height>20</height>
                   </size>
                  </property>
