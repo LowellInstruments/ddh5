@@ -1766,11 +1766,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.btn_sms.setVisible(False)
 
 
-        print("slow boot so not loading webengineview")
-
-
         # web engine viewer, put this on top
         # todo: see if these makes display unresponsive
+        # print("slow boot so not loading webengineview")
         # from PyQt6.QtWebEngineWidgets import QWebEngineView
         # os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
         # os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
