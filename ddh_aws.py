@@ -117,15 +117,18 @@ def _ddh_get_timestamp_aws_sqs(k):
 
 
 
-def _aws_sync(past_year=False):
+def _aws_sync(past_year):
 
     # doing past year AWS sync
     yyyy = datetime.datetime.now().year
-    yyyy_prev = yyyy - 1
-    yyyy_prev_flag = LI_PATH_LAST_YEAR_AWS_TEMPLATE + str(yyyy_prev)
+    y_p = yyyy - 1
+    yyyy_prev_flag = LI_PATH_LAST_YEAR_AWS_TEMPLATE + str(y_p)
     if past_year and os.path.exists(yyyy_prev_flag):
-        lg.a(f'warning: skip AWS sync for LAST YEAR {yyyy_prev}, flag detected')
+        lg.a(f'warning, skip AWS sync for LAST YEAR {y_p}, flag detected')
         return 0
+    if past_year:
+        lg.a(f'doing sync for LAST YEAR {y_p}')
+        yyyy = y_p
 
 
     # cannot do anything without internet access
@@ -203,7 +206,7 @@ def _aws_sync(past_year=False):
     _t = datetime.datetime.now()
     if all_rv == 0:
         lg.a(f"success: cloud sync on {_t} for year {yyyy}")
-        if yyyy_prev == int(yyyy):
+        if past_year:
             pathlib.Path(yyyy_prev_flag).touch()
             lg.a(f"created last year flag {yyyy_prev_flag} so next runs skip this")
     else:
@@ -263,7 +266,7 @@ def _aws_cp(path):
 def aws_sync(past_year=False):
     try:
         _ddh_aws_set_state('busy')
-        rv = _aws_sync(past_year=past_year)
+        rv = _aws_sync(past_year)
         s = 'OK' if rv == 0 else 'error'
         _ddh_aws_set_state(s)
 
