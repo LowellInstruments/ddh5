@@ -124,7 +124,7 @@ def _aws_sync(past_year=False):
     yyyy_prev = yyyy - 1
     yyyy_prev_flag = LI_PATH_LAST_YEAR_AWS_TEMPLATE + str(yyyy_prev)
     if past_year and os.path.exists(yyyy_prev_flag):
-        lg.a(f'skip AWS sync for LAST YEAR {yyyy_prev} because flag detected')
+        lg.a(f'warning: skip AWS sync for LAST YEAR {yyyy_prev}, flag detected')
         return 0
 
 
