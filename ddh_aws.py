@@ -14,9 +14,11 @@ from ddh_net import ddh_net_calculate_via
 from utils.redis import (
     RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
-    RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST,
     RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT,
-    RD_DDH_AWS_NO_EXPIRES_RV, RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD
+    RD_DDH_AWS_NO_EXPIRES_RV,
+    RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
+    RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST,
+    RD_DDH_AWS_SYNC_PERIODIC_FLAG
 )
 from utils.ddh_common import (
     NAME_EXE_AWS,
@@ -324,6 +326,7 @@ def _ddh_aws(ignore_gui):
             while r.exists(RD_DDH_BLE_SEMAPHORE):
                 time.sleep(1)
 
+
         # flags if we did something at AWS level
         did_aws = False
 
@@ -346,12 +349,21 @@ def _ddh_aws(ignore_gui):
                 _ddh_aws_set_state('error')
 
 
+        # user asked for a AWS sync via GUI
+        if r.exists(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST):
+            did_aws = True
+            r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
+            r.setex(RD_DDH_AWS_SYNC_PERIODIC_FLAG, 12 * 3600, 1)
+            aws_sync()
+
 
         # AWS SYNC upload every 12 hours or when user deletes the flag
-        if not r.exists(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST):
+        if not r.exists(RD_DDH_AWS_SYNC_PERIODIC_FLAG):
             did_aws = True
+            r.setex(RD_DDH_AWS_SYNC_PERIODIC_FLAG, 12 * 3600, 1)
+            r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
             aws_sync()
-            r.set(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, 12 * 3600, 1)
+
 
 
         # helps updating GUI
