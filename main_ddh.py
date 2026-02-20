@@ -2,11 +2,6 @@ import signal
 import sys
 from pathlib import Path
 import os
-
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-
-os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
-os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
 import psutil
 import glob
 import pathlib
@@ -1763,6 +1758,12 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         print("slow boot so not loading webengineview")
 
+
+        # web engine viewer, put this on top
+        # todo: see if these makes display unresponsive
+        # from PyQt6.QtWebEngineWidgets import QWebEngineView
+        # os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
+        # os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
 
         # web engine viewer, tricky to display ok in raspberry
         # self.browser = QWebEngineView()
