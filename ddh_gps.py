@@ -349,35 +349,38 @@ def _ddh_gps(ignore_gui):
         # -----------------------------------------------------
         if port_type == 'hat' and 'err_rmc_comma' in d.keys():
             k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
-            r.setex(f'{k}_{int(time.time())}', 3600, 1)
-            ls = list(r.scan_iter(f'{k}_*', count=NUM_RMC_ERRORS_POWER_CYCLE))
-            lg.a(f'warning: RMC comma, n = {len(ls)}, port_ctrl = {port_ctrl}')
+            if d['err_rmc_comma']:
+                r.setex(f'{k}_{int(time.time())}', 3600, 1)
+                ls = list(r.scan_iter(f'{k}_*', count=NUM_RMC_ERRORS_POWER_CYCLE))
+                lg.a(f'warning: RMC comma, n = {len(ls)}, port_ctrl = {port_ctrl}')
 
-            # there are enough errors, power-cycle the hat
-            if len(ls) >= NUM_RMC_ERRORS_POWER_CYCLE - 5:
-                for i in ls:
+                # there are enough errors, power-cycle the hat
+                if len(ls) >= NUM_RMC_ERRORS_POWER_CYCLE - 5:
+                    for i in ls:
+                        r.delete(i)
+
+                    # grab GUI state to restore it after GPS hat power-cycle
+                    _sc, _st = app_state_get()
+                    lg.a("warning: starting power-cycle GPS hat shield")
+                    app_state_set(EV_GPS_HAT_POWER_CYCLE, t_str(STR_EV_GPS_HAT_POWER_CYCLE))
+                    r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 5, 1)
+                    gps_hat_power_cycle_ddc(port_ctrl, use_print=False)
+                    lg.a("warning: end power-cycle GPS hat shield")
+                    app_state_set(_sc, t_str(_st))
+
+                    # after GPS hat power-cycle, re-detect ports and re-init GPS output
+                    port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
+                    lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
+                    rv = gps_hat_init(port_ctrl)
+                    if rv:
+                        lg.a(f'OK activate hat NMEA stream on {port_nmea}')
+                        r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'internal')
+                    else:
+                        lg.a(f'error activate hat NMEA stream on {port_nmea}')
+            else:
+                # clean up GPS is ok
+                for i in list(r.scan_iter(f'{k}_*')):
                     r.delete(i)
-
-                # grab GUI state to restore it after GPS hat power-cycle
-                _sc, _st = app_state_get()
-                lg.a("warning: starting power-cycle GPS hat shield")
-                app_state_set(EV_GPS_HAT_POWER_CYCLE, t_str(STR_EV_GPS_HAT_POWER_CYCLE))
-                r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 5, 1)
-                gps_hat_power_cycle_ddc(port_ctrl, use_print=False)
-                lg.a("warning: end power-cycle GPS hat shield")
-                app_state_set(_sc, t_str(_st))
-
-                # after GPS hat power-cycle, re-detect ports and re-init GPS output
-                port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
-                lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
-                rv = gps_hat_init(port_ctrl)
-                if rv:
-                    lg.a(f'OK activate hat NMEA stream on {port_nmea}')
-                    r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'internal')
-                else:
-                    lg.a(f'error activate hat NMEA stream on {port_nmea}')
-
-
 
         # get bytes from hardware USB port
         d = dict()
