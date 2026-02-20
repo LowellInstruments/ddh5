@@ -21,7 +21,8 @@ from utils.ddh_common import (
     EV_GPS_IN_PORT,
     STR_EV_GPS_IN_PORT,
     ddh_this_process_needs_to_quit,
-    TMP_PATH_GPS_LAST_JSON, linux_is_rpi, EV_GPS_HAT_POWER_CYCLE, STR_EV_GPS_HAT_POWER_CYCLE
+    TMP_PATH_GPS_LAST_JSON, linux_is_rpi, EV_GPS_HAT_POWER_CYCLE, STR_EV_GPS_HAT_POWER_CYCLE, app_state_get,
+    EV_GPS_SYNC_CLOCK, STR_EV_GPS_WAITING_BOOT, STR_EV_GPS_SYNC_CLOCK
 )
 import datetime
 import json
@@ -46,11 +47,9 @@ from utils.ddh_common import (
 # ============================================
 
 
-
-
-
 r = redis.Redis('localhost', port=6379)
-PERIOD_GPS_AT_BOOT_SECS = 60 if linux_is_rpi() else 10
+PERIOD_GPS_AT_BOOT_SECS = 600 if linux_is_rpi() else 10
+NUM_RMC_ERRORS_POWER_CYCLE = 300
 PERIOD_GPS_NOTI_NUM_GPS_SAT = 1800
 p_name = NAME_EXE_GPS
 _skip_satellite_notification = 1
@@ -325,10 +324,10 @@ def _ddh_gps(ignore_gui):
         lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
         rv = gps_hat_init(port_ctrl)
         if rv:
-            lg.a('OK activate hat NMEA stream')
+            lg.a(f'OK activate hat NMEA stream on {port_nmea}')
             r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'internal')
         else:
-            lg.a('error activate hat NMEA stream ')
+            lg.a(f'error activate hat NMEA stream on {port_nmea}')
 
     else:
         # not hat, can still be puck or adafruit
@@ -345,21 +344,39 @@ def _ddh_gps(ignore_gui):
             sys.exit(0)
 
 
+        # -----------------------------------------------------
         # see need for HAT power-cycling because of SIXFAB bug
+        # -----------------------------------------------------
         if port_type == 'hat' and 'err_rmc_comma' in d.keys():
             k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
             r.setex(f'{k}_{int(time.time())}', 3600, 1)
-            max_len_ls = 1000
-            ls = list(r.scan_iter(f'{k}_*', count=max_len_ls))
-            lg.a(f'error comma, n = {len(ls)}, port_ctrl = {port_ctrl}\n')
-            if len(ls) >= 25:
-                lg.a("warning: starting shield power-cycle")
+            ls = list(r.scan_iter(f'{k}_*', count=NUM_RMC_ERRORS_POWER_CYCLE))
+            lg.a(f'warning: RMC comma, n = {len(ls)}, port_ctrl = {port_ctrl}')
+
+            # there are enough errors, power-cycle the hat
+            if len(ls) >= NUM_RMC_ERRORS_POWER_CYCLE - 5:
+                for i in ls:
+                    r.delete(i)
+
+                # grab GUI state to restore it after GPS hat power-cycle
+                _sc, _st = app_state_get()
+                lg.a("warning: starting power-cycle GPS hat shield")
                 app_state_set(EV_GPS_HAT_POWER_CYCLE, t_str(STR_EV_GPS_HAT_POWER_CYCLE))
                 r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 5, 1)
                 gps_hat_power_cycle_ddc(port_ctrl, use_print=False)
-                lg.a("warning: leaving shield power-cycle")
-                for i in ls:
-                    r.delete(i)
+                lg.a("warning: end power-cycle GPS hat shield")
+                app_state_set(_sc, t_str(_st))
+
+                # after GPS hat power-cycle, re-detect ports and re-init GPS output
+                port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
+                lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
+                rv = gps_hat_init(port_ctrl)
+                if rv:
+                    lg.a(f'OK activate hat NMEA stream on {port_nmea}')
+                    r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'internal')
+                else:
+                    lg.a(f'error activate hat NMEA stream on {port_nmea}')
+
 
 
         # get bytes from hardware USB port
@@ -412,6 +429,12 @@ def _ddh_gps(ignore_gui):
 
 
 def main_ddh_gps(ignore_gui=False):
+
+    # start with clean sheet of GPS RMC errors
+    k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
+    for i in list(r.scan_iter(f'{k}_*')):
+        r.delete(i)
+
     while 1:
         try:
             _ddh_gps(ignore_gui)
