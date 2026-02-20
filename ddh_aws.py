@@ -263,7 +263,7 @@ def _aws_cp(path):
 def aws_sync(past_year=False):
     try:
         _ddh_aws_set_state('busy')
-        rv = _aws_sync(past_year)
+        rv = _aws_sync(past_year=past_year)
         s = 'OK' if rv == 0 else 'error'
         _ddh_aws_set_state(s)
 
@@ -312,7 +312,12 @@ def _ddh_aws(ignore_gui):
     aws_sync(past_year=True)
 
 
-    # forever loop waiting requests
+    # force first AWS sync for the current year
+    if r.exists(RD_DDH_AWS_SYNC_PERIODIC_FLAG):
+        r.delete(RD_DDH_AWS_SYNC_PERIODIC_FLAG)
+
+
+    # forever AWS loop waiting requests
     while 1:
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name):
