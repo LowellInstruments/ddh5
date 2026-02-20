@@ -355,7 +355,7 @@ def _ddh_gps(ignore_gui):
             if len(ls) >= 25:
                 lg.a("warning: starting shield power-cycle")
                 app_state_set(EV_GPS_HAT_POWER_CYCLE, t_str(STR_EV_GPS_HAT_POWER_CYCLE))
-                r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 30, 1)
+                r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 5, 1)
                 gps_hat_power_cycle_ddc(port_ctrl, use_print=False)
                 lg.a("warning: leaving shield power-cycle")
                 for i in ls:

@@ -819,6 +819,13 @@ lang_msg_db = {
         'sp': '--', # spanish
         'pt': '--'  # portuguese
     },
+    STR_EV_GPS_HAT_POWER_CYCLE: {
+        'fr': "--",
+        'ca': '--',
+        'pl': '--',
+        'sp': '--',  # spanish
+        'pt': '--'  # portuguese
+    },
 }
 
 
@@ -826,7 +833,7 @@ lang_msg_db = {
 def t_str(s):
     # putting this here allows for dynamic changing of language
     if s not in lang_msg_db.keys():
-        print(f"** error, no translation for text '{s}'")
+        print(f"\033[31m** error, no translation for text '{s}'\033[0m")
         return s
     if g_lang == 'en':
         return s
