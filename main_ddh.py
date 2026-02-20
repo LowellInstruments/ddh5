@@ -1438,7 +1438,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             RD_DDH_BLE_NO_EXPIRES_ANTENNA: self.lbl_ble_antenna_txt,
             RD_DDH_GPS_NO_EXPIRES_ANTENNA: self.lbl_gps_antenna_txt,
             RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT: self.lbl_cloud_txt,
-            RD_DDH_NET_PROCESS_OUTPUT: self.lbl_cell_wifi_txt,
         }
         for rd_key, field in ls_fields_to_refresh.items():
             v = r.get(rd_key)
