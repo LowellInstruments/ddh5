@@ -27,7 +27,7 @@ from mat.linux import linux_is_process_running_strict
 from utils.redis import (
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE,
     RD_DDH_BLE_NO_EXPIRES_ANTENNA, \
-    RD_DDH_GPS_NO_EXPIRES_ANTENNA, RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE,
+    RD_DDH_GPS_NO_EXPIRES_ANTENNA, RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT,
     RD_DDH_NET_PROCESS_OUTPUT, \
     RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, RD_DDH_BLE_SEMAPHORE, \
     RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT,
@@ -36,8 +36,9 @@ from utils.redis import (
     RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING,
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_LOW, RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_MID,
-    RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_REFRESH_MODELS, RD_DDH_GUI_RV,
-    RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES
+    RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP, RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_REFRESH_MODELS,
+    RD_DDH_GUI_RV,
+    RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES, RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -79,7 +80,7 @@ from utils.ddh_common import (
     PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, EV_GPS_HW_ERROR,
     PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK, ddh_config_get_language_index, linux_is_rpi, STR_EV_ERROR_REDIS,
     EV_GUI_ERROR_REDIS, EV_GUI_ERROR_POWER_SAH, STR_EV_ERROR_POWER_SAH, EV_GUI_ERROR_POWER_J4H, STR_EV_ERROR_POWER_J4H,
-    EV_GPS_HAT_POWER_CYCLE, PATH_MAIN_GPS_POWER_CYCLE,
+    EV_GPS_HAT_POWER_CYCLE, PATH_MAIN_GPS_POWER_CYCLE, PATH_CLOUD_ICON_OK, PATH_CLOUD_ICON_ERROR,
 )
 import datetime
 import os
@@ -239,7 +240,7 @@ def gui_setup_view(my_win):
     a.lbl_gps_antenna_img.setPixmap(QPixmap(PATH_GPS_ANTENNA_ICON_START))
     a.lbl_ble_antenna_img.setPixmap(QPixmap(PATH_BLE_ANTENNA_ICON_START))
     a.lbl_cell_wifi_img.setPixmap(QPixmap("ddh/gui/res/new_icon_cell_wifi.png"))
-    a.lbl_cloud_img.setPixmap(QPixmap("ddh/gui/res/new_icon_cloud.png"))
+    a.lbl_cloud_img.setPixmap(QPixmap(PATH_CLOUD_ICON_OK))
     a.lbl_boat_txt.setText(ddh_config_get_vessel_name())
     a.lbl_gps.setText('-\n-')
     a.lbl_box_sn.setText('DDH ' + ddh_config_get_box_sn())
@@ -1436,7 +1437,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE: None,
             RD_DDH_BLE_NO_EXPIRES_ANTENNA: self.lbl_ble_antenna_txt,
             RD_DDH_GPS_NO_EXPIRES_ANTENNA: self.lbl_gps_antenna_txt,
-            RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE: self.lbl_cloud_txt,
+            RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT: self.lbl_cloud_txt,
             RD_DDH_NET_PROCESS_OUTPUT: self.lbl_cell_wifi_txt,
         }
         for rd_key, field in ls_fields_to_refresh.items():
@@ -1448,17 +1449,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 if v:
                     gui_tabs_populate_history(self)
                     gui_tabs_populate_graph_dropdown_sn(self)
-                    r.delete(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE)
+                    r.delete(rd_key)
                 continue
 
+            # do not move this
             field.setText(v)
-
-            # post-processing
-            if rd_key == RD_DDH_NET_PROCESS_OUTPUT:
-                if v in ("wifi", "wi-fi"):
-                    ssid = gui_get_my_current_wlan_ssid()
-                    self.lbl_cell_wifi_txt.setText(ssid)
-
 
 
 
@@ -1479,8 +1474,18 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
+        # refresh ICON CLOUD in main tab left column less often
+        k = RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD
+        if r.exists(k):
+            s_c = self.lbl_cloud_txt.text()
+            p = PATH_CLOUD_ICON_ERROR if s_c == 'error' else PATH_CLOUD_ICON_OK
+            self.lbl_cloud_img.setPixmap(QPixmap(p))
+            r.delete(k)
 
-        # refresh ICON GPS in main tab left column
+
+
+
+        # refresh ICON GPS in main tab left column less often
         k = RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS
         if not r.exists(k):
             # we check the GPS position 'g'
@@ -1491,7 +1496,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-        # refresh ICON BLE in main tab left column
+        # refresh ICON BLE in main tab left column less often
         k = RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE
         if not r.exists(k):
             b = self.lbl_ble_antenna_txt.text()
@@ -1505,7 +1510,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-        # refresh icon cell-wifi in main tab left column
+        # refresh ICON CELL-WIFI in main tab left column less often
         k = RD_DDH_GUI_PERIODIC_CHECK_ICON_NET
         if not r.exists(k):
             via = r.get(RD_DDH_NET_PROCESS_OUTPUT)
@@ -1513,6 +1518,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.lbl_cell_wifi_img.setPixmap(QPixmap(p))
             # schedule next time we want this NET via obtention to happen
             r.setex(k, 10, 1)
+            if via in ("wifi", "wi-fi"):
+                ssid = gui_get_my_current_wlan_ssid()
+                self.lbl_cell_wifi_txt.setText(ssid)
 
 
 
@@ -1529,14 +1537,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
+        # ------------------
         # update MAIN icon
+        # ------------------
         code, text = app_state_get()
         code = code.decode() if code else ''
         text = text.decode() if text else ''
         self.bar_dl.setVisible(False)
-
-
-
         # debug
         # print(f'code {code} \n text {text}')
         pi = ''

@@ -893,7 +893,8 @@ PATH_MAIN_BLE_DL_RETRY = f'{_p}/sand_clock.png'
 PATH_MAIN_BLE_DL_PROGRESS = f'{_p}/dl2.png'
 PATH_MAIN_GPS_HW_ERROR = f'{_p}/gps_err.png'
 PATH_MAIN_GPS_POWER_CYCLE = f'{_p}/gps_power_cycle.png'
-
+PATH_CLOUD_ICON_OK = f"{_p}/new_icon_cloud.png"
+PATH_CLOUD_ICON_ERROR = f"{_p}/new_icon_cloud_error.png"
 
 
 if __name__ == '__main__':

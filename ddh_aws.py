@@ -15,8 +15,8 @@ from utils.redis import (
     RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
     RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST,
-    RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE,
-    RD_DDH_AWS_NO_EXPIRES_RV
+    RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT,
+    RD_DDH_AWS_NO_EXPIRES_RV, RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD
 )
 from utils.ddh_common import (
     NAME_EXE_AWS,
@@ -59,12 +59,12 @@ def _get_path_of_aws_binary():
 
 
 def _ddh_aws_set_state(s):
-    r.set(RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE, s)
+    r.set(RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT, s)
 
 
 
 def ddh_aws_get_state():
-    return r.get(RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE)
+    return r.get(RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT)
 
 
 
@@ -295,7 +295,7 @@ def aws_sync(past_year=False):
 def _ddh_aws(ignore_gui):
 
     # prepare AWS process
-    r.delete(RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE)
+    r.delete(RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT)
     setproctitle.setproctitle(p_name)
     _ddh_aws_set_state('boot')
 
@@ -305,9 +305,9 @@ def _ddh_aws(ignore_gui):
         lg.a('--------------------------------------------------------------')
 
 
+
     # first, do the past year one
     aws_sync(past_year=True)
-
 
 
     # forever loop waiting requests
@@ -324,9 +324,13 @@ def _ddh_aws(ignore_gui):
             while r.exists(RD_DDH_BLE_SEMAPHORE):
                 time.sleep(1)
 
+        # flags if we did something at AWS level
+        did_aws = False
+
 
         # AWS COPY individual files
         for i in range(r.llen(q)):
+            did_aws = True
             _, path_to_file_to_cp = r.blpop([q])
             p = path_to_file_to_cp.decode()
             bn = os.path.basename(p)
@@ -335,6 +339,7 @@ def _ddh_aws(ignore_gui):
             dn = os.path.dirname(p).split('/')[-1]
             lg.a(f'copying to bucket file {dn}/{bn}')
             try:
+                did_aws = True
                 _aws_cp(p)
             except (Exception,) as ex:
                 lg.a(f'error, aws_cp -> {ex}')
@@ -344,9 +349,15 @@ def _ddh_aws(ignore_gui):
 
         # AWS SYNC upload every 12 hours or when user deletes the flag
         if not r.exists(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST):
+            did_aws = True
             aws_sync()
-            r.set(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, 1)
-            r.expire(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, 12 * 3600)
+            r.set(RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST, 12 * 3600, 1)
+
+
+        # helps updating GUI
+        if did_aws:
+            r.set(RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD, 1)
+
 
 
 

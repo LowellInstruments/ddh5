@@ -26,6 +26,7 @@ RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING = p + 'processes_present'
 RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE = p + 'ble_icon'
 RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS = p + 'gps_icon'
 RD_DDH_GUI_PERIODIC_CHECK_ICON_NET = p + 'cell_wifi_icon'
+RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD = p + 'aws_icon'
 
 
 
@@ -70,7 +71,8 @@ RD_DDH_CNV_QUEUE = p + 'queue'
 p = 'ddh:aws:'
 RD_DDH_AWS_COPY_QUEUE = p + 'queue'
 RD_DDH_AWS_NO_EXPIRES_SYNC_REQUEST = p + 'sync'
-RD_DDH_AWS_NO_EXPIRES_PROCESS_STATE = p + 'process_state'
+# 'OK' or 'error' or 'checking'
+RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT = p + 'process_state'
 # counts the number of bad AWS interactions
 RD_DDH_AWS_NO_EXPIRES_RV = p + 'rv'
 
