@@ -1586,7 +1586,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 pass
         elif code in (EV_GPS_HW_ERROR, ):
             pi = PATH_MAIN_GPS_HW_ERROR
-        elif code in (EV_GPS_HAT_POWER_CYCLE):
+        elif code in (EV_GPS_HAT_POWER_CYCLE, ):
             pi = PATH_MAIN_GPS_POWER_CYCLE
         elif code in (EV_BLE_SCAN, ):
             pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
@@ -1773,6 +1773,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         #     self.resize(800, 600)
         #     self.showFullScreen()
         # lg.a("OK, finished booting GUI")
+
+
+        # useful to see the debug output terminal
+        if os.path.exists('/tmp/ddh_start_minimized'):
+            self.showMinimized()
 
 
 
