@@ -84,6 +84,7 @@ from utils.ddh_common import (
     PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, EV_GPS_HW_ERROR,
     PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK, ddh_config_get_language_index, linux_is_rpi, STR_EV_ERROR_REDIS,
     EV_GUI_ERROR_REDIS, EV_GUI_ERROR_POWER_SAH, STR_EV_ERROR_POWER_SAH, EV_GUI_ERROR_POWER_J4H, STR_EV_ERROR_POWER_J4H,
+    EV_GPS_HAT_POWER_CYCLE, PATH_MAIN_GPS_POWER_CYCLE,
 )
 import datetime
 import os
@@ -1585,6 +1586,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 pass
         elif code in (EV_GPS_HW_ERROR, ):
             pi = PATH_MAIN_GPS_HW_ERROR
+        elif code in (EV_GPS_HAT_POWER_CYCLE):
+            pi = PATH_MAIN_GPS_POWER_CYCLE
         elif code in (EV_BLE_SCAN, ):
             pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
         elif code in (

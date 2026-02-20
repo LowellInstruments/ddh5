@@ -21,7 +21,7 @@ from utils.ddh_common import (
     EV_GPS_IN_PORT,
     STR_EV_GPS_IN_PORT,
     ddh_this_process_needs_to_quit,
-    TMP_PATH_GPS_LAST_JSON, linux_is_rpi
+    TMP_PATH_GPS_LAST_JSON, linux_is_rpi, EV_GPS_HAT_POWER_CYCLE, STR_EV_GPS_HAT_POWER_CYCLE
 )
 import datetime
 import json
@@ -239,9 +239,9 @@ def ddh_gps_get_fix_upon_cold_boot():
         t_left = int(till - time.perf_counter())
         g = ddh_gps_get()
         if g:
-            lg.a(f"OK, cold boot, got first gps fix")
+            lg.a(f"OK, cold boot, got first position fix")
             return
-        lg.a(f"{t_left} seconds remaining GPS at boot")
+        lg.a(f"{t_left} seconds waiting at boot")
         time.sleep(1)
 
     lg.a("warning, cold boot, did NOT get GPS lock")
@@ -345,15 +345,19 @@ def _ddh_gps(ignore_gui):
             sys.exit(0)
 
 
-        # see need for power-cycling because of sixfab bug
+        # see need for HAT power-cycling because of SIXFAB bug
         if port_type == 'hat' and 'err_rmc_comma' in d.keys():
             k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
             r.setex(f'{k}_{int(time.time())}', 3600, 1)
             max_len_ls = 1000
             ls = list(r.scan_iter(f'{k}_*', count=max_len_ls))
-            lg.a('error comma n = {len(ls)}, port_ctrl = {port_ctrl}\n')
-            if len(ls) >= 10:
-                gps_hat_power_cycle_ddc(port_ctrl)
+            lg.a(f'error comma, n = {len(ls)}, port_ctrl = {port_ctrl}\n')
+            if len(ls) >= 25:
+                lg.a("warning: starting shield power-cycle")
+                app_state_set(EV_GPS_HAT_POWER_CYCLE, t_str(STR_EV_GPS_HAT_POWER_CYCLE))
+                r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 30, 1)
+                gps_hat_power_cycle_ddc(port_ctrl, use_print=False)
+                lg.a("warning: leaving shield power-cycle")
                 for i in ls:
                     r.delete(i)
 

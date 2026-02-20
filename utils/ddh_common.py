@@ -674,6 +674,7 @@ EV_BLE_HW_ERROR = '16'
 EV_GUI_ERROR_REDIS = '17'
 EV_GUI_ERROR_POWER_SAH = '18'
 EV_GUI_ERROR_POWER_J4H = '19'
+EV_GPS_HAT_POWER_CYCLE = '20'
 
 
 
@@ -697,7 +698,7 @@ STR_EV_BLE_HW_ERROR = 'no BLE service'
 STR_EV_ERROR_REDIS = 'error redis'
 STR_EV_ERROR_POWER_SAH = 'error power SAH'
 STR_EV_ERROR_POWER_J4H = 'error power J4H'
-
+STR_EV_GPS_HAT_POWER_CYCLE = 'power-cycling GPS'
 
 
 
@@ -884,6 +885,7 @@ PATH_MAIN_BLE_DL_LOW_BATTERY = f'{_p}/low_battery.png'
 PATH_MAIN_BLE_DL_RETRY = f'{_p}/sand_clock.png'
 PATH_MAIN_BLE_DL_PROGRESS = f'{_p}/dl2.png'
 PATH_MAIN_GPS_HW_ERROR = f'{_p}/gps_err.png'
+PATH_MAIN_GPS_POWER_CYCLE = f'{_p}/gps_cycle.png'
 
 
 
