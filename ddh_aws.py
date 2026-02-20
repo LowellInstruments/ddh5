@@ -65,11 +65,6 @@ def _ddh_aws_set_state(s):
 
 
 
-def ddh_aws_get_state():
-    return r.get(RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT)
-
-
-
 def ddh_write_timestamp_aws_sqs(k, v):
     assert k in ('aws', 'sqs')
     # v: 'ok', 'error', 'unknown'

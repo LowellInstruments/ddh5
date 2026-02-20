@@ -211,18 +211,6 @@ def ddh_gps_get_clock_sync_if_so():
 
 
 
-def ddh_gps_get_hat_firmware_version():
-    if using_dummy_gps:
-        return 'dummy_gps'
-    gfv = r.get(RD_DDH_GPS_NO_EXPIRES_HAT_GFV)
-    with open(LI_PATH_CELL_FW, 'w') as f:
-        # gfv: EG25GGBR07A08M2GMay 18 2022 20:48:14Authors: QCT
-        f.write(gfv)
-    return gfv
-
-
-
-
 def ddh_gps_get_fix_upon_cold_boot():
 
     # Wikipedia: GPS-Time-To-First-Fix for cold start is typ.

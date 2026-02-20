@@ -1516,7 +1516,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # refresh ICON CELL-WIFI in main tab left column less often
         k = RD_DDH_GUI_PERIODIC_CHECK_ICON_NET
         if not r.exists(k):
-            via = r.get(RD_DDH_NET_PROCESS_OUTPUT)
+            via = r.get(RD_DDH_NET_PROCESS_OUTPUT).decode()
             p = PATH_CELL_ICON_ERROR if via == 'none' else PATH_CELL_ICON_OK
             self.lbl_cell_wifi_img.setPixmap(QPixmap(p))
             # schedule next time we want this NET via obtention to happen
