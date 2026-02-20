@@ -49,7 +49,7 @@ from utils.ddh_common import (
 
 r = redis.Redis('localhost', port=6379)
 PERIOD_GPS_AT_BOOT_SECS = 600 if linux_is_rpi() else 10
-NUM_RMC_ERRORS_POWER_CYCLE = 300
+NUM_RMC_ERRORS_POWER_CYCLE = 1200
 PERIOD_GPS_NOTI_NUM_GPS_SAT = 1800
 p_name = NAME_EXE_GPS
 _skip_satellite_notification = 1
