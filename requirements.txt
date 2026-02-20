@@ -21,7 +21,8 @@ gsw~=3.6.20
 
 
 # on RPi, install PyQt6 via apt
-# apt install python3-pyqt6 pyqt6-dev-tools
+# apt install python3-pyqt6 pyqt6-dev-tools python3-pyqt6.qtwebengine
+
 
 
 
