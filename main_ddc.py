@@ -9,7 +9,7 @@ from gps.gps_adafruit import gps_adafruit_init
 from gps.gps_quectel import (
     gps_hat_detect_list_of_usb_ports,
     gps_hat_init, gps_hat_get_firmware_version, \
-    gps_power_cycle_ddc
+    gps_hat_power_cycle_ddc
 )
 from scripts.script_nadv import main_nadv
 from utils.ddh_common import (
@@ -269,7 +269,7 @@ def _menu_cb_gps_signal_quality():
         print('\nQUESTION: Do you want to power-cycle GPS shield? (y/n) -> ', end='')
         question = input().lower()
         if question in ('y', 'yes'):
-            gps_power_cycle_ddc(p_ctl)
+            gps_hat_power_cycle_ddc(p_ctl)
 
 
     # figure out the baudrate

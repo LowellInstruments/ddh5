@@ -23,7 +23,7 @@ from ddh_gps import (
     ddh_gps_get_fix_upon_cold_boot,
     ddh_gps_know_we_are_using_dummy,
     ddh_gps_get_clock_sync_if_so, ddh_gps_get,
-    ddh_app_check_operational_conditions
+    ddh_gps_check_app_operational_conditions
 )
 from ddh.ble_tdo import ble_download_tdo
 from ddh.macs import (
@@ -629,7 +629,7 @@ def _ddh_ble(ignore_gui):
 
 
         # see the rest non-GPSy APP conditions are OK
-        if not ddh_app_check_operational_conditions(g):
+        if not ddh_gps_check_app_operational_conditions(g):
             continue
 
 
