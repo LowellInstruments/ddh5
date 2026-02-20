@@ -270,13 +270,13 @@ def gui_setup_view(my_win):
         a.chk_rerun.setChecked(True)
 
     # test mode
-    a.lbl_testmode.setVisible(False)
+    a.frame_lbl_testmode.setVisible(False)
     if ddh_config_does_flag_file_download_test_mode_exist():
-        a.lbl_testmode.setVisible(True)
+        a.frame_lbl_testmode.setVisible(True)
 
 
     # dl statistics
-    a.lbl_summary_dl.setVisible(False)
+    a.frame_lbl_summary_dl.setVisible(False)
 
 
     # edit tab language dropdown
@@ -1625,7 +1625,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             else:
                 s = ''
             s = s.replace('mg_l', 'mg/l')
-            self.lbl_summary_dl.setVisible(s != '')
+            self.frame_lbl_summary_dl.setVisible(s != '')
             self.lbl_summary_dl.setText(s)
 
 
