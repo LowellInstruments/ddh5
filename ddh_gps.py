@@ -3,7 +3,7 @@ import setproctitle
 from tzlocal import get_localzone
 from gps.gps_adafruit import gps_adafruit_init
 from gps.gps_puck import gps_puck_detect_usb_port
-from gps.gps_quectel import gps_hat_get_firmware_version, gps_hat_init
+from gps.gps_quectel import gps_hat_get_firmware_version, gps_hat_init, gps_power_cycle_ddc
 from utils.redis import *
 from gps.gps import (
     gps_find_any_usb_port,
@@ -301,7 +301,7 @@ def _ddh_gps(ignore_gui):
     baud_rate = 115200 if port_type in ('hat', 'adafruit') else 4800
 
 
-    # set to redis the type of GPS antenna
+    # set to REDIS the type of GPS antenna
     if using_dummy_gps:
         lg.a(f'using dummy')
         r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'dummy')
@@ -337,11 +337,31 @@ def _ddh_gps(ignore_gui):
             gps_adafruit_init(port_nmea)
 
 
+    # see need to power-cycle GPS
+    k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
+    max_len_ls = 1000
+    ls = list(r.scan_iter(f'{k}_*', count=max_len_ls))
+    print(f'\ncurrent len(ls) = {len(ls)}, port_ctrl = {port_ctrl}\n')
+    if len(ls) >= 10:
+        gps_power_cycle_ddc(port_ctrl)
+        for i in ls:
+            r.delete(i)
+
+
     # GPS infinite loop
+    d = dict()
     while 1:
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name):
             sys.exit(0)
+
+
+        # see need for power-cycling because of sixfab bug
+        if port_type == 'hat' and 'err_rmc_comma' in d.keys():
+            k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
+            r.setex(f'{k}_{int(time.time())}', 3600, 1)
+            print('\n ** error_comma \n')
+
 
 
         # get bytes from hardware USB port
@@ -369,7 +389,8 @@ def _ddh_gps(ignore_gui):
                 lg.a('warning: too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
 
-            # remove entries when OK or when generated notification
+
+            # remove GPS error redis entries when OK or when generated notification
             if rv == 0 or len(ls) >= 10:
                 for i in ls:
                     r.delete(i)
@@ -389,15 +410,6 @@ def _ddh_gps(ignore_gui):
         else:
             if d_gga:
                 _set_redis_gps_fix_dict(d_gga)
-
-
-        # see need for power-cycling because of sixfab bug
-        if port_type == 'hat' and 'err_rmc_comma' in d.keys():
-            k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
-            r.setex(f'{k}_{int(time.time())}', 3600, 1)
-            print('error_comma')
-
-
 
 
 

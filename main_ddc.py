@@ -6,8 +6,11 @@ from os.path import exists
 import serial
 from gps.gps import gps_find_any_usb_port, gps_hardware_read
 from gps.gps_adafruit import gps_adafruit_init
-from gps.gps_quectel import gps_hat_detect_list_of_usb_ports, gps_hat_init, gps_hat_get_firmware_version, \
+from gps.gps_quectel import (
+    gps_hat_detect_list_of_usb_ports,
+    gps_hat_init, gps_hat_get_firmware_version, \
     gps_power_cycle_ddc
+)
 from scripts.script_nadv import main_nadv
 from utils.ddh_common import (
     ddh_get_path_to_folder_settings, ddh_config_load_file,
@@ -301,7 +304,7 @@ def _menu_cb_gps_signal_quality():
             ser_ctl.reset_input_buffer()
             time.sleep(1)
         except (Exception, ) as ex:
-            print(f'error: gps_power_cycle_ddc {ex}')
+            print(f'error: gps_power_cycle_ddc_0 -> {ex}')
         finally:
             if ser_ctl and ser_ctl.is_open:
                 ser_ctl.close()
