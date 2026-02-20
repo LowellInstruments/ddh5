@@ -690,7 +690,7 @@ STR_EV_BLE_DL_OK_NO_RERUN = "stopped & auto-wake OFF"
 STR_EV_GPS_HW_ERROR = 'need GPS'
 STR_NO_ASSIGNED_LOGGERS = 'no loggers assigned'
 STR_EV_GUI_BOOT = 'DDH starting'
-STR_EV_GPS_WAITING_BOOT = 'boot GPS, up to'
+STR_EV_GPS_WAITING_BOOT = 'boot GPS'
 STR_EV_BLE_SCAN = 'searching loggers'
 STR_EV_GPS_SYNC_CLOCK = 'syncing GPS time'
 STR_EV_BLE_DL_RETRY = 'retrying'
@@ -833,7 +833,7 @@ lang_msg_db = {
 def t_str(s):
     # putting this here allows for dynamic changing of language
     if s not in lang_msg_db.keys():
-        print(f"\033[31m** error, no translation for text '{s}'\033[0m")
+        print(f"\033[33m** warning, no translation for text '{s}'\033[0m")
         return s
     if g_lang == 'en':
         return s
