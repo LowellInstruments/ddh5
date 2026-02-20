@@ -57,3 +57,7 @@
 5.0.13  02/18/26
 
     fixed summary box units
+
+5.0.14  02/20/26
+
+    integrated GPS hat power-cycle in ddh_gps.py
