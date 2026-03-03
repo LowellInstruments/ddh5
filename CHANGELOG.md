@@ -61,3 +61,7 @@
 5.0.14  02/20/26
 
     integrated GPS hat power-cycle in ddh_gps.py
+
+5.0.15  03/03/26
+
+    removed the double frame in statistics summary box
