@@ -728,7 +728,7 @@ def _graph_process_n_draw(a, plot_reason=''):
                         ls_p.append(dp[i])
                         ls_t.append(dt[i])
 
-                s = 'haul summary\nTDO\n'
+                s = f'{sn}\nhaul summary\nTDO\n'
                 units_p = 'fathoms' if imp_or_metric == 'Imperial' else 'm'
                 units_t = 'F' if imp_or_metric == 'Imperial' else 'C'
                 if been_water:
@@ -768,7 +768,7 @@ def _graph_process_n_draw(a, plot_reason=''):
                     ls_do = _do
                     ls_dt = dt
 
-                s = 'haul summary\noxygen\n'
+                s = f'{sn}\nhaul summary\noxygen\n'
                 units_t = 'F' if imp_or_metric == 'Imperial' else 'C'
                 if been_water:
                     s += f'{t1}\n{t2}\n'
