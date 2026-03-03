@@ -290,7 +290,7 @@ async def ble_download_tdo(d):
 
 
     # format file-system
-    await asyncio.sleep(.1)
+    await asyncio.sleep(.5)
     rv = await lc.cmd_frm()
     _rae(rv, "frm")
     lg.a("FRM | OK")
