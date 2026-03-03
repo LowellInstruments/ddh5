@@ -65,3 +65,7 @@
 5.0.15  03/03/26
 
     removed the double frame in statistics summary box
+
+5.0.16  03/03/26
+
+    summary statistics box appears and disappears

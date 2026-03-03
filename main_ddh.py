@@ -1630,6 +1630,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             s = s.replace('mg_l', 'mg/l')
             self.frame_lbl_summary_dl.setVisible(s != '')
             self.lbl_summary_dl.setText(s)
+        else:
+            self.frame_lbl_summary_dl.setVisible(False)
 
 
 
