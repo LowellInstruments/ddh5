@@ -1673,10 +1673,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # show or not STATISTICS box
         if t_str(STR_EV_BLE_DL_OK) in self.lbl_main_txt.text():
             s = r.get(RD_DDH_GUI_GRAPH_STATISTICS)
-            if s:
-                s = s.decode()
-            else:
-                s = ''
+            s = s.decode() if s else ''
             s = s.replace('mg_l', 'mg/l')
             self.frame_lbl_summary_dl.setVisible(s != '')
             self.lbl_summary_dl.setText(s)
