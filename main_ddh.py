@@ -1,7 +1,6 @@
 import signal
 import sys
 from pathlib import Path
-import os
 import psutil
 import glob
 import pathlib
@@ -84,7 +83,9 @@ from utils.ddh_common import (
     PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, EV_GPS_HW_ERROR,
     PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK, ddh_config_get_language_index, linux_is_rpi, STR_EV_ERROR_REDIS,
     EV_GUI_ERROR_REDIS, EV_GUI_ERROR_POWER_SAH, STR_EV_ERROR_POWER_SAH, EV_GUI_ERROR_POWER_J4H, STR_EV_ERROR_POWER_J4H,
-    EV_GPS_HAT_POWER_CYCLE, PATH_MAIN_GPS_POWER_CYCLE, PATH_CLOUD_ICON_OK, PATH_CLOUD_ICON_ERROR,
+    EV_GPS_HAT_POWER_CYCLE, PATH_MAIN_GPS_POWER_CYCLE, PATH_CLOUD_ICON_OK, PATH_CLOUD_ICON_ERROR, STR_TAB_NAME_SETUP,
+    STR_TAB_NAME_GRAPHS, STR_TAB_NAME_ADVANCED, STR_TAB_NAME_MODELS, STR_TAB_NAME_NOTE,
+    STR_QUESTION_SAVE_EMPTY_LOGGER_LIST, STR_QUESTION_PURGE_HISTORY, STR_EV_GPS_SEARCHING,
 )
 import datetime
 import os
@@ -108,7 +109,6 @@ from utils.ddh_common import (
     ddh_get_path_to_folder_gui_res,
     ddh_get_path_to_db_history_file,
     ddh_does_do_not_rerun_file_flag_exist,
-    ddh_get_path_to_root_application_folder,
     ddh_get_local_software_version,
 )
 from ddh_log import lg_gui as lg
@@ -284,7 +284,7 @@ def gui_setup_view(my_win):
 
 
     # edit tab language dropdown
-    a.combo_language.addItems(["en", "pt", "fr", "ca", "pl", "sp"])
+    a.combo_language.addItems(["en", "pt", "sp"])
 
 
     # edit tab configuration dropdowns
@@ -494,7 +494,7 @@ def gui_setup_buttons(my_app):
 
 
 
-def gui_tabs_hide_settings(ui):
+def gui_tabs_hide_setup(ui):
     # find tab ID, index and keep ref
     w = ui.tabs.findChild(QWidget, "tab_setup")
     i = ui.tabs.indexOf(w)
@@ -503,9 +503,9 @@ def gui_tabs_hide_settings(ui):
 
 
 
-def gui_show_edit_tab(ui):
+def gui_tabs_show_setup(ui):
     icon = QIcon("ddh/gui/res/icon_setup.png")
-    ui.tabs.addTab(ui.tab_edit_wgt_ref, icon, " Setup")
+    ui.tabs.addTab(ui.tab_edit_wgt_ref, icon, f" {t_str(STR_TAB_NAME_SETUP)}")
     w = ui.tabs.findChild(QWidget, "tab_setup")
     i = ui.tabs.indexOf(w)
     ui.tabs.setCurrentIndex(i)
@@ -535,7 +535,7 @@ def gui_tabs_hide_advanced(ui):
 
 
 
-def gui_hide_graph_tab(ui):
+def gui_tabs_hide_graph(ui):
     if not linux_is_rpi():
         return
     if os.path.exists('/home/pi/li/.ddh_graph_enabler.json'):
@@ -548,27 +548,27 @@ def gui_hide_graph_tab(ui):
 
 
 
-def gui_show_graph_tab(ui):
+def gui_tabs_show_graph(ui):
     icon = QIcon("ddh/gui/res/icon_graph.ico")
-    ui.tabs.addTab(ui.tab_graph_wgt_ref, icon, " Graphs")
+    ui.tabs.addTab(ui.tab_graph_wgt_ref, icon, f" {t_str(STR_TAB_NAME_GRAPHS)}")
     w = ui.tabs.findChild(QWidget, "tab_graph")
     i = ui.tabs.indexOf(w)
     ui.tabs.setCurrentIndex(i)
 
 
 
-def gui_show_advanced_tab(ui):
+def gui_tabs_show_advanced(ui):
     icon = QIcon("ddh/gui/res/icon_tweak.png")
-    ui.tabs.addTab(ui.tab_advanced_wgt_ref, icon, " Advanced")
+    ui.tabs.addTab(ui.tab_advanced_wgt_ref, icon, f" {t_str(STR_TAB_NAME_ADVANCED)}")
     w = ui.tabs.findChild(QWidget, "tab_advanced")
     i = ui.tabs.indexOf(w)
     ui.tabs.setCurrentIndex(i)
 
 
 
-def gui_show_models_tab(ui):
+def gui_tabs_show_models(ui):
     icon = QIcon("ddh/gui/res/icon_waves.png")
-    ui.tabs.addTab(ui.tab_map_wgt_ref, icon, "  Models")
+    ui.tabs.addTab(ui.tab_map_wgt_ref, icon, f" {t_str(STR_TAB_NAME_MODELS)}")
     w = ui.tabs.findChild(QWidget, "tab_map")
     i = ui.tabs.indexOf(w)
     ui.tabs.setCurrentIndex(i)
@@ -583,9 +583,9 @@ def gui_tabs_hide_note(ui):
 
 
 
-def gui_show_note_tab_delete_black_macs(ui):
+def gui_tabs_show_note_delete_black_macs(ui):
     icon = QIcon("ddh/gui/res/icon_exclamation.png")
-    ui.tabs.addTab(ui.tab_note_wgt_ref, icon, " Note")
+    ui.tabs.addTab(ui.tab_note_wgt_ref, icon, f" {t_str(STR_TAB_NAME_NOTE)}")
     ui.lbl_note.setText(STR_NOTE_PURGE_BLACKLIST)
     w = ui.tabs.findChild(QWidget, "tab_note")
     i = ui.tabs.indexOf(w)
@@ -892,7 +892,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def click_btn_edit_tab_close_wo_save(self):
         lg.a('edit tab: pressed the close without save button')
         self.tab_edit_hide = not self.tab_edit_hide
-        gui_tabs_hide_settings(self)
+        gui_tabs_hide_setup(self)
         self.tabs.setCurrentIndex(0)
 
 
@@ -905,7 +905,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             ans_mb = QMessageBox.question(
                 self,
                 'Question',
-                "Do you want to save an empty logger list?",
+                t_str(STR_QUESTION_SAVE_EMPTY_LOGGER_LIST),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No)
             if ans_mb == QMessageBox.StandardButton.No:
@@ -1003,7 +1003,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_btn_adv_purge_lo(self):
-        gui_show_note_tab_delete_black_macs(self)
+        gui_tabs_show_note_delete_black_macs(self)
 
 
 
@@ -1024,7 +1024,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def click_btn_purge_his_db(self):
         """ deletes contents in history database """
 
-        s = "sure to purge history?"
+        s = t_str(STR_QUESTION_PURGE_HISTORY)
         if gui_confirm_by_user(s):
             p = ddh_get_path_to_db_history_file()
             db = DbHis(p)
@@ -1056,7 +1056,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         s = self.lbl_note.text()
 
         # only affects purge_macs note, not BLE GPS one
-        if s == STR_NOTE_PURGE_BLACKLIST:
+        if s == t_str(STR_NOTE_PURGE_BLACKLIST):
             try:
                 path_fol = ddh_get_path_to_folder_macs_black()
                 n = self.lst_macs_note_tab.count()
@@ -1108,7 +1108,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         s = self.lbl_note.text()
 
         # only affects purge_macs note, not BLE GPS one
-        if s == STR_NOTE_PURGE_BLACKLIST:
+        if s == t_str(STR_NOTE_PURGE_BLACKLIST):
             try:
                 lg.a(f'smart lock-out, user removed ALL macs')
                 slo_delete_all()
@@ -1179,7 +1179,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         elif ev.key() == Qt.Key.Key_2:
             lg.a("user pressed box side button 2")
-            gui_show_note_tab_delete_black_macs(self)
+            gui_tabs_show_note_delete_black_macs(self)
 
         elif ev.key() == Qt.Key.Key_3:
             lg.a("user pressed box side button 3")
@@ -1250,12 +1250,12 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.context_menu.exec(p)
 
 
-    def gui_show_edit_tab(self, _):
-        gui_show_edit_tab(self)
+    def _gui_tabs_show_edit(self, _):
+        gui_tabs_show_setup(self)
 
 
-    def gui_show_advanced_tab(self, _):
-        gui_show_advanced_tab(self)
+    def _gui_tabs_show_advanced(self, _):
+        gui_tabs_show_advanced(self)
 
 
     def click_btn_map_next(self, _):
@@ -1412,7 +1412,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # update DATE and UPTIME fields, also a COUNTER for incremental stuff
         self.lbl_date_txt.setText(datetime.datetime.now().strftime("%b %d %H:%M:%S"))
         _up = datetime.timedelta(seconds=time.perf_counter() - _g_ts_gui_boot)
-        self.lbl_uptime.setText("uptime " + str(_up).split(".")[0])
+        self.lbl_uptime.setText(str(_up).split(".")[0])
         i = int(time.time()) % 4
 
 
@@ -1470,9 +1470,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         else:
             self.lbl_gps.setText("-\n-")
             self.lbl_gps_sat.setText("-")
-            self.lbl_gps_antenna_txt.setText('searching')
+            self.lbl_gps_antenna_txt.setText(t_str(STR_EV_GPS_SEARCHING))
         ns = r.get(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES)
-        ns_str = f'{ns.decode()} satellites' if ns else '-'
+        ns_str = f'{ns.decode()} sat.' if ns else '-'
         self.lbl_gps_sat.setText(ns_str)
 
 
@@ -1703,7 +1703,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # tabs
-        gui_tabs_hide_settings(self)
+        gui_tabs_hide_setup(self)
         gui_tabs_hide_advanced(self)
         gui_tabs_hide_note(self)
         gui_tabs_populate_history(self)
@@ -1751,8 +1751,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         cm_action_advanced_tab = self.context_menu.addAction("advanced tab")
         cm_action_minimize.triggered.connect(self.showMinimized)
         cm_action_quit.triggered.connect(self.close_my_ddh)
-        cm_action_edit_tab.triggered.connect(self.gui_show_edit_tab)
-        cm_action_advanced_tab.triggered.connect(self.gui_show_advanced_tab)
+        cm_action_edit_tab.triggered.connect(self._gui_tabs_show_edit)
+        cm_action_advanced_tab.triggered.connect(self._gui_tabs_show_advanced)
 
 
         # left panel

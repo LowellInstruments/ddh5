@@ -120,10 +120,6 @@ I don't think we will ever use the RPC version of this. So much work. But, meh, 
 
 Stores the ``advanced`` tab configuration setting to re-run logger after being downloaded or not.
 
-### settings/language.toml
-
-Indicates the language the DDH should display its text with. Under development.
-
 ### settings/all_macs.toml
 
 Contains all the logger MACs of the 3-letters project name this current DDH is part of.
