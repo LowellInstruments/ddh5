@@ -27,7 +27,8 @@ from utils.ddh_common import (
     ddh_get_path_to_db_aws_status_file,
     ddh_config_get_vessel_name,
     ddh_config_get_one_aws_credential_value,
-    LI_PATH_LAST_YEAR_AWS_TEMPLATE, ddh_this_process_needs_to_quit, linux_is_rpi)
+    LI_PATH_LAST_YEAR_AWS_TEMPLATE,
+    ddh_this_process_needs_to_quit, linux_is_rpi)
 from ddh_log import lg_aws as lg
 
 
@@ -36,7 +37,7 @@ from ddh_log import lg_aws as lg
 # ===================================================================
 # ddh_aws
 #   - dequeues AWS-CP requests from BLE download (LID + track files)
-#   - dequeues AWS-cop requests from CNV for new CSV files
+#   - dequeues AWS-CP requests from CNV for new CSV files
 #   - attends AWS sync requests from GUI or periodically
 #   - also updates AWS redis state
 # ===================================================================
