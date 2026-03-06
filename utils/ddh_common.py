@@ -459,7 +459,7 @@ def ddh_config_get_logger_mac_from_sn(sn):
 
 
 def ddh_config_get_language_index():
-    # 0 en 1 pt 2 fr 3 ca 4 pl 5 sp
+    # 0 en 1 pt 2 sp
     try:
         return cfg['behavior']['language']
     except KeyError:
@@ -469,7 +469,7 @@ def ddh_config_get_language_index():
 
 
 def ddh_config_get_language_str_by_index(i):
-    d_lang = {0: 'en', 1: 'pt', 2: 'fr', 3: 'ca', 4: 'pl', 5: 'sp'}
+    d_lang = {0: 'en', 1: 'pt', 2: 'sp'}
     return d_lang.get(i, 'en')
 
 
@@ -680,17 +680,14 @@ EV_GPS_HAT_POWER_CYCLE = '20'
 
 
 STR_EV_CONF_BAD = 'error config, see log'
-STR_EV_GPS_IN_PORT = 'we are in port'
 STR_EV_BLE_CONNECTING = 'connecting'
 STR_EV_BLE_DL_NO_NEED = 'no new in-water data'
 STR_EV_BLE_DL_PROGRESS = 'downloading'
 STR_EV_BLE_DL_OK = 'done'
 STR_EV_BLE_LOW_BATTERY = "low battery!"
 STR_EV_BLE_DL_OK_NO_RERUN = "stopped & auto-wake OFF"
-STR_EV_GPS_HW_ERROR = 'need GPS'
 STR_NO_ASSIGNED_LOGGERS = 'no loggers assigned'
 STR_EV_GUI_BOOT = 'DDH starting'
-STR_EV_GPS_WAITING_BOOT = 'boot GPS'
 STR_EV_BLE_SCAN = 'searching loggers'
 STR_EV_GPS_SYNC_CLOCK = 'syncing GPS time'
 STR_EV_BLE_DL_RETRY = 'retrying'
@@ -698,7 +695,18 @@ STR_EV_BLE_HW_ERROR = 'no BLE service'
 STR_EV_ERROR_REDIS = 'error redis'
 STR_EV_ERROR_POWER_SAH = 'error power SAH'
 STR_EV_ERROR_POWER_J4H = 'error power J4H'
+STR_EV_GPS_IN_PORT = 'we are in port'
+STR_EV_GPS_HW_ERROR = 'need GPS'
+STR_EV_GPS_WAITING_BOOT = 'boot GPS'
 STR_EV_GPS_HAT_POWER_CYCLE = 'power-cycling GPS'
+STR_EV_GPS_SEARCHING = 'searching'
+STR_TAB_NAME_SETUP = 'Setup'
+STR_TAB_NAME_GRAPHS = 'Graphs'
+STR_TAB_NAME_ADVANCED = 'Advanced'
+STR_TAB_NAME_MODELS = 'Models'
+STR_TAB_NAME_NOTE = 'Note'
+STR_QUESTION_SAVE_EMPTY_LOGGER_LIST = "Do you want to save an empty logger list?"
+STR_QUESTION_PURGE_HISTORY = "sure to purge history?"
 
 
 
@@ -708,123 +716,74 @@ g_lang = ddh_config_get_language_str_by_index(g_lang_idx)
 
 lang_msg_db = {
     STR_EV_BLE_SCAN: {
-        'fr': 'cherchant sondes',
-        'ca': 'buscant loggers',
-        'pl': 'earchingsay orfay ogerslay',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_BLE_CONNECTING: {
-        'fr': 'en cours de connexion',
-        'ca': 'connectant',
-        'pl': 'onnectinglay oggerlay',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_GPS_SYNC_CLOCK: {
-        'fr': 'synchronisation GPS',
-        'ca': 'esperant GPS',
-        'pl': 'ycningay GPA imetay',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_GUI_BOOT: {
-        'fr': "--",
-        'ca': '--',
-        'pl': 'ootingbay',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_BLE_DL_PROGRESS: {
-        'fr': "téléchargement en cours",
-        'ca': '--',
-        'pl': "ownloadingday oggerlay",
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_BLE_DL_OK: {
-        'fr': "complété",
-        'ca': '--',
-        'pl': "kosay",
-        'sp': '--',  # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_BLE_DL_NO_NEED: {
-        'fr': "complété",
-        'ca': '--',
-        'pl': 'ownloadinglay oggerlay oneday',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_BLE_DL_OK_NO_RERUN: {
-        'fr': "arrêté, auto-réveille éteint",
-        'ca': '--',
-        'pl': 'oppedstay autowakeyay offyay',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_BLE_DL_RETRY: {
-        'fr': "nouvel essai",
-        'ca': '--',
-        'pl': 'etryingray oggerlay',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_GPS_HW_ERROR: {
-        'fr': "aucun signal GPS",
-        'ca': '--',
-        'pl': 'eednay GPS',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
-    },
+        'pt': '--',
+        'sp': '--'    },
     STR_EV_GPS_WAITING_BOOT: {
-        'fr': "en attente du GPS",
-        'ca': '--',
-        'pl': 'yncingay GPS imetay illstay aitingway ootbay',
-        'sp': '--',  # spanish
-        'pt': '--'  # portuguese
-    },
+        'pt': '--',
+        'sp': '--'    },
     STR_EV_BLE_HW_ERROR: {
         'pt': '--',
-        'fr': "erreur du signal radio",
-        'ca': '--',
-        'pl': 'oggerlay errorlay adioray',
-        'sp': '--',  # spanish
+        'sp': '--'
     },
     STR_EV_CONF_BAD: {
-        'fr': "erreur de config, voir log",
-        'ca': '--',
-        'pl': "DDS adbay onfcay",
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_GPS_IN_PORT: {
-        'fr': "dans port",
-        'ca': '--',
-        'pl': "eway arelay inlay ortpay",
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_BLE_LOW_BATTERY: {
-        'fr': "batterie faible!",
-        'ca': '--',
-        'pl': 'oggerlay owlay atterybay!',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_NO_ASSIGNED_LOGGERS: {
-        'fr': "aucune sonde attribué",
-        'ca': '--',
-        'pl': 'onay oggerlay assignedlay',
-        'sp': '--', # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
     },
     STR_EV_GPS_HAT_POWER_CYCLE: {
-        'fr': "--",
-        'ca': '--',
-        'pl': '--',
-        'sp': '--',  # spanish
-        'pt': '--'  # portuguese
+        'pt': '--',
+        'sp': '--'
+    },
+    STR_TAB_NAME_SETUP: {
+            'pt': '--',
+            'sp': '--'
     },
 }
 
