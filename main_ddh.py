@@ -85,7 +85,9 @@ from utils.ddh_common import (
     EV_GUI_ERROR_REDIS, EV_GUI_ERROR_POWER_SAH, STR_EV_ERROR_POWER_SAH, EV_GUI_ERROR_POWER_J4H, STR_EV_ERROR_POWER_J4H,
     EV_GPS_HAT_POWER_CYCLE, PATH_MAIN_GPS_POWER_CYCLE, PATH_CLOUD_ICON_OK, PATH_CLOUD_ICON_ERROR, STR_TAB_NAME_SETUP,
     STR_TAB_NAME_GRAPHS, STR_TAB_NAME_ADVANCED, STR_TAB_NAME_MODELS, STR_TAB_NAME_NOTE,
-    STR_QUESTION_SAVE_EMPTY_LOGGER_LIST, STR_QUESTION_PURGE_HISTORY, STR_EV_GPS_SEARCHING,
+    STR_QUESTION_SAVE_EMPTY_LOGGER_LIST, STR_QUESTION_PURGE_HISTORY, STR_EV_GPS_SEARCHING, STR_TAB_NAME_INFORMATION,
+    STR_TAB_NAME_MORE_INFO, STR_TAB_NAME_MAPS_NEW, STR_DESC_INTERNAL, STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
+    STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL, STR_DESC_HAULS_SINGLE,
 )
 import datetime
 import os
@@ -227,14 +229,22 @@ def gui_setup_view(my_win):
     a = my_win
     a.setupUi(a)
     a.setWindowTitle("Lowell Instruments' Deck Data Hub")
-    a.tabs.setTabIcon(0, QIcon("ddh/gui/res/icon_info.png"))
-    a.tabs.setTabIcon(1, QIcon("ddh/gui/res/icon_setup.png"))
-    a.tabs.setTabIcon(2, QIcon("ddh/gui/res/icon_exclamation.png"))
-    a.tabs.setTabIcon(3, QIcon("ddh/gui/res/icon_history.ico"))
-    a.tabs.setTabIcon(4, QIcon("ddh/gui/res/icon_tweak.png"))
-    a.tabs.setTabIcon(5, QIcon("ddh/gui/res/icon_graph.ico"))
-    a.tabs.setTabIcon(6, QIcon("ddh/gui/res/icon_waves.png"))
-    a.tabs.setTabIcon(7, QIcon("ddh/gui/res/icon_maps.png"))
+    i = gui_tabs_get_index('tab_info')
+    a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_info.png"))
+    i = gui_tabs_get_index('tab_setup')
+    a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_setup.png"))
+    i = gui_tabs_get_index('tab_note')
+    a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_exclamation.png"))
+    i = gui_tabs_get_index('tab_more_info')
+    a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_history.ico"))
+    i = gui_tabs_get_index('tab_advanced')
+    a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_tweak.png"))
+    i = gui_tabs_get_index('tab_graph')
+    a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_graph.ico"))
+    i = gui_tabs_get_index('tab_map')
+    a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_waves.png"))
+    i = gui_tabs_get_index('tab_maps_new')
+    a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_maps.png"))
     a.setWindowIcon(QIcon("ddh/gui/res/icon_lowell.ico"))
 
     # new icons
@@ -384,8 +394,9 @@ def gui_tabs_populate_history(my_app):
     a.tbl_his.horizontalHeader().resizeSection(1, 300)
     a.tbl_his.horizontalHeader().setStretchLastSection(True)
 
+
     # columns' title labels
-    labels = ["logger", "result", "rerun"]
+    labels = ["logger", t_str(STR_DESC_RESULT), "re-run"]
     a.tbl_his.setHorizontalHeaderLabels(labels)
 
     # show row numbers
@@ -453,7 +464,6 @@ def gui_setup_buttons(my_app):
 
 
     # BUTTON clicks
-    # a.btn_expand.clicked.connect(a.click_btn_expand)
     a.btn_known_clear.clicked.connect(a.click_btn_clear_known_mac_list)
     a.btn_see_all.clicked.connect(a.click_btn_see_all_macs)
     # see current macs
@@ -493,31 +503,97 @@ def gui_setup_buttons(my_app):
 
 
 
+def gui_tabs_get_index(s):
+    d = {
+        # main tab
+        'tab_info': 0,
+        # edit tab
+        'tab_setup': 1,
+        'tab_note': 2,
+        # details tab
+        'tab_more_info': 3,
+        'tab_advanced': 4,
+        'tab_graph': 5,
+        'tab_map': 6,
+        'tab_maps_new': 7
+    }
+    return d[s]
+
+
+
 
 def gui_tabs_hide_setup(ui):
-    # find tab ID, index and keep ref
-    w = ui.tabs.findChild(QWidget, "tab_setup")
-    i = ui.tabs.indexOf(w)
-    ui.tab_edit_wgt_ref = ui.tabs.widget(i)
-    ui.tabs.removeTab(i)
+    i = gui_tabs_get_index('tab_setup')
+    ui.tabs.setTabVisible(i, False)
+
+
+
+def gui_translate(ui):
+
+    i = gui_tabs_get_index('tab_info')
+    ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_info.png"))
+    ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_INFORMATION)}")
+    ui.tabs.setTabVisible(i, True)
+
+    i = gui_tabs_get_index('tab_setup')
+    ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_setup.png"))
+    ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_SETUP)}")
+    ui.tabs.setTabVisible(i, False)
+
+    i = gui_tabs_get_index('tab_note')
+    ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_exclamation.png"))
+    ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_NOTE)}")
+    ui.tabs.setTabVisible(i, False)
+
+    i = gui_tabs_get_index('tab_more_info')
+    ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_history.ico"))
+    ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_MORE_INFO)}")
+    ui.tabs.setTabVisible(i, True)
+
+    i = gui_tabs_get_index('tab_advanced')
+    ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_tweak.png"))
+    ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_ADVANCED)}")
+    ui.tabs.setTabVisible(i, False)
+
+    i = gui_tabs_get_index('tab_graph')
+    ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_graph.ico"))
+    ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_GRAPHS)}")
+    ui.tabs.setTabVisible(i, True)
+
+    i = gui_tabs_get_index('tab_map')
+    ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_waves.png"))
+    ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_MODELS)}")
+    ui.tabs.setTabVisible(i, True)
+
+    i = gui_tabs_get_index('tab_maps_new')
+    ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_maps.png"))
+    ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_MAPS_NEW)}")
+    ui.tabs.setTabVisible(i, False)
+
+    ui.btn_shortcuts.setText('👆')
+    ui.btn_g_reset.setText(t_str(STR_DESC_RESET))
+    ui.lbl_hauls.setText(t_str(STR_DESC_HAULS))
+    ui.cb_g_cycle_haul.clear()
+    ui.cb_g_cycle_haul.addItem(t_str(STR_DESC_HAULS_LAST))
+    ui.cb_g_cycle_haul.addItem(t_str(STR_DESC_HAULS_ALL))
+    ui.cb_g_cycle_haul.addItem(t_str(STR_DESC_HAULS_SINGLE))
+
+
+
 
 
 
 def gui_tabs_show_setup(ui):
-    icon = QIcon("ddh/gui/res/icon_setup.png")
-    ui.tabs.addTab(ui.tab_edit_wgt_ref, icon, f" {t_str(STR_TAB_NAME_SETUP)}")
-    w = ui.tabs.findChild(QWidget, "tab_setup")
-    i = ui.tabs.indexOf(w)
+    i = gui_tabs_get_index('tab_setup')
+    ui.tabs.setTabVisible(i, True)
     ui.tabs.setCurrentIndex(i)
 
 
 
 
 def gui_tabs_hide_map(ui):
-    w = ui.tabs.findChild(QWidget, "tab_map")
-    i = ui.tabs.indexOf(w)
-    ui.tab_map_wgt_ref = ui.tabs.widget(i)
-    ui.tabs.removeTab(i)
+    i = gui_tabs_get_index('tab_map')
+    ui.tabs.setTabVisible(i, False)
 
 
 
@@ -527,59 +603,35 @@ def gui_tabs_hide_models_next_btn(ui):
 
 
 def gui_tabs_hide_advanced(ui):
-    # find tab ID, index and keep ref
-    w = ui.tabs.findChild(QWidget, "tab_advanced")
-    i = ui.tabs.indexOf(w)
-    ui.tab_advanced_wgt_ref = ui.tabs.widget(i)
-    ui.tabs.removeTab(i)
+    i = gui_tabs_get_index('tab_advanced')
+    ui.tabs.setTabVisible(i, False)
 
 
 
 def gui_tabs_hide_graph(ui):
-    if not linux_is_rpi():
-        return
-    if os.path.exists('/home/pi/li/.ddh_graph_enabler.json'):
-        return
-    # find tab ID, index and keep ref
-    w = ui.tabs.findChild(QWidget, "tab_graph")
-    i = ui.tabs.indexOf(w)
-    ui.tab_graph_wgt_ref = ui.tabs.widget(i)
-    ui.tabs.removeTab(i)
+    i = gui_tabs_get_index('tab_graph')
+    ui.tabs.setTabVisible(i, False)
 
 
 
 def gui_tabs_show_graph(ui):
-    icon = QIcon("ddh/gui/res/icon_graph.ico")
-    ui.tabs.addTab(ui.tab_graph_wgt_ref, icon, f" {t_str(STR_TAB_NAME_GRAPHS)}")
-    w = ui.tabs.findChild(QWidget, "tab_graph")
-    i = ui.tabs.indexOf(w)
+    i = gui_tabs_get_index('tab_graph')
+    ui.tabs.setTabVisible(i, True)
     ui.tabs.setCurrentIndex(i)
 
 
 
 def gui_tabs_show_advanced(ui):
-    icon = QIcon("ddh/gui/res/icon_tweak.png")
-    ui.tabs.addTab(ui.tab_advanced_wgt_ref, icon, f" {t_str(STR_TAB_NAME_ADVANCED)}")
-    w = ui.tabs.findChild(QWidget, "tab_advanced")
-    i = ui.tabs.indexOf(w)
-    ui.tabs.setCurrentIndex(i)
-
-
-
-def gui_tabs_show_models(ui):
-    icon = QIcon("ddh/gui/res/icon_waves.png")
-    ui.tabs.addTab(ui.tab_map_wgt_ref, icon, f" {t_str(STR_TAB_NAME_MODELS)}")
-    w = ui.tabs.findChild(QWidget, "tab_map")
-    i = ui.tabs.indexOf(w)
+    # re-run and these things
+    i = gui_tabs_get_index('tab_advanced')
+    ui.tabs.setTabVisible(i, True)
     ui.tabs.setCurrentIndex(i)
 
 
 
 def gui_tabs_hide_note(ui):
-    w = ui.tabs.findChild(QWidget, "tab_note")
-    i = ui.tabs.indexOf(w)
-    ui.tab_note_wgt_ref = ui.tabs.widget(i)
-    ui.tabs.removeTab(i)
+    i = gui_tabs_get_index('tab_note')
+    ui.tabs.setTabVisible(i, True)
 
 
 
@@ -825,23 +877,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def click_btn_clear_known_mac_list(self):
         self.lst_mac_org.clear()
         self.lst_mac_dst.clear()
-
-
-    def click_btn_expand(self):
-        self.frame_2of2_expanded = not self.frame_2of2_expanded
-        ls_controls_disappear = (
-            self.lbl_gps_antenna_img,
-            self.lbl_gps_antenna_txt,
-            self.lbl_ble_antenna_img,
-            self.lbl_ble_antenna_txt,
-            self.lbl_cell_wifi_img,
-            self.lbl_cell_wifi_txt
-        )
-        for i in ls_controls_disappear:
-            i.setVisible(self.frame_2of2_expanded)
-        s = '↑' if self.frame_2of2_expanded else '↓'
-        self.btn_expand.setText(s)
-
 
 
 
@@ -1436,7 +1471,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-        # refresh TEXT in main tab left column
+        # refresh LEFT COLUMN in main tab
         ls_fields_to_refresh = {
             RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE: None,
             RD_DDH_BLE_NO_EXPIRES_ANTENNA: self.lbl_ble_antenna_txt,
@@ -1447,7 +1482,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             v = r.get(rd_key)
             v = v.decode() if v else ''
 
-            # pre-processing
+            # pre-processing key history table
             if rd_key == RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE:
                 if v:
                     gui_tabs_populate_history(self)
@@ -1455,12 +1490,26 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                     r.delete(rd_key)
                 continue
 
+            # pre-processing key ble antenna
+            if rd_key == RD_DDH_BLE_NO_EXPIRES_ANTENNA:
+                if v == 'external':
+                    v = 'USB'
+                if v == 'internal':
+                    v = t_str(STR_DESC_INTERNAL)
+
+
+            # pre-processing key AWS
+            if rd_key == RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT:
+                if v == 'busy':
+                    v = t_str(STR_DESC_BUSY)
+
+
             # do not move this
             field.setText(v)
 
 
 
-        # update GPS field in "Details" tab
+        # update GPS fields
         g = ddh_gps_get()
         if g:
             lat, lon, dt, speed = g
@@ -1516,12 +1565,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # refresh ICON CELL-WIFI in main tab left column less often
         k = RD_DDH_GUI_PERIODIC_CHECK_ICON_NET
         if not r.exists(k):
-            via = r.get(RD_DDH_NET_PROCESS_OUTPUT).decode()
+            via = r.get(RD_DDH_NET_PROCESS_OUTPUT)
+            via = via.decode() if via else ''
             p = PATH_CELL_ICON_ERROR if via == 'none' else PATH_CELL_ICON_OK
             self.lbl_cell_wifi_img.setPixmap(QPixmap(p))
             # schedule next time we want this NET via obtention to happen
             r.setex(k, 10, 1)
-            if via in ("wifi", "wi-fi"):
+            if via in ("wifi", "wi-fi") or not linux_is_rpi():
                 ssid = gui_get_my_current_wlan_ssid()
                 self.lbl_cell_wifi_txt.setText(ssid)
 
@@ -1789,6 +1839,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # useful to see the debug output terminal
         if os.path.exists('/tmp/ddh_start_minimized'):
             self.showMinimized()
+
+
+        gui_translate(self)
 
 
 
