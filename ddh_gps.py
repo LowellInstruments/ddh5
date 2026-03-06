@@ -313,7 +313,7 @@ def _ddh_gps(ignore_gui):
         rv = gps_hat_init(port_ctrl)
         if rv:
             lg.a(f'OK activate hat NMEA stream on {port_nmea}')
-            r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'internal')
+            r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
         else:
             lg.a(f'error activate hat NMEA stream on {port_nmea}')
 
@@ -362,7 +362,7 @@ def _ddh_gps(ignore_gui):
                     rv = gps_hat_init(port_ctrl)
                     if rv:
                         lg.a(f'OK activate hat NMEA stream on {port_nmea}')
-                        r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'internal')
+                        r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
                     else:
                         lg.a(f'error activate hat NMEA stream on {port_nmea}')
             else:

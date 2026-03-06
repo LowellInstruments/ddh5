@@ -69,3 +69,14 @@
 5.0.16  03/03/26
 
     summary statistics box appears and disappears
+
+5.0.17  03/06/26
+
+    added portuguese translation
+    added spanish translation
+    to set it, config.toml 
+    [behavior] 
+    language = 0 -> English
+    language = 1 -> Portuguese
+    language = 2 -> Spanish
+

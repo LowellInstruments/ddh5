@@ -19,7 +19,7 @@ from utils.redis import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_G
 from utils.ddh_common import (
     calculate_path_to_folder_within_dl_files_from_mac_address,
     get_total_number_of_hauls,
-    ddh_config_get_logger_mac_from_sn, linux_is_rpi
+    ddh_config_get_logger_mac_from_sn, linux_is_rpi, STR_ERROR_GRAPH_SN_NOT_IN_CONFIG, t_str
 )
 from ddh_log import lg_gra as lg
 
@@ -269,7 +269,7 @@ def _graph_process_n_draw(a, plot_reason=''):
             sn = sn[2:]
         mac = ddh_config_get_logger_mac_from_sn(sn)
         if not mac:
-            raise GraphException(f'error, chosen SN not in config.toml')
+            raise GraphException(t_str(STR_ERROR_GRAPH_SN_NOT_IN_CONFIG))
         mac = mac.replace(':', '-')
         if not _graph_check_mac_has_dl_files(mac, fol_ls):
             raise GraphException(f'error, no files for SN {sn} mac {mac}')

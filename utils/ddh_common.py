@@ -249,12 +249,12 @@ def linux_is_rpi(i=""):
 
 
 def linux_is_rpi3():
-    return linux_is_rpi(3)
+    return linux_is_rpi('3')
 
 
 
 def linux_is_rpi4():
-    return linux_is_rpi(4)
+    return linux_is_rpi('4')
 
 
 
@@ -447,6 +447,8 @@ def ddh_config_get_logger_sn_from_mac(mac):
     for k, v in cfg['monitored_macs'].items():
         if mac.upper() == k.upper():
             return v.upper()
+    return None
+
 
 
 def ddh_config_get_logger_mac_from_sn(sn):
@@ -455,6 +457,7 @@ def ddh_config_get_logger_mac_from_sn(sn):
     for k, v in cfg['monitored_macs'].items():
         if sn.upper() == v.upper():
             return k.upper()
+    return None
 
 
 
@@ -700,13 +703,26 @@ STR_EV_GPS_HW_ERROR = 'need GPS'
 STR_EV_GPS_WAITING_BOOT = 'boot GPS'
 STR_EV_GPS_HAT_POWER_CYCLE = 'power-cycling GPS'
 STR_EV_GPS_SEARCHING = 'searching'
+STR_TAB_NAME_INFORMATION = 'Information'
+STR_TAB_NAME_NOTE = 'Note'
 STR_TAB_NAME_SETUP = 'Setup'
 STR_TAB_NAME_GRAPHS = 'Graphs'
 STR_TAB_NAME_ADVANCED = 'Advanced'
 STR_TAB_NAME_MODELS = 'Models'
-STR_TAB_NAME_NOTE = 'Note'
+STR_TAB_NAME_MAPS_NEW = 'Maps'
+STR_TAB_NAME_MORE_INFO = 'Details'
 STR_QUESTION_SAVE_EMPTY_LOGGER_LIST = "Do you want to save an empty logger list?"
 STR_QUESTION_PURGE_HISTORY = "sure to purge history?"
+STR_DESC_INTERNAL = 'internal'
+STR_DESC_BUSY = 'busy'
+STR_DESC_RESULT = 'result'
+STR_DESC_RESET = 'reset'
+STR_ERROR_GRAPH_SN_NOT_IN_CONFIG = 'error, chosen SN not in config.toml'
+STR_DESC_HAULS = 'hauls'
+STR_DESC_HAULS_LAST = 'last'
+STR_DESC_HAULS_ALL = 'all'
+STR_DESC_HAULS_SINGLE = 'single'
+
 
 
 
@@ -714,77 +730,148 @@ g_lang_idx = ddh_config_get_language_index()
 g_lang = ddh_config_get_language_str_by_index(g_lang_idx)
 
 
+
 lang_msg_db = {
     STR_EV_BLE_SCAN: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'procurando coletors',
+        'sp': 'buscando loggers'
     },
     STR_EV_BLE_CONNECTING: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'conectando',
+        'sp': 'conectando'
     },
     STR_EV_GPS_SYNC_CLOCK: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'sinc. a hora do GPS',
+        'sp': 'sinc. fecha GPS'
     },
     STR_EV_GUI_BOOT: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'iniciando DDH',
+        'sp': 'iniciando DDH'
     },
     STR_EV_BLE_DL_PROGRESS: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'baixando',
+        'sp': 'bajando'
     },
     STR_EV_BLE_DL_OK: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'feito',
+        'sp': 'hecho'
     },
     STR_EV_BLE_DL_NO_NEED: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'sem dados em água',
+        'sp': 'sin datos en agua'
     },
     STR_EV_BLE_DL_OK_NO_RERUN: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'auto-wake desativada',
+        'sp': 'auto-wake desactivado'
     },
     STR_EV_BLE_DL_RETRY: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'retentando',
+        'sp': 'reintentando'
     },
     STR_EV_GPS_HW_ERROR: {
-        'pt': '--',
-        'sp': '--'    },
+        'pt': 'sem GPS',
+        'sp': 'sin GPS'
+    },
     STR_EV_GPS_WAITING_BOOT: {
-        'pt': '--',
-        'sp': '--'    },
+        'pt': 'iniciando GPS',
+        'sp': 'iniciando GPS'
+    },
+    STR_EV_GPS_SEARCHING: {
+        'pt': 'procurando',
+        'sp': 'buscando'
+    },
     STR_EV_BLE_HW_ERROR: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'sem BLE',
+        'sp': 'sin BLE'
     },
     STR_EV_CONF_BAD: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'erro de configuração',
+        'sp': 'error de configuración'
     },
     STR_EV_GPS_IN_PORT: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'no porto',
+        'sp': 'en puerto'
     },
     STR_EV_BLE_LOW_BATTERY: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'bateria fraca',
+        'sp': 'batería baja'
     },
     STR_NO_ASSIGNED_LOGGERS: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'nenhum registrador atribuído',
+        'sp': 'loggers no assignados'
     },
     STR_EV_GPS_HAT_POWER_CYCLE: {
-        'pt': '--',
-        'sp': '--'
+        'pt': 'ciclagem de energia GPS HAT',
+        'sp': 'reiniciando HAT GPS'
+    },
+    STR_TAB_NAME_INFORMATION: {
+        'pt': 'Informação',
+        'sp': 'Información'
+    },
+    STR_TAB_NAME_NOTE: {
+        'pt': 'Observação',
+        'sp': 'Nota'
     },
     STR_TAB_NAME_SETUP: {
-            'pt': '--',
-            'sp': '--'
+        'pt': 'Conf.',
+        'sp': 'Conf.'
     },
+    STR_TAB_NAME_GRAPHS: {
+        'pt': 'Graficos',
+        'sp': 'Gráficos'
+    },
+    STR_TAB_NAME_ADVANCED: {
+        'pt': 'Avançado',
+        'sp': 'Avanzado'
+    },
+    STR_TAB_NAME_MODELS: {
+        'pt': 'Modelos',
+        'sp': 'Modelos'
+    },
+    STR_TAB_NAME_MAPS_NEW: {
+        'pt': 'Mapas',
+        'sp': 'Mapas'
+    },
+    STR_TAB_NAME_MORE_INFO: {
+        'pt': 'Detalhes',
+        'sp': 'Detalles'
+    },
+    STR_DESC_INTERNAL: {
+        'pt': 'interno',
+        'sp': 'interno'
+    },
+    STR_DESC_BUSY: {
+        'pt': 'ocupado',
+        'sp': 'ocupado'
+    },
+    STR_DESC_RESULT: {
+        'pt': 'resultado',
+        'sp': 'resultado'
+    },
+    STR_DESC_RESET: {
+        'pt': 'reiniciar',
+        'sp': 'reiniciar'
+    },
+    STR_ERROR_GRAPH_SN_NOT_IN_CONFIG: {
+        'pt': 'error: número de série não está no config.toml',
+        'sp': 'error: número de serie no esta en config.toml'
+    },
+    STR_DESC_HAULS: {
+        'pt': 'lances',
+        'sp': 'lances'
+    },
+    STR_DESC_HAULS_LAST: {
+        'pt': 'último',
+        'sp': 'último'
+    },
+    STR_DESC_HAULS_ALL: {
+        'pt': 'todos',
+        'sp': 'todos'
+    },
+    STR_DESC_HAULS_SINGLE: {
+        'pt': 'uno',
+        'sp': 'uno'
+    }
 }
 
 
