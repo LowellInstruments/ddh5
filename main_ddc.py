@@ -687,7 +687,9 @@ def _ddc_run_check():
             return 0
         port_ctrl = ls[-2]
         gfv, _ = gps_hat_get_firmware_version(port_ctrl)
-        return gfv and b'2022' in gfv
+        is_2022 = gfv and b'2022' in gfv
+        is_2025 = gfv and b'2025' in gfv
+        return is_2022 or is_2025
 
 
 
@@ -752,6 +754,7 @@ def _ddc_run_check():
     ok_issue_20240315 = sh('cat /boot/issue.txt | grep 2024-03-15') == 0
     ok_issue_20230503 = sh('cat /boot/issue.txt | grep 2023-05-03') == 0
     ok_issue_20220922 = sh('cat /boot/issue.txt | grep 2022-09-22') == 0
+    ok_issue_20251124 = sh('cat /boot/issue.txt | grep 2025-11-24') == 0
     is_rpi3 = sh("cat /proc/cpuinfo | grep 'aspberry Pi 3'") == 0
     ok_hostname = sh('hostname | grep raspberrypi') == 0
     flag_vp_gps_puck1 = sh(f'lsusb | grep {VP_GPS_PUCK_1}') == 0
@@ -864,7 +867,9 @@ def _ddc_run_check():
 
     if not (ok_issue_20230503 or
             ok_issue_20220922 or
-            ok_issue_20240315):
+            ok_issue_20240315 or
+            ok_issue_20251124
+    ):
         _e('bad issue.txt file')
         rv += 1
     if not ok_hostname:

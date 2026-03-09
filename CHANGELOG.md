@@ -80,3 +80,7 @@
     language = 1 -> Portuguese
     language = 2 -> Spanish
 
+5.0.18  03/09/26
+
+    DDC fixed /boot/issues and cell firmware to detect 2025
+
