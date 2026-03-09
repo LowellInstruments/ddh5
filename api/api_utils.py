@@ -462,8 +462,6 @@ def api_get_gps():
         with open(TMP_PATH_GPS_LAST_JSON, 'r') as f:
             # translate to float
             d = json.load(f)
-            d['lat'] = float(d['lat'])
-            d['lon'] = float(d['lon'])
             return d
     except (Exception, ) as ex:
         print(f'{CTT_API_ER}: cannot api_get_gps -> {ex}')
