@@ -84,3 +84,8 @@
 
     DDC fixed /boot/issues and cell firmware to detect 2025
 
+5.0.19  03/09/26
+
+    started testing API
+    bumped API version to 2.0.0
+    API -> fixed GPS interface names, alive DDH processes names

@@ -36,17 +36,25 @@ def api_get_api_version():
         return 'error_get_api_version'
 
 
+
+
 def api_dws_stop():
     return _sh('sudo systemctl stop dwagent.service')
+
+
 
 
 def api_dws_start():
     return _sh('sudo systemctl start dwagent.service')
 
 
+
+
 def api_dws_status():
     # 0 when active, 1 otherwise
     return _sh('systemctl is-active --quiet dwagent.service')
+
+
 
 
 def _sh(c):
@@ -68,11 +76,15 @@ def _sh(c):
     return rv
 
 
+
+
 def api_linux_is_rpi():
     if platform.system() == 'Windows':
         return False
     # better than checking architecture
     return os.uname().nodename in ('raspberrypi', 'rpi')
+
+
 
 
 def api_linux_is_process_running(name) -> bool:
@@ -81,28 +93,42 @@ def api_linux_is_process_running(name) -> bool:
     return rv.returncode == 0
 
 
+
+
 _r = str(pathlib.Path.home())
 _r += '/li' if api_linux_is_rpi() else '/PycharmProjects'
+
+
 
 
 def api_get_full_ddh_config_file_path():
     return _r + '/ddh/settings/config.toml'
 
 
+
+
 def api_get_folder_path_root():
     return _r + '/ddh'
+
+
 
 
 def api_ddt_get_folder_path_root():
     return _r + '/ddt'
 
 
+
+
 def api_ddh_get_folder_dl_files():
     return _r + '/ddh/dl_files'
 
 
+
+
 def api_get_ddh_folder_path_macs_black():
     return _r + '/ddh/ddh/macs/black'
+
+
 
 
 def _get_remote_commit(s):
@@ -122,6 +148,8 @@ def _get_remote_commit(s):
         return a[0]
 
 
+
+
 def _get_local_commit(s):
     # main_api.py runs in DDH base folder
     assert s in ('ddh', 'ddt')
@@ -131,16 +159,24 @@ def _get_local_commit(s):
     return s
 
 
+
+
 def api_get_git_commit_ddh_remote():
     return _get_remote_commit('ddh')
+
+
 
 
 def api_get_git_commit_ddh_local():
     return _get_local_commit('ddh')
 
 
+
+
 def api_get_git_commit_mat_remote():
     return _get_remote_commit('mat')
+
+
 
 
 def _get_git_commit_mat_local_from_file(s):
@@ -153,16 +189,24 @@ def _get_git_commit_mat_local_from_file(s):
     return commit_id
 
 
+
+
 def api_get_git_commit_mat_local():
     return _get_git_commit_mat_local_from_file('mat')
+
+
 
 
 def api_get_git_commit_ddt_local():
     return _get_local_commit('ddt')
 
 
+
+
 def api_get_git_commit_ddt_remote():
     return _get_remote_commit('ddt')
+
+
 
 
 def _get_iface_ip(iface):
@@ -178,8 +222,12 @@ def _get_iface_ip(iface):
     return ip
 
 
+
+
 def api_get_ip_vpn():
     return _get_iface_ip('wg0')
+
+
 
 
 def api_get_fw_cell_version():
@@ -189,6 +237,8 @@ def api_get_fw_cell_version():
     except (Exception, ) as ex:
         print(f'error, api_get_fw_cell_version -> {ex}')
         return ''
+
+
 
 
 def api_get_timezone():
@@ -201,6 +251,8 @@ def api_get_timezone():
     return f'{CTT_API_ER}: get_local_timezone()'
 
 
+
+
 def api_get_kernel():
     c = 'uname -r'
     rv = _sh(c)
@@ -209,8 +261,12 @@ def api_get_kernel():
     return f'{CTT_API_ER}: api_get_kernel()'
 
 
+
+
 def api_get_utc_epoch():
     return int(time.time())
+
+
 
 
 def api_get_ddh_sw_version():
@@ -221,18 +277,26 @@ def api_get_ddh_sw_version():
         return 'error_get_version'
 
 
+
+
 def api_get_shellinabox_active():
     c = 'systemctl is-active shellinabox'
     rv = _sh(c)
     return int(rv.returncode == 0)
 
 
+
+
 def api_get_ip_wlan():
     return _get_iface_ip('wlan0')
 
 
+
+
 def api_get_ip_cell():
     return _get_iface_ip('ppp0')
+
+
 
 
 def api_get_uptime():
@@ -250,11 +314,15 @@ def api_get_uptime():
     return s
 
 
+
+
 def api_get_uptime_secs():
     c = "awk '{print $1}' /proc/uptime"
     rv = _sh(c)
     s = rv.stdout.decode().replace('\n', '')
     return int(float(s))
+
+
 
 
 def _get_crontab(s):
@@ -272,12 +340,18 @@ def _get_crontab(s):
     return 1
 
 
+
+
 def api_get_crontab_ddh():
     return _get_crontab('ddh')
 
 
+
+
 def api_get_crontab_api():
     return _get_crontab('api')
+
+
 
 
 def api_set_crontab(on_flag):
@@ -305,11 +379,19 @@ def api_set_crontab(on_flag):
         return rv.returncode == 0
 
 
+
+
 def api_get_running_ddh():
     rv_h = _sh(f'ps -aux | grep -w {NAME_EXE_DDH} | grep -v grep')
+    rv_s = _sh('ps -aux | grep -w ddh_ble | grep -v grep')
     return {
         'ddh': int(rv_h.returncode == 0),
+        'dds': int(rv_s.returncode == 0),
+        'ddh_controller': 0,
+        'dds_controller': 0
     }
+
+
 
 
 def api_get_wlan_mbps():
@@ -321,6 +403,8 @@ def api_get_wlan_mbps():
     # only keep numbers
     s = re.sub("[^0-9]", "", s)
     return int(s)
+
+
 
 
 
@@ -338,6 +422,8 @@ def api_get_disk_capacity():
 
 
 
+
+
 def api_get_internet_via():
     try:
         with open(TMP_PATH_INET_VIA, 'r') as f:
@@ -345,6 +431,8 @@ def api_get_internet_via():
     except (Exception, ) as ex:
         print(f'{CTT_API_ER}: cannot api_get_internet_via -> {ex}')
         return None
+
+
 
 
 def api_get_ble_state():
@@ -365,6 +453,8 @@ def api_get_ble_state():
         rv = _sh(f'{_p} hci1')
         d['hci1_running'] = 'UP RUNNING' in rv.stdout.decode()
     return d
+
+
 
 
 def api_get_gps():
@@ -392,10 +482,20 @@ def api_get_ble_iface():
 def api_get_gps_iface():
     try:
         port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
+
+        # translate from GPS redis names to API names
+        if port_type:
+            if port_type == 'hat':
+                port_type = 'internal'
+            else:
+                port_type = 'external'
+
         return port_type
     except (Exception, ) as ex:
         print(f'{CTT_API_ER}: cannot api_get_gps_iface -> {ex}')
         return None
+
+
 
 
 def api_get_commits():
@@ -415,10 +515,14 @@ def api_get_commits():
     }
 
 
+
+
 def api_get_logger_mac_reset_files():
     p = api_get_folder_path_root()
     ff = glob.glob(f'{p}/ddh/tweak/*.rst')
     return ff
+
+
 
 
 def api_read_aws_sqs_ts():
@@ -436,8 +540,12 @@ def api_read_aws_sqs_ts():
     return j
 
 
+
+
 def api_read_aws_grouped():
     return os.path.exists(LI_PATH_GROUPED_S3_FILE_FLAG)
+
+
 
 
 def extract_filename_from_content_disposition_header(cd):
@@ -448,6 +556,8 @@ def extract_filename_from_content_disposition_header(cd):
     if len(s) == 0:
         return None
     return s[0].replace('"', '')
+
+
 
 
 def req(url):
@@ -467,6 +577,8 @@ def req(url):
         return rsp
 
 
+
+
 def get_files_from_server(pr, sn, ip, addr, port):
     url = f'http://{addr}:{port}/ddh_provision/v1?prj={pr}&sn={sn}&ip={ip}'
     rsp = req(url)
@@ -477,6 +589,8 @@ def get_files_from_server(pr, sn, ip, addr, port):
         with open(dst, 'wb') as f:
             f.write(rsp.content)
         return dst
+
+
 
 
 def api_send_email_crash():
@@ -518,8 +632,12 @@ def _api_get_mac_address(iface: str):
 
 
 
+
+
 def api_get_mac_address_eth0():
     return _api_get_mac_address('eth0')
+
+
 
 
 def api_get_mac_address_wlan0():

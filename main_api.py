@@ -376,12 +376,16 @@ async def ep_clear_lock_out_time():
     return {'ddh_clear_lock_out_time': CTT_API_OK}
 
 
+
+
 @app.get("/cron_ena")
 async def ep_crontab_enable():
     if not api_linux_is_rpi():
         return {'cron_ena': 'not RPi, not enabling crontab'}
     api_set_crontab(1)
     return {'cron_ena': api_get_crontab_ddh()}
+
+
 
 
 @app.get("/cron_dis")
@@ -392,9 +396,13 @@ async def ep_crontab_disable():
     return {'cron_dis': api_get_crontab_ddh()}
 
 
+
+
 @app.get("/api_version")
 async def ep_api_version():
     return {'api_version': api_get_api_version()}
+
+
 
 
 @app.get("/rpi_temperature")
@@ -485,10 +493,14 @@ async def ep_rpi_temperature():
 #     return {'provision': CTT_API_OK}
 
 
+
+
 @app.get("/test_crash")
 async def ep_api_test_crash():
     # just lose it
     os._exit(-1)
+
+
 
 
 @app.get("/dws_start")
@@ -499,12 +511,16 @@ async def ep_api_dws_start():
     return {'dws_start': CTT_API_OK}
 
 
+
+
 @app.get("/dws_stop")
 async def ep_api_dws_stop():
     rv = api_dws_stop()
     if rv.returncode:
         return {'dws_stop': CTT_API_ER}
     return {'dws_stop': CTT_API_OK}
+
+
 
 
 @app.get("/dws_status")
@@ -527,10 +543,14 @@ def _alarm_api_crash(n):
         api_send_email_crash()
 
 
+
+
 def main_api():
     # docs at http://0.0.0.0:port/docs
     setproctitle.setproctitle(NAME_EXE_API)
     uvicorn.run(app, host="0.0.0.0", port=DDH_PORT_API)
+
+
 
 
 def controller_main_api():
