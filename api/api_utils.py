@@ -469,7 +469,7 @@ def api_get_gps():
             # v4 gave
             # {"lat": "41.6394", "lon": "-70.9203", "gps_time": "2026-03-09 19:56:17", "speed": "0.0"}
             t = d['gps_time']
-            d['gps-time'] = t.replace('T', ' ').replace('Z', '')
+            d['gps_time'] = t.replace('T', ' ').replace('Z', '')
             return d
     except (Exception, ) as ex:
         print(f'{CTT_API_ER}: cannot api_get_gps -> {ex}')
