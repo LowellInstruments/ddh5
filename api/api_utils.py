@@ -383,12 +383,12 @@ def api_set_crontab(on_flag):
 
 def api_get_running_ddh():
     rv_h = _sh(f'ps -aux | grep -w {NAME_EXE_DDH} | grep -v grep')
-    # rv_s = _sh('ps -aux | grep -w ddh_ble | grep -v grep')
+    rv_s = _sh('ps -aux | grep -w ddh_ble | grep -v grep')
     return {
         'ddh': int(rv_h.returncode == 0),
-        # 'dds': int(rv_s.returncode == 0),
-        # 'ddh_controller': 0,
-        # 'dds_controller': 0
+        'dds': int(rv_s.returncode == 0),
+        'ddh_controller': 0,
+        'dds_controller': 0
     }
 
 
@@ -462,6 +462,14 @@ def api_get_gps():
         with open(TMP_PATH_GPS_LAST_JSON, 'r') as f:
             # translate to float
             d = json.load(f)
+            d['lat'] = float(d['lat'])
+            d['lon'] = float(d['lon'])
+            # v5 gave
+            # {"lat": "+41.610100", "lon": "-70.609300", "gps_time": "2026-03-09T19:55:32Z", "speed": "0.0"}
+            # v4 gave
+            # {"lat": "41.6394", "lon": "-70.9203", "gps_time": "2026-03-09 19:56:17", "speed": "0.0"}
+            t = d['gps_time']
+            d['gps-time'] = t.replace('T', ' ').replace('Z', '')
             return d
     except (Exception, ) as ex:
         print(f'{CTT_API_ER}: cannot api_get_gps -> {ex}')
