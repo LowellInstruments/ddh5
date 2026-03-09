@@ -383,12 +383,12 @@ def api_set_crontab(on_flag):
 
 def api_get_running_ddh():
     rv_h = _sh(f'ps -aux | grep -w {NAME_EXE_DDH} | grep -v grep')
-    rv_s = _sh('ps -aux | grep -w ddh_ble | grep -v grep')
+    # rv_s = _sh('ps -aux | grep -w ddh_ble | grep -v grep')
     return {
         'ddh': int(rv_h.returncode == 0),
-        'dds': int(rv_s.returncode == 0),
-        'ddh_controller': 0,
-        'dds_controller': 0
+        # 'dds': int(rv_s.returncode == 0),
+        # 'ddh_controller': 0,
+        # 'dds_controller': 0
     }
 
 
