@@ -89,8 +89,7 @@ def _ddh_net(ignore_gui):
         time.sleep(1)
         if not r.exists(RD_DDH_NET_PROCESS_OUTPUT):
             via = _net()
-            r.set(RD_DDH_NET_PROCESS_OUTPUT, via)
-            r.expire(RD_DDH_NET_PROCESS_OUTPUT, 60)
+            r.setex(RD_DDH_NET_PROCESS_OUTPUT, 10, via)
 
 
 
