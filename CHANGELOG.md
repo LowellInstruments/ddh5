@@ -89,3 +89,7 @@
     started testing API
     bumped API version to 2.0.0
     API -> fixed GPS interface names, alive DDH processes names
+
+5.0.20  03/10/26
+
+    changed frequency of low-satellites notification

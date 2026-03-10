@@ -8,7 +8,7 @@ PRE = 'ddh:timecache:'
 
 
 
-def _pre(k):
+def _add_prefix(k):
     if k.startswith(PRE):
         return k
     return f'{PRE}{k}'
@@ -18,14 +18,13 @@ def _pre(k):
 def annotate_time_this_occurred(k, t):
     if t <= 0:
         return
-    k = _pre(k)
-    r.set(k, 1)
-    r.expire(k, t)
+    k = _add_prefix(k)
+    r.setex(k, t, 1)
 
 
 
 def is_it_time_to(k, t):
-    k = _pre(k)
+    k = _add_prefix(k)
     if r.exists(k):
         # not enough time passed since last occurrence
         return False
@@ -34,11 +33,10 @@ def is_it_time_to(k, t):
     return True
 
 
-# todo: maybe remove all this file and use REDIS
 
 
 def query_is_it_time_to(k):
-    return not r.exists(_pre(k))
+    return not r.exists(_add_prefix(k))
 
 
 

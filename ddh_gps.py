@@ -52,7 +52,6 @@ PERIOD_GPS_AT_BOOT_SECS = 600 if linux_is_rpi() else 10
 NUM_RMC_ERRORS_POWER_CYCLE = 1200
 PERIOD_GPS_NOTI_NUM_GPS_SAT = 1800
 p_name = NAME_EXE_GPS
-_skip_satellite_notification = 1
 using_dummy_gps = os.path.exists(LI_PATH_GPS_DUMMY)
 g_ls_macs_mon = ddh_config_get_list_of_monitored_macs()
 
@@ -128,12 +127,18 @@ def _ddh_gps_get():
     # get from redis the number of satellites notification
     ns = r.get(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES)
     ns = int(ns.decode()) if ns else 0
-    global _skip_satellite_notification
-    if 0 < ns < 5 and is_it_time_to('SQS_gps_num_satellites', PERIOD_GPS_NOTI_NUM_GPS_SAT):
-        if _skip_satellite_notification:
-            _skip_satellite_notification = 0
-        else:
+    k = RD_DDH_GPS_LIST_LOW_NUMBER_SATELLITES
+    if 0 < ns < 5:
+        r.setex(f'{k}_{int(time.time())}', 3600, 1)
+
+
+    # generate alarm or not, check every hour
+    if is_it_time_to("check_alarm_number_of_satellites", 3600):
+        ls = list(r.scan_iter(f'{k}_*', count=10))
+        if len(ls) >= 5:
             notify_ddh_number_of_gps_satellites(ns)
+        for i in ls:
+            r.delete(i)
 
 
     # get from redis the GPS fix
@@ -216,11 +221,11 @@ def ddh_gps_get_fix_upon_cold_boot():
     # Wikipedia: GPS-Time-To-First-Fix for cold start is typ.
     # 2 to 5 minutes, warm <= 45 secs, hot <= 22 secs
 
-    r.set(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT, 1)
-    r.expire(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT, PERIOD_GPS_AT_BOOT_SECS)
+    p = PERIOD_GPS_AT_BOOT_SECS
+    r.setex(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT, p, 1)
     app_state_set(EV_GPS_WAITING_BOOT, 'GPS boot')
-    lg.a(f"boot, wait up to {PERIOD_GPS_AT_BOOT_SECS} seconds")
-    till = time.perf_counter() + PERIOD_GPS_AT_BOOT_SECS
+    lg.a(f"boot, wait up to {p} seconds")
+    till = time.perf_counter() + p
 
     while time.perf_counter() < till:
         t_left = int(till - time.perf_counter())
@@ -243,8 +248,7 @@ def ddh_gps_get_fix_upon_cold_boot():
 
 def _set_redis_gps_number_of_satellites(d):
     if d and 'ns' in d.keys():
-        r.set(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES, d['ns'])
-        r.expire(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES, 60)
+        r.setex(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES, 60, d['ns'])
 
 
 
@@ -259,8 +263,7 @@ def _set_redis_gps_fix_dict(d: dict):
         #     "sentence": "$GPGGA,184028.163,,,,,0,00,,,M,0.0,M,,0000*55"
         # }
         j = json.dumps(d)
-        r.set(RD_DDH_GPS_FIX_POSITION, j)
-        r.expire(RD_DDH_GPS_FIX_POSITION, 5)
+        r.setex(RD_DDH_GPS_FIX_POSITION, 5, j)
     else:
         lg.a(f"warning, _send_dict_to_redis discarded sentence {d['sentence']}")
 
@@ -269,8 +272,7 @@ def _set_redis_gps_fix_dict(d: dict):
 def _set_redis_gps_speed(d: dict):
     if d and 'speed' in d.keys():
         s = d['speed']
-        r.set(RD_DDH_GPS_FIX_SPEED, s)
-        r.expire(RD_DDH_GPS_FIX_SPEED, 2)
+        r.setex(RD_DDH_GPS_FIX_SPEED, 2, s)
 
 
 
