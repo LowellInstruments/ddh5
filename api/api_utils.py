@@ -658,3 +658,11 @@ def api_get_mac_address_wlan0():
 
 if __name__ == '__main__':
     api_send_email_crash()
+
+
+    # Failed to validate object due to the found value not matching the expected type in the following cases:
+    # $input.last_gps.lat: "+41.610100" != (string & (Integer | Float)),
+    # $input.gps_iface_used: "hat" != ("external" | "internal" | "puck" | null),
+    # $input.running.dds: undefined != ("0" | "1"),
+    # $input.running.ddh_controller: undefined != ("0" | "1"),
+    # $input.running.dds_controller: undefined != ("0" | "1")
