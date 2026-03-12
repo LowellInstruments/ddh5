@@ -1,8 +1,10 @@
 import redis
+from utils.ddh_common import exp_get_skip_slo
 from utils.redis import RD_DDH_SLO_LS
 
 
 
+DISABLE_SLO = exp_get_skip_slo() == 1
 r = redis.Redis('localhost', port=6379)
 
 
@@ -14,6 +16,10 @@ def slo_add(mac):
     #       - downloaded OK
     #       - HBW told us no need to download
     #       - too many errors
+    if DISABLE_SLO:
+        slo_delete_all()
+        print(f'** warning: SLO disabled in config.toml, not working with mac {mac}')
+        return
     k = f"{RD_DDH_SLO_LS}{mac}"
     r.setex(k, 120, 1)
 

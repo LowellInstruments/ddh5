@@ -18,7 +18,7 @@ from utils.ddh_common import (
     TESTMODE_FILENAME_PREFIX,
     calculate_path_to_folder_within_dl_files_from_mac_address,
     ddh_config_does_flag_file_download_test_mode_exist,
-    exp_get_conf_dox, exp_debug_skip_hbw, linux_is_rpi,
+    exp_get_conf_dox, exp_get_skip_hbw, linux_is_rpi,
 )
 from ddh_log import lg_ble as lg
 
@@ -103,7 +103,7 @@ async def ble_download_dox(d):
 
     # feature has-logger-been-in-water
     flag_ignore_hbw = ddh_get_template_of_path_of_hbw_flag_file().format(mac)
-    if exp_debug_skip_hbw() != 1:
+    if exp_get_skip_hbw() != 1:
         if state == 'running':
             if v >= MIN_VERSION_HBW_CMD:
                 if os.path.exists(flag_ignore_hbw):
@@ -123,7 +123,7 @@ async def ble_download_dox(d):
         else:
             lg.a('logger NOT running, not sending HBW command')
     else:
-        lg.a("warning: not sending command Has-Been-in-Water, it's disabled in configuration file")
+        lg.a("warning: not sending HBW command, disabled in configuration file")
 
 
     rv = await lc.cmd_sws(g)
