@@ -5,7 +5,7 @@ import time
 
 from ddh.slo import slo_add
 from utils.ddh_common import (
-    ddh_get_path_to_folder_macs, ddh_config_get_forget_time_seconds,
+    ddh_get_path_to_folder_macs, ddh_config_get_forget_time_seconds, exp_get_override_ft,
 )
 from ddh_log import lg_ble as lg
 
@@ -15,7 +15,10 @@ from ddh_log import lg_ble as lg
 # ---------------------------------------------
 
 
+# OVERRIDE_FT 0 is disabled, 1 overwrites with 15, very short
+OVERRIDE_FT = exp_get_override_ft() == 1
 PERIOD_MACS_ORANGE_SECS = 15
+
 
 
 def macs_color_show_at_boot():
@@ -58,6 +61,11 @@ def _add_mac(c, mac):
     ft = ddh_config_get_forget_time_seconds()
     if c == "orange":
         ft = PERIOD_MACS_ORANGE_SECS
+    else:
+        # when black
+        if OVERRIDE_FT:
+            lg.a("** warning: OVERRIDE_FT")
+            ft = PERIOD_MACS_ORANGE_SECS
     t = int(time.time()) + ft
     fol = str(ddh_get_path_to_folder_macs() / c)
     mac = mac.replace(":", "-")

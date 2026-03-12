@@ -93,3 +93,9 @@
 5.0.20  03/10/26
 
     changed frequency of low-satellites notification
+
+
+5.0.21  03/12/26
+
+    option to disable smart lock-out by config.toml [experimenta] skip_slo = 1
+    option to disable color macs by config.toml [experimental] override_ft = 1
