@@ -45,4 +45,4 @@ hook_gps_error_measurement_forced = 0
 # custom_side_buttons_debounce_time = 2
 use_skip_hbw = 1
 skip_slo = 0
-override_ft = 1
+override_ft = 0
