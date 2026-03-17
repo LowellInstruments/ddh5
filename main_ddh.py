@@ -1471,7 +1471,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def _cb_timer_gui_one_second(self):
 
         # update DATE and UPTIME fields, also a COUNTER for incremental stuff
-        self.lbl_date_txt.setText(datetime.datetime.now().strftime("%b %d %H:%M:%S"))
+        self.lbl_date_txt.setText(datetime.datetime.now().strftime(" %b %d %H:%M:%S"))
         _up = datetime.timedelta(seconds=time.perf_counter() - _g_ts_gui_boot)
         self.lbl_uptime.setText(str(_up).split(".")[0])
         i = int(time.time()) % 4
