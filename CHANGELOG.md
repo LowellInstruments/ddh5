@@ -99,3 +99,7 @@
 
     option to disable smart lock-out by config.toml [experimenta] skip_slo = 1
     option to disable color macs by config.toml [experimental] override_ft = 1
+
+5.0.22  03/17/26
+
+    added DDH power hat icon

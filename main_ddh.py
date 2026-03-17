@@ -20,7 +20,11 @@ from ddh.graph_draw import graph_request
 from ddh.preferences import preferences_set_models_index
 from ddh_gps import ddh_gps_get
 from ddh.buttons import ddh_create_thread_buttons
-from ddh.notifications_v2 import notify_via_sms, notify_ddh_alive, notify_error_sw_crash
+from ddh.notifications_v2 import (
+    notify_via_sms,
+    notify_ddh_alive,
+    notify_error_sw_crash
+)
 from ddh.slo import slo_delete, slo_delete_all
 from mat.linux import linux_is_process_running_strict
 from utils.redis import (
@@ -41,7 +45,7 @@ from utils.redis import (
     RD_DDH_GUI_RV,
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
-    RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG
+    RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -76,18 +80,28 @@ from utils.ddh_common import (
     PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG, PATH_GPS_ANTENNA_ICON_START,
     PATH_BLE_ANTENNA_ICON_START, PATH_GPS_ANTENNA_ICON_OK,
     PATH_GPS_ANTENNA_ICON_ERROR, PATH_BLE_ANTENNA_ICON_ERROR,
-    PATH_BLE_ANTENNA_ICON_OK, PATH_MAIN_BOOT, PATH_MAIN_NO_LOGGERS_ASSIGNED, EV_NO_ASSIGNED_LOGGERS,
-    PATH_MAIN_CONF_BAD, EV_GPS_IN_PORT, PATH_MAIN_IN_PORT, EV_BLE_CONNECTING, EV_BLE_DL_ERROR, EV_BLE_DL_NO_NEED,
-    EV_BLE_LOW_BATTERY, EV_BLE_DL_RETRY, PATH_MAIN_BLE_CONNECTING, PATH_MAIN_BLE_DL_OK, PATH_MAIN_BLE_DL_ERROR,
-    PATH_MAIN_BLE_DL_OK_NO_RERUN, PATH_MAIN_BLE_DL_NO_NEED, PATH_MAIN_BLE_DL_LOW_BATTERY, PATH_MAIN_BLE_DL_RETRY,
-    PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS, EV_GPS_HW_ERROR,
-    PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK, ddh_config_get_language_index, linux_is_rpi, STR_EV_ERROR_REDIS,
-    EV_GUI_ERROR_REDIS, EV_GUI_ERROR_POWER_SAH, STR_EV_ERROR_POWER_SAH, EV_GUI_ERROR_POWER_J4H, STR_EV_ERROR_POWER_J4H,
-    EV_GPS_HAT_POWER_CYCLE, PATH_MAIN_GPS_POWER_CYCLE, PATH_CLOUD_ICON_OK, PATH_CLOUD_ICON_ERROR, STR_TAB_NAME_SETUP,
-    STR_TAB_NAME_GRAPHS, STR_TAB_NAME_ADVANCED, STR_TAB_NAME_MODELS, STR_TAB_NAME_NOTE,
-    STR_QUESTION_SAVE_EMPTY_LOGGER_LIST, STR_QUESTION_PURGE_HISTORY, STR_EV_GPS_SEARCHING, STR_TAB_NAME_INFORMATION,
-    STR_TAB_NAME_MORE_INFO, STR_TAB_NAME_MAPS_NEW, STR_DESC_INTERNAL, STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
-    STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL, STR_DESC_HAULS_SINGLE,
+    PATH_BLE_ANTENNA_ICON_OK, PATH_MAIN_BOOT,
+    PATH_MAIN_NO_LOGGERS_ASSIGNED, EV_NO_ASSIGNED_LOGGERS,
+    PATH_MAIN_CONF_BAD, EV_GPS_IN_PORT, PATH_MAIN_IN_PORT,
+    EV_BLE_CONNECTING, EV_BLE_DL_ERROR, EV_BLE_DL_NO_NEED,
+    EV_BLE_LOW_BATTERY, EV_BLE_DL_RETRY, PATH_MAIN_BLE_CONNECTING,
+    PATH_MAIN_BLE_DL_OK, PATH_MAIN_BLE_DL_ERROR,
+    PATH_MAIN_BLE_DL_OK_NO_RERUN, PATH_MAIN_BLE_DL_NO_NEED,
+    PATH_MAIN_BLE_DL_LOW_BATTERY, PATH_MAIN_BLE_DL_RETRY,
+    PATH_CELL_ICON_ERROR, PATH_CELL_ICON_OK, PATH_MAIN_BLE_DL_PROGRESS,
+    EV_GPS_HW_ERROR, PATH_MAIN_GPS_HW_ERROR, STR_EV_BLE_DL_OK,
+    ddh_config_get_language_index, linux_is_rpi, STR_EV_ERROR_REDIS,
+    EV_GUI_ERROR_REDIS, EV_GUI_ERROR_POWER_SAH, STR_EV_ERROR_POWER_SAH,
+    EV_GUI_ERROR_POWER_J4H, STR_EV_ERROR_POWER_J4H,
+    EV_GPS_HAT_POWER_CYCLE, PATH_MAIN_GPS_POWER_CYCLE, PATH_CLOUD_ICON_OK,
+    PATH_CLOUD_ICON_ERROR, STR_TAB_NAME_SETUP,
+    STR_TAB_NAME_GRAPHS, STR_TAB_NAME_ADVANCED, STR_TAB_NAME_MODELS,
+    STR_TAB_NAME_NOTE, STR_QUESTION_SAVE_EMPTY_LOGGER_LIST, STR_QUESTION_PURGE_HISTORY,
+    STR_EV_GPS_SEARCHING, STR_TAB_NAME_INFORMATION,
+    STR_TAB_NAME_MORE_INFO, STR_TAB_NAME_MAPS_NEW, STR_DESC_INTERNAL,
+    STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
+    STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
+    STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK,
 )
 import datetime
 import os
@@ -247,6 +261,7 @@ def gui_setup_view(my_win):
     a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_maps.png"))
     a.setWindowIcon(QIcon("ddh/gui/res/icon_lowell.ico"))
 
+
     # new icons
     a.lbl_boat_img.setPixmap(QPixmap("ddh/gui/res/new_icon_boat.png"))
     a.lbl_date_img.setPixmap(QPixmap("ddh/gui/res/calendar.png"))
@@ -254,9 +269,11 @@ def gui_setup_view(my_win):
     a.lbl_gps_antenna_img.setPixmap(QPixmap(PATH_GPS_ANTENNA_ICON_START))
     a.lbl_ble_antenna_img.setPixmap(QPixmap(PATH_BLE_ANTENNA_ICON_START))
     a.lbl_cell_wifi_img.setPixmap(QPixmap("ddh/gui/res/new_icon_cell_wifi.png"))
+    a.lbl_power_img.setPixmap(QPixmap("ddh/gui/res/new_icon_power_ok.png"))
     a.lbl_cloud_img.setPixmap(QPixmap(PATH_CLOUD_ICON_OK))
     a.lbl_boat_txt.setText(ddh_config_get_vessel_name())
     a.lbl_gps.setText('-\n-')
+    a.lbl_power_txt.setText('-')
     a.lbl_box_sn.setText('DDH ' + ddh_config_get_box_sn())
     a.lbl_cloud_txt.setText("-")
     a.bar_dl.setVisible(False)
@@ -1417,7 +1434,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a("error, redis server")
             app_state_set(EV_GUI_ERROR_REDIS, STR_EV_ERROR_REDIS, 5)
 
+        k = RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS
         if not linux_is_rpi():
+            r.set(k, 'dev')
             return
 
         # check power systems
@@ -1430,6 +1449,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 lg.a("error, power juice4halt")
                 app_state_set(EV_GUI_ERROR_POWER_J4H,
                               STR_EV_ERROR_POWER_J4H, 5)
+                r.set(k, 'error')
+            else:
+                r.set(k, 'juice4halt')
 
 
         if os.path.exists(path_flag_sah):
@@ -1439,6 +1461,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 lg.a("error, power sailorhat")
                 app_state_set(EV_GUI_ERROR_POWER_SAH,
                               STR_EV_ERROR_POWER_SAH, 5)
+                r.set(k, 'error')
+            else:
+                r.set(k, 'sailorhat')
+
 
 
 
@@ -1574,6 +1600,16 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if via in ("wifi", "wi-fi") or not linux_is_rpi():
                 ssid = gui_get_my_current_wlan_ssid()
                 self.lbl_cell_wifi_txt.setText(ssid)
+
+
+        # refresh ICON POWER in main tab left column less often
+        k = RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS
+        if r.exists(k):
+            hat = r.get(RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS).decode()
+            self.lbl_power_txt.setText(hat)
+            p = PATH_POWER_ICON_ERROR if hat == 'error' else PATH_POWER_ICON_OK
+            self.lbl_power_img.setPixmap(QPixmap(p))
+            r.delete(k)
 
 
 
@@ -1836,7 +1872,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # useful to see the debug output terminal
         if os.path.exists('/tmp/ddh_start_minimized'):
             self.showMinimized()
-
 
         gui_translate(self)
 

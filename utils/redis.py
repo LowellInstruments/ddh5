@@ -89,3 +89,8 @@ RD_DDH_NET_PROCESS_OUTPUT = p + 'process_output'
 p = 'ddh:slo:'
 # for smart lock-out entries, followed by MAC addresses
 RD_DDH_SLO_LS = p + 'ls:'
+
+
+p = 'ddh:power:'
+# for GUI to show status of j4h or sailorhat
+RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS = p + 'hat'
