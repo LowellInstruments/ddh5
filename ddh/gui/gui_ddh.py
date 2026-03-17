@@ -96,7 +96,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.lbl_date_txt.sizePolicy().hasHeightForWidth())
         self.lbl_date_txt.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setPointSize(16)
+        font.setPointSize(15)
         self.lbl_date_txt.setFont(font)
         self.lbl_date_txt.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self.lbl_date_txt.setText("")
