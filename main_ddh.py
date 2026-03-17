@@ -264,7 +264,7 @@ def gui_setup_view(my_win):
 
     # new icons
     a.lbl_boat_img.setPixmap(QPixmap("ddh/gui/res/new_icon_boat.png"))
-    a.lbl_date_img.setPixmap(QPixmap("ddh/gui/res/calendar.png"))
+    # a.lbl_date_img.setPixmap(QPixmap("ddh/gui/res/calendar.png"))
     a.lbl_brightness_img.setPixmap(QPixmap("ddh/gui/res/new_icon_brightness.png"))
     a.lbl_gps_antenna_img.setPixmap(QPixmap(PATH_GPS_ANTENNA_ICON_START))
     a.lbl_ble_antenna_img.setPixmap(QPixmap(PATH_BLE_ANTENNA_ICON_START))
@@ -1844,7 +1844,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.left_frame.setMinimumWidth(int(_w * .25))
         self.left_frame.setMaximumWidth(int(_w * .25))
         self.frame_2of2_expanded = True
-        self.btn_expand.setVisible(False)
+        # self.btn_expand.setVisible(False)
 
 
         # SMS support button
