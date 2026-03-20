@@ -1296,8 +1296,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def click_btn_shortcuts(self, _):
         bp = self.btn_shortcuts.mapToGlobal(QtCore.QPoint(0, 0))
-        x = bp.x() - 50
-        y = bp.y() - 50
+        x = bp.x() - 150
+        y = bp.y() - 150
         p = QPoint(x, y)
         self.context_menu.exec(p)
 
@@ -1451,7 +1451,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                               STR_EV_ERROR_POWER_J4H, 5)
                 r.set(k, 'error')
             else:
-                r.set(k, 'juice4halt')
+                r.set(k, 'j4h')
 
 
         if os.path.exists(path_flag_sah):
@@ -1463,7 +1463,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                               STR_EV_ERROR_POWER_SAH, 5)
                 r.set(k, 'error')
             else:
-                r.set(k, 'sailorhat')
+                r.set(k, 'sai-h')
 
 
 
@@ -1831,6 +1831,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # build context menu shortcuts
         self.context_menu = QMenu(self)
+        self.context_menu.setStyleSheet("QMenu { font-size: 22px; }")
         cm_action_minimize = self.context_menu.addAction("minimize")
         cm_action_quit = self.context_menu.addAction("quit")
         cm_action_edit_tab = self.context_menu.addAction("edit tab")
