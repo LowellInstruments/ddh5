@@ -1669,12 +1669,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             pi = PATH_MAIN_BLE_DL_PROGRESS
             self.bar_dl.setVisible(True)
             try:
+                # the BLE library updates this as 'w'
                 with open(DEV_SHM_DL_PROGRESS, 'r') as f:
                     v = f.read()
                     v = int(float(v))
                     self.bar_dl.setValue(v)
-            except (Exception,):
-                pass
+            except (Exception,) as ex:
+                # print(f'error DL progress -> {ex}')
+                self.bar_dl.setValue(0)
         elif code in (EV_GPS_HW_ERROR, ):
             pi = PATH_MAIN_GPS_HW_ERROR
         elif code in (EV_GPS_HAT_POWER_CYCLE, ):
