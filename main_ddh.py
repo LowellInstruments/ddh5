@@ -587,7 +587,7 @@ def gui_translate(ui):
     ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_MAPS_NEW)}")
     ui.tabs.setTabVisible(i, False)
 
-    ui.btn_shortcuts.setText('👆')
+    ui.btn_shortcuts.setText('⠇')
     ui.btn_g_reset.setText(t_str(STR_DESC_RESET))
     ui.lbl_hauls.setText(t_str(STR_DESC_HAULS))
     ui.cb_g_cycle_haul.clear()
