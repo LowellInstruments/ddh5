@@ -67,8 +67,8 @@ fi
 
 
 _pb "    KERNEL - set BLE connection supervision timeout"
-echo '200' | sudo tee /sys/kernel/debug/bluetooth/hci0/supervision_timeout 2> /dev/null
-echo '200' | sudo tee /sys/kernel/debug/bluetooth/hci1/supervision_timeout 2> /dev/null
+echo '300' | sudo tee /sys/kernel/debug/bluetooth/hci0/supervision_timeout 2> /dev/null
+echo '300' | sudo tee /sys/kernel/debug/bluetooth/hci1/supervision_timeout 2> /dev/null
 
 
 
