@@ -103,3 +103,7 @@
 5.0.22  03/17/26
 
     added DDH power hat icon
+
+5.0.23  03/20/26
+
+    fixed file for BLE download progress bars
