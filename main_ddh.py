@@ -1684,7 +1684,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             pi = PATH_MAIN_GPS_POWER_CYCLE
         elif code in (EV_BLE_SCAN, ):
             # reset progress bar
-            self.bar_dl.setValue(0)
+            if os.path.exists(DEV_SHM_DL_PROGRESS):
+                os.unlink(DEV_SHM_DL_PROGRESS)
+                lg.a('resetting download progress bar value')
+                self.bar_dl.setValue(0)
             pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
         elif code in (
                 EV_GUI_ERROR_REDIS,
