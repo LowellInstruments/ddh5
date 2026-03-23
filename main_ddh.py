@@ -1651,7 +1651,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         elif code in (EV_GPS_SYNC_CLOCK, ):
             pi = PATH_TEMPLATE_MAIN_GPS_CLOCK_IMG
         elif code in (EV_BLE_CONNECTING, ):
-            # todo: does this one icon appear?
+            # most times this does not even appear, too fast
             pi = PATH_MAIN_BLE_CONNECTING
         elif code in (EV_BLE_DL_OK, ):
             pi = PATH_MAIN_BLE_DL_OK
@@ -1683,6 +1683,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         elif code in (EV_GPS_HAT_POWER_CYCLE, ):
             pi = PATH_MAIN_GPS_POWER_CYCLE
         elif code in (EV_BLE_SCAN, ):
+            # reset progress bar
+            self.bar_dl.setValue(0)
             pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
         elif code in (
                 EV_GUI_ERROR_REDIS,
