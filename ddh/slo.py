@@ -18,7 +18,7 @@ def slo_add(mac):
     #       - too many errors
     if DISABLE_SLO:
         slo_delete_all()
-        print(f'** warning: SLO disabled in config.toml, not working with mac {mac}')
+        print(f'warning, SLO disabled in config.toml, not working with mac {mac}')
         return
     k = f"{RD_DDH_SLO_LS}{mac}"
     r.setex(k, 120, 1)

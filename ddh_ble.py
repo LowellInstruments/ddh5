@@ -234,11 +234,15 @@ async def _ble_logger_id_and_download(d):
     rv = 0
 
 
+    # we can speed up things with this strategy
+    fq = not r.exists(RD_DDH_BLE_FULL_QUERY)
+
+
     # first IDENTIFY, then DOWNLOAD
     try:
         if _ble_logger_is_tdo(name):
             lg.a(f'processing TDO logger SN {sn}')
-            rv = await ble_download_tdo(d)
+            rv = await ble_download_tdo(d, full_query=fq)
 
         elif _ble_logger_is_do1_or_do2(name):
             rv = await ble_download_dox(d)
@@ -262,6 +266,11 @@ async def _ble_logger_id_and_download(d):
         lg.a(f'error, ble_id_and_download_logger -> {ex}')
         rv = 1
         ble_linux_logger_disconnect_by_mac(mac)
+
+
+    # speed up things
+    if rv == 0 and fq:
+        r.setex(RD_DDH_BLE_FULL_QUERY, 86400, 1)
 
 
     return rv

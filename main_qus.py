@@ -6,7 +6,7 @@ def main_qus():
     ls = gps_hat_detect_list_of_usb_ports()
     port_ctrl = ""
     if not ls:
-        print(f'\nwarning: QUS -> port_GPS = "", port_CTL = ""')
+        print(f'\nwarning, QUS -> port_GPS = "", port_CTL = ""')
     else:
         port_nmea = ls[1]
         port_ctrl = ls[-2]

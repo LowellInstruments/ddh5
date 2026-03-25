@@ -123,7 +123,7 @@ async def ble_download_dox(d):
         else:
             lg.a('logger NOT running, not sending HBW command')
     else:
-        lg.a("warning: not sending HBW command, disabled in configuration file")
+        lg.a("warning, not sending HBW command, disabled in configuration file")
 
 
     rv = await lc.cmd_sws(g)
@@ -256,7 +256,7 @@ async def ble_download_dox(d):
             lg.a(f'DO2 interval reconfiguration, DRI from {j["DRI"]} to {i_dro}')
             j["DRI"] = i_dro
     else:
-        lg.a('warning: skip DO2 interval reconfiguration, no experimental conf_dox setting')
+        lg.a('warning, skip DO2 interval reconfiguration, no experimental conf_dox setting')
 
 
 

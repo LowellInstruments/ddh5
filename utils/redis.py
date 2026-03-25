@@ -38,6 +38,7 @@ RD_DDH_BLE_NO_EXPIRES_RESET_REQ = p + 'linux_reset_req'
 RD_DDH_BLE_SEMAPHORE = p + 'semaphore'
 # antenna can be external or internal
 RD_DDH_BLE_NO_EXPIRES_ANTENNA = p + 'antenna_ble'
+RD_DDH_BLE_FULL_QUERY = p + 'full_query'
 
 
 

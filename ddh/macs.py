@@ -2,12 +2,13 @@ import glob
 import os
 import pathlib
 import time
-
+import random
 from ddh.slo import slo_add
 from utils.ddh_common import (
     ddh_get_path_to_folder_macs, ddh_config_get_forget_time_seconds, exp_get_override_ft,
 )
 from ddh_log import lg_ble as lg
+
 
 
 # ---------------------------------------------
@@ -64,8 +65,9 @@ def _add_mac(c, mac):
     else:
         # when black
         if OVERRIDE_FT:
-            lg.a("** warning: OVERRIDE_FT")
-            ft = PERIOD_MACS_ORANGE_SECS
+            lg.a("warning, OVERRIDE_FT")
+            # ft = PERIOD_MACS_ORANGE_SECS
+            ft = random.randint(PERIOD_MACS_ORANGE_SECS, PERIOD_MACS_ORANGE_SECS + 60)
     t = int(time.time()) + ft
     fol = str(ddh_get_path_to_folder_macs() / c)
     mac = mac.replace(":", "-")

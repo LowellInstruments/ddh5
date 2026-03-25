@@ -342,7 +342,7 @@ def _ddh_gps(ignore_gui):
             if d['err_rmc_comma']:
                 r.setex(f'{k}_{int(time.time())}', 3600, 1)
                 ls = list(r.scan_iter(f'{k}_*', count=NUM_RMC_ERRORS_POWER_CYCLE))
-                lg.a(f'warning: RMC comma, n = {len(ls)}, port_ctrl = {port_ctrl}')
+                lg.a(f'warning, RMC comma, n = {len(ls)}, port_ctrl = {port_ctrl}')
 
                 # there are enough errors, power-cycle the hat
                 if len(ls) >= NUM_RMC_ERRORS_POWER_CYCLE - 5:
@@ -351,11 +351,11 @@ def _ddh_gps(ignore_gui):
 
                     # grab GUI state to restore it after GPS hat power-cycle
                     _sc, _st = app_state_get()
-                    lg.a("warning: starting power-cycle GPS hat shield")
+                    lg.a("warning, starting power-cycle GPS hat shield")
                     app_state_set(EV_GPS_HAT_POWER_CYCLE, t_str(STR_EV_GPS_HAT_POWER_CYCLE))
                     r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 5, 1)
                     gps_hat_power_cycle_ddc(port_ctrl, use_print=False)
-                    lg.a("warning: end power-cycle GPS hat shield")
+                    lg.a("warning, end power-cycle GPS hat shield")
                     app_state_set(_sc, t_str(_st))
 
                     # after GPS hat power-cycle, re-detect ports and re-init GPS output
@@ -394,7 +394,7 @@ def _ddh_gps(ignore_gui):
 
             # too many of these entries mean generating a notification
             if len(ls) >= 10:
-                lg.a('warning: too many GPS errors, generating SQS file')
+                lg.a('warning, too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
 
 

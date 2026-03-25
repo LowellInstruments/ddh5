@@ -25,8 +25,7 @@ from utils.ddh_common import (
     exp_get_skip_hbw, linux_is_rpi,
 )
 from ddh_log import lg_ble as lg
-
-
+from utils.redis import RD_DDH_BLE_FULL_QUERY
 
 lc = LoggerBle()
 
@@ -117,7 +116,7 @@ async def _tdo_reconfigure_profiling(ver):
 
 
 
-async def ble_download_tdo(d):
+async def ble_download_tdo(d, full_query=False):
 
     # d: {'battery_level': 65535,
     #     'error': 'error comm.',
@@ -142,6 +141,11 @@ async def ble_download_tdo(d):
     _une(not rv, d, "comm.")
     _rae(not rv, "connecting")
     lg.a(f"connected to {mac}")
+    if full_query:
+        lg.a(f'OK, TDO download full query ON')
+    else:
+        lg.a(f'note, TDO download full query OFF')
+
 
 
     if ddh_ble_logger_needs_a_reset(mac):
@@ -149,6 +153,8 @@ async def ble_download_tdo(d):
         await lc.cmd_rst()
         # out of here for sure
         raise BLEAppException("TDO interact logger reset file")
+
+
 
 
     rv, v = await lc.cmd_gfv()
@@ -160,6 +166,7 @@ async def ble_download_tdo(d):
     rv, state = await lc.cmd_sts()
     _rae(rv, "sts")
     lg.a(f"STS | logger was {state}")
+
 
 
     # feature has-logger-been-in-water
@@ -184,16 +191,21 @@ async def ble_download_tdo(d):
         else:
             lg.a('logger NOT running, not sending HBW command')
     else:
-        lg.a("warning: not sending HBW command, disabled in configuration file")
+        lg.a("warning, not sending HBW command, disabled in configuration file")
+
 
 
     rv = await lc.cmd_sws(g)
     _rae(rv, "sws")
     lg.a("SWS | OK")
 
-    rv, t = await lc.cmd_utm()
-    _rae(rv, "utm")
-    lg.a(f"UTM | {t}")
+
+
+    if full_query:
+        rv, t = await lc.cmd_utm()
+        _rae(rv, "utm")
+        lg.a(f"UTM | {t}")
+
 
     rv, b = await lc.cmd_bat()
     _rae(rv, "bat")
@@ -223,17 +235,18 @@ async def ble_download_tdo(d):
 
 
     # disable log for lower power consumption
-    rv, v = await lc.cmd_log()
-    _rae(rv, "log")
-    if linux_is_rpi():
-        if v != 0:
-            rv, v = await lc.cmd_log()
-            _rae(rv, "log")
-    else:
-        # we want logs while developing
-        if v != 1:
-            rv, v = await lc.cmd_log()
-            _rae(rv, "log")
+    if full_query:
+        rv, v = await lc.cmd_log()
+        _rae(rv, "log")
+        if linux_is_rpi():
+            if v != 0:
+                rv, v = await lc.cmd_log()
+                _rae(rv, "log")
+        else:
+            # we WANT logs ON while developing
+            if v != 1:
+                rv, v = await lc.cmd_log()
+                _rae(rv, "log")
 
 
 
@@ -299,28 +312,30 @@ async def ble_download_tdo(d):
 
 
     # check sensor Temperature
-    rv = await lc.cmd_gst()
-    # rv: (0, 46741)
-    bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
-    if bad_rv:
-        _une(bad_rv, d, "T_sensor_error", ce=1)
-        lg.a(f'GST | error {rv}')
-        d['error'] = 'sensor T'
-    _rae(bad_rv, "gst")
+    if full_query:
+        rv = await lc.cmd_gst()
+        # rv: (0, 46741)
+        bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
+        if bad_rv:
+            _une(bad_rv, d, "T_sensor_error", ce=1)
+            lg.a(f'GST | error {rv}')
+            d['error'] = 'sensor T'
+        _rae(bad_rv, "gst")
 
 
 
     # check sensor Pressure
-    rv = await lc.cmd_gsp()
-    # rv: (0, 1241)
-    bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
-    if bad_rv:
-        _une(bad_rv, d, "P_sensor_error", ce=1)
-        lg.a(f'GSP | error {rv}')
-        ln = LoggerNotification(mac, sn, 'TDO', b)
-        notify_logger_error_sensor_pressure(g, ln)
-        d['error'] = 'sensor P'
-    _rae(bad_rv, "gsp")
+    if full_query:
+        rv = await lc.cmd_gsp()
+        # rv: (0, 1241)
+        bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
+        if bad_rv:
+            _une(bad_rv, d, "P_sensor_error", ce=1)
+            lg.a(f'GSP | error {rv}')
+            ln = LoggerNotification(mac, sn, 'TDO', b)
+            notify_logger_error_sensor_pressure(g, ln)
+            d['error'] = 'sensor P'
+        _rae(bad_rv, "gsp")
 
 
 

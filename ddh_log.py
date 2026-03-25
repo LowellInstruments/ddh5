@@ -75,6 +75,8 @@ def _color_write_to_console(b):
         PC.B(s)
     elif 'warning' in s:
         PC.Y(s)
+    elif 'note' in s:
+        PC.Y(s)
     elif 'OK' in s:
         PC.G(s)
     elif 'success' in s:
