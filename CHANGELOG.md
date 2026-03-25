@@ -107,3 +107,8 @@
 5.0.23  03/20/26
 
     fixed file for BLE download progress bars
+
+
+5.0.24  03/25/26
+
+    slightly faster TDO downloads with full_query mechanism

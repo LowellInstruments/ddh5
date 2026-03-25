@@ -276,7 +276,7 @@ def aws_sync(past_year=False):
         # when too many of these entries, alarm
         ls = list(r.scan_iter(f'{k}_*', count=10))
         if ls:
-            lg.a(f'warning: current AWS sync number of errors = {len(ls)}')
+            lg.a(f'warning, current AWS sync number of errors = {len(ls)}')
         if len(ls) >= 5:
             notify_error_sw_aws_s3()
 
