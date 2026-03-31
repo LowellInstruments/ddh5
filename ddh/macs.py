@@ -67,7 +67,7 @@ def _add_mac(c, mac):
         if OVERRIDE_FT:
             lg.a("warning, OVERRIDE_FT")
             # ft = PERIOD_MACS_ORANGE_SECS
-            ft = random.randint(PERIOD_MACS_ORANGE_SECS, PERIOD_MACS_ORANGE_SECS + 60)
+            ft = random.randint(PERIOD_MACS_ORANGE_SECS, PERIOD_MACS_ORANGE_SECS + 1)
     t = int(time.time()) + ft
     fol = str(ddh_get_path_to_folder_macs() / c)
     mac = mac.replace(":", "-")

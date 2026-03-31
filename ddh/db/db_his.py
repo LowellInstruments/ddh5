@@ -1,6 +1,6 @@
 # from pysondb import getDb
 # from pysondb.errors import DataNotFoundError
-
+import os
 
 # class DBHis:
 #
@@ -73,9 +73,31 @@ class DbHis:
             print(f"error, db_his -=> {ex}")
         self._db.commit(self.f)
 
+
     def get_all(self) -> dict:
         return self._db.get_all()
+
 
     def delete_all(self):
         self._db.delete_all()
         self._db.commit(self.f)
+
+
+
+if __name__ == "__main__":
+    filename = 'db_his.json'
+    db = DbHis(filename)
+    rr = db.get_all()
+    # '21461676674199430233':
+    #     {
+    #     'mac': 'D0:2E:AB:D9:30:66',
+    #     'SN': '1234567',
+    #     'e': 'ok DO-2',
+    #     'lat': '+51.116300',
+    #     'lon': '-114.038300',
+    #     'ep_loc': 1774619218,
+    #     'ep_utc': 1774633618,
+    #     'rerun': 'True',
+    #     'uuid_interaction': 'de031c25-7ba4-4f20-beac-8e8263e5af60'
+    #     },
+    print(rr)

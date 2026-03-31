@@ -478,7 +478,11 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
     dt_local = dt.replace(tzinfo=tz_utc).astimezone(tz=tz_ddh)
     ep_loc = int(dt_local.timestamp())
     ep_utc = int(dt.timestamp())
-    e = 'ok' if not rv else f"error {d['error']}"
+    # d['error'] might already contain the error string
+    my_e = d['error']
+    if not my_e.startswith('error'):
+        my_e = f'error {my_e}'
+    e = 'ok' if not rv else my_e
     gui_add_to_history_database(mac, e, lat, lon, ep_loc, ep_utc, rerun, u, name)
     r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE, 1)
 
