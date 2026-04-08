@@ -112,3 +112,7 @@
 5.0.24  03/25/26
 
     slightly faster TDO downloads with full_query mechanism
+
+5.0.25  04/08/26
+
+    when GPS is dummy, don't power-cycle GPS sixfab hat
