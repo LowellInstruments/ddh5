@@ -43,6 +43,9 @@ hook_gps_error_measurement_forced = 0
 # conf_dox can be 60, 300, 900
 # conf_dox = 900
 # custom_side_buttons_debounce_time = 2
-use_skip_hbw = 1
+# skip_hbw set to 1 to NOT use command has-been-in-water, 0 to use it
+use_skip_hbw = 0
+# skip_slo set to 1 to NOT use smart lock-out, 0 to use it
 skip_slo = 0
+# override_ft set to 1 for Andrew's tests
 override_ft = 0

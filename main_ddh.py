@@ -128,7 +128,8 @@ from utils.ddh_common import (
     ddh_get_local_software_version,
 )
 from ddh_log import lg_gui as lg
-
+if not linux_is_rpi():
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 
 
@@ -585,7 +586,10 @@ def gui_translate(ui):
     i = gui_tabs_get_index('tab_maps_new')
     ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_maps.png"))
     ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_MAPS_NEW)}")
-    ui.tabs.setTabVisible(i, False)
+    if linux_is_rpi():
+        ui.tabs.setTabVisible(i, False)
+    else:
+        ui.tabs.setTabVisible(i, True)
 
     ui.btn_shortcuts.setText('⠇')
     ui.btn_g_reset.setText(t_str(STR_DESC_RESET))
@@ -1862,20 +1866,19 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # web engine viewer, put this on top
         # todo: see if these makes display unresponsive
-        # print("slow boot so not loading webengineview")
-        # from PyQt6.QtWebEngineWidgets import QWebEngineView
-        # os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
-        # os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
-
-        # web engine viewer, tricky to display ok in raspberry
-        # self.browser = QWebEngineView()
-        # u = "https://ondeckdata.com/database/soe_hypoxic_days_2025.html"
-        # self.browser.setUrl(QUrl(u))
-        # self.lay_maps.addWidget(self.browser)
-        # if linux_is_rpi():
-        #     self.resize(800, 600)
-        #     self.showFullScreen()
-        # lg.a("OK, finished booting GUI")
+        if not linux_is_rpi():
+            # from PyQt6.QtWebEngineWidgets import QWebEngineView
+            os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
+            os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
+            self.browser = QWebEngineView()
+            # u = "https://ondeckdata.com/database/soe_hypoxic_days_2025.html"
+            u = "https://ondeckdata.com/database/osm_fishbot_explorer.html"
+            self.browser.setUrl(QUrl(u))
+            self.lay_maps.addWidget(self.browser)
+            # web engine viewer is tricky to display ok in raspberry, patch it
+            if linux_is_rpi():
+                self.resize(800, 600)
+                self.showFullScreen()
 
 
         # useful to see the debug output terminal
@@ -1883,7 +1886,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.showMinimized()
 
         gui_translate(self)
-
+        lg.a("OK, finished booting GUI")
 
 
 
