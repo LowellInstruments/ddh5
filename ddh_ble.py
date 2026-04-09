@@ -317,6 +317,7 @@ def _ddh_ble_boot_gps_clock_sync():
 
 def _ddh_ble_scan_loggers(antenna_idx):
 
+    # adapter: 'hciX'
     adapter = f'hci{antenna_idx}'
     ls_devs_all = ael.run_until_complete(ble_scan_slow(adapter, timeout=5))
 
@@ -590,7 +591,9 @@ def _ddh_ble(ignore_gui):
         lg.a('detected DDH download test mode')
 
 
+    # -----------------------
     # know your BLE antenna
+    # -----------------------
     antenna_idx, antenna_s = _ddh_ble_hardware_describe_antenna_type()
     lg.a(f"using BLE antenna hci{antenna_idx}, type {antenna_s}")
     r.set(RD_DDH_BLE_NO_EXPIRES_ANTENNA, antenna_s)
