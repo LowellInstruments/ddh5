@@ -128,7 +128,7 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
     if rv_previous_run or brr or nlc or aur:
         if rv_previous_run != 2:
             # 2 is when command has-been-in-water returns no need to download
-            lg.a("warning, last interaction had BLE error")
+            lg.a(f"warning, last interaction had BLE error {rv_previous_run}")
         if brr:
             # on scan errors + required by some BLE dongles
             lg.a("warning, detected ble_reset_req flag")
