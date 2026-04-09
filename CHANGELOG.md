@@ -116,3 +116,7 @@
 5.0.25  04/08/26
 
     when GPS is dummy, don't power-cycle GPS sixfab hat
+
+5.0.26  04/09/26
+
+    GUI: removed 2 one-second timers

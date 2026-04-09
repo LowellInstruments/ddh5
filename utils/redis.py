@@ -27,6 +27,8 @@ RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE = p + 'ble_icon'
 RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS = p + 'gps_icon'
 RD_DDH_GUI_PERIODIC_CHECK_ICON_NET = p + 'cell_wifi_icon'
 RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD = p + 'aws_icon'
+RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE = p + 'cpu_temperature'
+
 
 
 
