@@ -30,4 +30,5 @@ lsb@git+https://github.com/LowellInstruments/lsb.git
 # don't install during dev but "attach" in pycharm
 # ble@git+https://github.com/LowellInstruments/ble.git
 # gps@git+https://github.com/LowellInstruments/gps.git
+# lix@git+https://github.com/LowellInstruments/lix.git
 # mat@git+https://github.com/LowellInstruments/mat.git

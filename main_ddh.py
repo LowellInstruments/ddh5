@@ -592,6 +592,8 @@ def gui_translate(ui):
     else:
         ui.tabs.setTabVisible(i, True)
 
+
+    # other buttons
     ui.btn_shortcuts.setText('⠇')
     ui.btn_g_reset.setText(t_str(STR_DESC_RESET))
     ui.lbl_hauls.setText(t_str(STR_DESC_HAULS))
@@ -1433,6 +1435,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def _cb_timer_gui_one_second(self):
 
+        # useful to see the debug output terminal
+        # careful, this screws calibration offset screen until app restart
+        if os.path.exists('/tmp/ddh_minimize'):
+            self.showMinimized()
+            os.unlink('/tmp/ddh_minimize')
+
+
         # is there something to plot?
         p_r = r.get(RD_DDH_GUI_PLOT_REASON)
         if p_r:
@@ -1484,10 +1493,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.tabs.setCurrentIndex(0)
 
 
-        # update MODELS tab, prevent freeze at boot
+        # update MODELS tab, prevent freeze at boot, then, every 24 hours
         if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_PERIODIC_REFRESH_MODELS):
             gui_populate_models_tab(self)
-            r.setex(RD_DDH_GUI_PERIODIC_REFRESH_MODELS, 3600, 1)
+            r.setex(RD_DDH_GUI_PERIODIC_REFRESH_MODELS, 3600 * 24, 1)
 
 
 
@@ -1834,11 +1843,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # build context menu shortcuts
         self.context_menu = QMenu(self)
         self.context_menu.setStyleSheet("QMenu { font-size: 22px; }")
-        cm_action_minimize = self.context_menu.addAction("minimize")
         cm_action_quit = self.context_menu.addAction("quit")
         cm_action_edit_tab = self.context_menu.addAction("edit tab")
         cm_action_advanced_tab = self.context_menu.addAction("advanced tab")
-        cm_action_minimize.triggered.connect(self.showMinimized)
         cm_action_quit.triggered.connect(self.close_my_ddh)
         cm_action_edit_tab.triggered.connect(self._gui_tabs_show_edit)
         cm_action_advanced_tab.triggered.connect(self._gui_tabs_show_advanced)
@@ -1870,13 +1877,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.lay_maps.addWidget(self.browser)
             # web engine viewer is tricky to display ok in raspberry, patch it
             if linux_is_rpi():
-                self.resize(800, 600)
+                self.resize(800, 480)
                 self.showFullScreen()
 
-
-        # useful to see the debug output terminal
-        if os.path.exists('/tmp/ddh_start_minimized'):
-            self.showMinimized()
 
         gui_translate(self)
         lg.a("OK, finished booting GUI")

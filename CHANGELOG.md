@@ -119,4 +119,6 @@
 
 5.0.26  04/09/26
 
-    GUI: removed 2 one-second timers
+    GUI, removed 2 one-second timers
+    GUI, removed minimize conflictive button
+    GUI, made maps only download every day instead of every hour
