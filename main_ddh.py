@@ -45,7 +45,8 @@ from utils.redis import (
     RD_DDH_GUI_RV,
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
-    RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS
+    RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS,
+    RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -852,48 +853,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.timer_six_hours.start(3600 * 1 * 1000)
 
 
-    def _cb_timer_plot(self):
-        p_r = r.get(RD_DDH_GUI_PLOT_REASON)
-        if p_r:
-            # p_r: 'ble', 'user', 'hauls_next', 'hauls_labels'
-            # BLE needs a FOLDER path written on another redis key
-            p_r = p_r.decode()
-            lg.a(f"received plot request, reason = {p_r}")
-            graph_process_n_draw(self, reason=p_r)
-            r.delete(RD_DDH_GUI_PLOT_REASON)
-
-
-
-    def _cb_timer_cpu_temperature(self):
-        m = psutil.virtual_memory()
-        if int(m.percent) > 75:
-            ma = m.available / 1e9
-            s = "statistics, {:.2f}% GB of RAM used, {:.2f} GB available"
-            lg.a(s.format(m.percent, ma))
-
-        # measure temperature of DDH box, tell when too high
-        self.timer_cpu_hot.stop()
-        c = "/usr/bin/vcgencmd measure_temp"
-        rv = sp.run(c, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
-
-        try:
-            ans = rv.stdout
-            if ans:
-                # ans: b'temp=30.1'C'
-                ans = ans.replace(b"\n", b"")
-                ans = ans.replace(b"'C", b"")
-                ans = ans.replace(b"temp=", b"")
-                ans = float(ans.decode())
-                if ans > 80:
-                    lg.a(f"debug, box temperature {ans} degrees Celsius")
-
-        except (Exception,) as ex:
-            lg.a(f"error, getting vcgencmd -> {ex}")
-
-        # 600 seconds = 10 minutes
-        self.timer_cpu_hot.start(600000)
-
-
 
     def click_btn_clear_known_mac_list(self):
         self.lst_mac_org.clear()
@@ -1474,6 +1433,45 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def _cb_timer_gui_one_second(self):
 
+        # is there something to plot?
+        p_r = r.get(RD_DDH_GUI_PLOT_REASON)
+        if p_r:
+            # p_r: 'ble', 'user', 'hauls_next', 'hauls_labels'
+            # BLE needs a FOLDER path written on another redis key
+            p_r = p_r.decode()
+            lg.a(f"received plot request, reason = {p_r}")
+            graph_process_n_draw(self, reason=p_r)
+            r.delete(RD_DDH_GUI_PLOT_REASON)
+
+        # get raspberry RAM usage and CPU temperature every 10 minutes
+        m_t = r.get(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE)
+        if not m_t:
+            r.setex(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, 600, 1)
+            # get RAM usage
+            m = psutil.virtual_memory()
+            if int(m.percent) > 75:
+                ma = m.available / 1e9
+                s = "statistics, {:.2f}% GB of RAM used, {:.2f} GB available"
+                lg.a(s.format(m.percent, ma))
+
+            # measure temperature of DDH box, tell when too high
+            c = "/usr/bin/vcgencmd measure_temp"
+            rv = sp.run(c, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
+
+            try:
+                ans = rv.stdout
+                if ans:
+                    # ans: b'temp=30.1'C'
+                    ans = ans.replace(b"\n", b"")
+                    ans = ans.replace(b"'C", b"")
+                    ans = ans.replace(b"temp=", b"")
+                    ans = float(ans.decode())
+                    if ans > 80:
+                        lg.a(f"debug, box temperature {ans} degrees Celsius")
+
+            except (Exception,) as ex:
+                lg.a(f"error, getting vcgencmd -> {ex}")
+
         # update DATE and UPTIME fields, also a COUNTER for incremental stuff
         self.lbl_date_txt.setText(datetime.datetime.now().strftime(" %b %d %H:%M:%S"))
         _up = datetime.timedelta(seconds=time.perf_counter() - _g_ts_gui_boot)
@@ -1822,20 +1820,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.timer_gui_one_second = QTimer()
         self.timer_gui_sixty_seconds = QTimer()
         self.timer_six_hours = QTimer()
-        self.timer_cpu_hot = QTimer()
-        self.timer_plot = QTimer()
+        # timer that checks redis and power shields (j4h, sailorhat)
         self.timer_gui_sixty_seconds.timeout.connect(self._cb_timer_gui_sixty_seconds)
-        self.timer_gui_one_second.timeout.connect(self._cb_timer_gui_one_second)
-        self.timer_six_hours.timeout.connect(self._cb_timer_six_hours)
-        self.timer_cpu_hot.timeout.connect(self._cb_timer_cpu_temperature)
-        self.timer_plot.timeout.connect(self._cb_timer_plot)
         self.timer_gui_sixty_seconds.start(60 * 1000)
-        self.timer_gui_one_second.start(1 * 1000)
-        # well, the first will be less than 6 hours, more like 10 seconds
+        # timer to generate DDH-alive notifications, first trigger at 10 s, then 6 h
+        self.timer_six_hours.timeout.connect(self._cb_timer_six_hours)
         self.timer_six_hours.start(10 * 1000)
-        self.timer_plot.start(1000)
-        if linux_is_rpi():
-            self.timer_cpu_hot.start(1000)
+        # main timer of the GUI, refreshes fields
+        self.timer_gui_one_second.timeout.connect(self._cb_timer_gui_one_second)
+        self.timer_gui_one_second.start(1 * 1000)
 
 
         # build context menu shortcuts
