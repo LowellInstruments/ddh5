@@ -34,5 +34,6 @@ lsb@git+https://github.com/LowellInstruments/lsb.git
 
 gps@git+https://github.com/LowellInstruments/gps.git
 ble@git+https://github.com/LowellInstruments/ble.git
+lix@git+https://github.com/LowellInstruments/lix.git
 # mat is installed differently
 
