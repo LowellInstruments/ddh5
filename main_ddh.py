@@ -1627,7 +1627,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             s = f'{hat}'
             m_t = r.get(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE).decode()
             if m_t:
-                s = f'{hat} | {m_t} °C'
+                s = f'{hat} {m_t} °C'
             self.lbl_power_txt.setText(s)
 
 
