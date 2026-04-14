@@ -1399,6 +1399,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a("error, redis server")
             app_state_set(EV_GUI_ERROR_REDIS, STR_EV_ERROR_REDIS, 5)
 
+        # set power shield value in redis when on laptop
         k = RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS
         if not linux_is_rpi():
             r.set(k, 'dev')
@@ -1435,6 +1436,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def _cb_timer_gui_one_second(self):
 
+        # detect any of the DDH processes is not there
+        k = RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING
+        if not r.exists(k):
+            gui_check_all_processes()
+            r.setex(k, 10, 1)
+
+
         # useful to see the debug output terminal
         # careful, this screws calibration offset screen until app restart
         if os.path.exists('/tmp/ddh_minimize'):
@@ -1452,9 +1460,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             graph_process_n_draw(self, reason=p_r)
             r.delete(RD_DDH_GUI_PLOT_REASON)
 
+
         # get raspberry RAM usage and CPU temperature every 10 minutes
         m_t = r.get(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE)
-        if not m_t:
+        if linux_is_rpi() and not m_t:
             r.setex(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, 600, 1)
             # get RAM usage
             m = psutil.virtual_memory()
@@ -1481,6 +1490,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             except (Exception,) as ex:
                 lg.a(f"error, getting vcgencmd -> {ex}")
 
+
         # update DATE and UPTIME fields, also a COUNTER for incremental stuff
         self.lbl_date_txt.setText(datetime.datetime.now().strftime(" %b %d %H:%M:%S"))
         _up = datetime.timedelta(seconds=time.perf_counter() - _g_ts_gui_boot)
@@ -1497,14 +1507,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_PERIODIC_REFRESH_MODELS):
             gui_populate_models_tab(self)
             r.setex(RD_DDH_GUI_PERIODIC_REFRESH_MODELS, 3600 * 24, 1)
-
-
-
-        # show if any of the DDH processes is not there
-        k = RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING
-        if not r.exists(k):
-            gui_check_all_processes()
-            r.setex(k, 10, 1)
 
 
 
@@ -1616,11 +1618,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # refresh ICON POWER in main tab left column less often
         k = RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS
         if r.exists(k):
-            hat = r.get(RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS).decode()
-            self.lbl_power_txt.setText(hat)
+            hat = r.get(k).decode()
             p = PATH_POWER_ICON_ERROR if hat == 'error' else PATH_POWER_ICON_OK
             self.lbl_power_img.setPixmap(QPixmap(p))
             r.delete(k)
+            s = f'{hat}'
+            if m_t:
+                s = f'{hat} | {m_t} °C'
+            self.lbl_power_txt.setText(s)
 
 
 
