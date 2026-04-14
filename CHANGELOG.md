@@ -122,3 +122,7 @@
     GUI, removed 2 one-second timers
     GUI, removed minimize conflictive button
     GUI, made maps only download every day instead of every hour
+
+5.0.27  04/14/26
+
+    GUI, added a celsius monitor for CPU in raspberry
