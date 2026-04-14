@@ -1426,7 +1426,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                     ans = float(ans.decode())
                     if ans > 80:
                         lg.a(f"debug, box temperature {ans} degrees Celsius")
-                r.setex(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, 600, str(ans))
+                    r.setex(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, 600, str(int(ans)))
 
             except (Exception,) as ex:
                 lg.a(f"error, getting vcgencmd -> {ex}")
