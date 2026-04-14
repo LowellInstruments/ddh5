@@ -45,7 +45,7 @@ from utils.redis import (
     RD_DDH_GUI_RV,
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
-    RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS,
+    RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
     RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE
 )
 from utils.ddh_common import (
@@ -1393,19 +1393,52 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def _cb_timer_gui_sixty_seconds(self):
+
+        # detect redis server is running
         c = "redis-cli ping"
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode:
             lg.a("error, redis server")
             app_state_set(EV_GUI_ERROR_REDIS, STR_EV_ERROR_REDIS, 5)
 
-        # set power shield value in redis when on laptop
-        k = RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS
+
+        # write to redis CPU temperature on raspberry
+        if linux_is_rpi():
+            # get RAM usage
+            m = psutil.virtual_memory()
+            if int(m.percent) > 75:
+                ma = m.available / 1e9
+                s = "statistics, {:.2f}% GB of RAM used, {:.2f} GB available"
+                lg.a(s.format(m.percent, ma))
+
+
+            # measure temperature of DDH box, tell when too high
+            c = "/usr/bin/vcgencmd measure_temp"
+            rv = sp.run(c, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
+
+            try:
+                ans = rv.stdout
+                if ans:
+                    # ans: b'temp=30.1'C'
+                    ans = ans.replace(b"\n", b"")
+                    ans = ans.replace(b"'C", b"")
+                    ans = ans.replace(b"temp=", b"")
+                    ans = float(ans.decode())
+                    if ans > 80:
+                        lg.a(f"debug, box temperature {ans} degrees Celsius")
+                r.setex(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, 600, str(ans))
+
+            except (Exception,) as ex:
+                lg.a(f"error, getting vcgencmd -> {ex}")
+
+
+        # set power shield value
+        k = RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS
         if not linux_is_rpi():
             r.set(k, 'dev')
-            return
 
-        # check power systems
+
+        # check power systems in case they exist
         path_flag_j4h = '/home/pi/li/.ddt_j4h_shield.flag'
         path_flag_sah = '/home/pi/li/.ddt_sailor_shield.flag'
         if os.path.exists(path_flag_j4h):
@@ -1419,7 +1452,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             else:
                 r.set(k, 'j4h')
 
-
         if os.path.exists(path_flag_sah):
             c = "systemctl is-active shrpid"
             rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
@@ -1429,7 +1461,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                               STR_EV_ERROR_POWER_SAH, 5)
                 r.set(k, 'error')
             else:
-                r.set(k, 'sai-h')
+                r.set(k, 'sai')
 
 
 
@@ -1459,36 +1491,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a(f"received plot request, reason = {p_r}")
             graph_process_n_draw(self, reason=p_r)
             r.delete(RD_DDH_GUI_PLOT_REASON)
-
-
-        # get raspberry RAM usage and CPU temperature every 10 minutes
-        m_t = r.get(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE)
-        if linux_is_rpi() and not m_t:
-            r.setex(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, 600, 1)
-            # get RAM usage
-            m = psutil.virtual_memory()
-            if int(m.percent) > 75:
-                ma = m.available / 1e9
-                s = "statistics, {:.2f}% GB of RAM used, {:.2f} GB available"
-                lg.a(s.format(m.percent, ma))
-
-            # measure temperature of DDH box, tell when too high
-            c = "/usr/bin/vcgencmd measure_temp"
-            rv = sp.run(c, shell=True, stderr=sp.PIPE, stdout=sp.PIPE)
-
-            try:
-                ans = rv.stdout
-                if ans:
-                    # ans: b'temp=30.1'C'
-                    ans = ans.replace(b"\n", b"")
-                    ans = ans.replace(b"'C", b"")
-                    ans = ans.replace(b"temp=", b"")
-                    ans = float(ans.decode())
-                    if ans > 80:
-                        lg.a(f"debug, box temperature {ans} degrees Celsius")
-
-            except (Exception,) as ex:
-                lg.a(f"error, getting vcgencmd -> {ex}")
 
 
         # update DATE and UPTIME fields, also a COUNTER for incremental stuff
@@ -1616,13 +1618,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # refresh ICON POWER in main tab left column less often
-        k = RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS
+        k = RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS
         if r.exists(k):
             hat = r.get(k).decode()
             p = PATH_POWER_ICON_ERROR if hat == 'error' else PATH_POWER_ICON_OK
             self.lbl_power_img.setPixmap(QPixmap(p))
             r.delete(k)
             s = f'{hat}'
+            m_t = r.get(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE).decode()
             if m_t:
                 s = f'{hat} | {m_t} °C'
             self.lbl_power_txt.setText(s)
