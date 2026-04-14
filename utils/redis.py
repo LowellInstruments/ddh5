@@ -96,4 +96,4 @@ RD_DDH_SLO_LS = p + 'ls:'
 
 p = 'ddh:power:'
 # for GUI to show status of j4h or sailorhat
-RD_DDH_AWS_NO_EXPIRE_POWER_HAT_STATUS = p + 'hat'
+RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS = p + 'hat'
