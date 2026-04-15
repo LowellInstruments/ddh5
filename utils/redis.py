@@ -15,6 +15,8 @@ RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_LOW = p + 'side_button_low'
 RD_DDH_GUI_GRAPH_STATISTICS = p + 'graph_statistics'
 # checked outside the ddh_main
 RD_DDH_GUI_RV = p + 'rv'
+# for beacon purposes
+RD_DDH_GUI_BEACON_FLAG = p + 'gui_beacon_flag'
 
 
 
@@ -28,7 +30,6 @@ RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS = p + 'gps_icon'
 RD_DDH_GUI_PERIODIC_CHECK_ICON_NET = p + 'cell_wifi_icon'
 RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD = p + 'aws_icon'
 RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE = p + 'cpu_temperature'
-RD_DDH_GUI_BEACON_FLAG = p + 'gui_beacon_flag'
 
 
 
