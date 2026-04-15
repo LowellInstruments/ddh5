@@ -471,10 +471,6 @@ def gui_setup_buttons(my_app):
     """link buttons and labels clicks and signals"""
     a = my_app
 
-    # hidden buttons
-    if not linux_is_rpi():
-        a.btn_sms.setEnabled(True)
-
     # LABEL clicks
     a.lbl_cloud_img.mousePressEvent = a.click_lbl_cloud_img
     a.lbl_brightness_img.mousePressEvent = a.click_lbl_brightness
@@ -502,7 +498,6 @@ def gui_setup_buttons(my_app):
     a.btn_note_yes_specific.clicked.connect(a.click_btn_note_yes_specific)
     a.chk_rerun.toggled.connect(a.click_chk_rerun)
     a.cb_s3_uplink_type.activated.connect(a.click_chk_s3_uplink_type)
-    a.btn_sms.clicked.connect(a.click_btn_sms)
     a.btn_map_next.clicked.connect(a.click_btn_map_next)
     a.chk_ow.toggled.connect(a.click_chk_ow)
     a.btn_shortcuts.clicked.connect(a.click_btn_shortcuts)
@@ -1025,20 +1020,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-    def click_btn_sms(self):
-        s: str
-        if is_it_time_to('sms', 3600):
-            s = 'sending'
-            notify_via_sms('sms')
-        else:
-            s = 'already sent'
-        self.btn_sms.setText(s)
-        QCoreApplication.processEvents()
-        time.sleep(2)
-        self.btn_sms.setText("tech support")
-
-
-
     def click_btn_purge_his_db(self):
         """ deletes contents in history database """
 
@@ -1222,13 +1203,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     
     
     def click_lbl_commit_pressed(self, ev):
-        m = QMessageBox()
-        m.setIcon(QMessageBox.Icon.Information)
-        m.setWindowTitle("Beacon done")
-        m.setText("press OK")
         r.setex(RD_DDH_GUI_BEACON_FLAG, 120, 1)
         lg.a("pressed button beacon")
-        m.exec()
 
 
 
@@ -1638,8 +1614,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             r.delete(k)
             s = f'{hat}'
             m_t = r.get(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE).decode()
+            self.lbl_cpu_temp.setText('')
             if m_t:
-                s = f'{hat}  {m_t} °C'
+                self.lbl_cpu_temp.setText(f'CPU {m_t}°C')
             self.lbl_power_txt.setText(s)
 
 
@@ -1878,10 +1855,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.left_frame.setMaximumWidth(int(_w * .25))
         self.frame_2of2_expanded = True
         # self.btn_expand.setVisible(False)
-
-
-        # SMS support button
-        self.btn_sms.setVisible(False)
 
 
         # web engine viewer, put this on top
