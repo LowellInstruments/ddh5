@@ -46,7 +46,7 @@ from utils.redis import (
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
     RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
-    RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE
+    RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, RD_DDH_GUI_BEACON_FLAG
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -480,6 +480,7 @@ def gui_setup_buttons(my_app):
     a.lbl_brightness_img.mousePressEvent = a.click_lbl_brightness
     a.lbl_brightness_txt.mousePressEvent = a.click_lbl_brightness
     a.lbl_map.mousePressEvent = a.click_lbl_map_pressed
+    a.lbl_commit.mousePressEvent = a.click_lbl_commit_pressed
 
 
     # BUTTON clicks
@@ -1217,6 +1218,17 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if (.3 * w <= x <= .6 * w and
                     .3 * h <= y <= .6 * h):
                 print('click dtm central area')
+    
+    
+    
+    def click_lbl_commit_pressed(self, ev):
+        m = QMessageBox()
+        m.setIcon(QMessageBox.Icon.Information)
+        m.setWindowTitle("Beacon done")
+        m.setText("press OK")
+        r.setex(RD_DDH_GUI_BEACON_FLAG, 120, 1)
+        lg.a("pressed button beacon")
+        m.exec()
 
 
 
