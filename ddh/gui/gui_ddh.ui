@@ -41,7 +41,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab_info">
        <property name="sizePolicy">
@@ -1370,12 +1370,24 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="btn_sms">
-              <property name="enabled">
-               <bool>false</bool>
+             <widget class="QLabel" name="lbl_cpu_temp">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
               </property>
               <property name="text">
-               <string>tech support</string>
+               <string/>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
