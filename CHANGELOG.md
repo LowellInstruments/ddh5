@@ -126,3 +126,7 @@
 5.0.27  04/14/26
 
     GUI, added a celsius monitor for CPU in raspberry
+
+5.0.28  04/16/26
+
+    GPS test in main_ddc now updates slower, every 6 seconds instead of 3
