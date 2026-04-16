@@ -398,7 +398,7 @@ def _menu_cb_gps_signal_quality():
                 s += ('#' * int(v)) + '\n'
 
         print(s)
-        time.sleep(3)
+        time.sleep(6)
 
 
 
