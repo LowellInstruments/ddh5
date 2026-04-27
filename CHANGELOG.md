@@ -130,3 +130,7 @@
 5.0.28  04/16/26
 
     GPS test in main_ddc now updates slower, every 6 seconds instead of 3
+
+5.0.29  04/27/26
+
+    we do again cell firmware shield being written to /li/.fw_cell_ver
