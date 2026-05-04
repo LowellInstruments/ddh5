@@ -1603,6 +1603,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if via in ("wifi", "wi-fi") or not linux_is_rpi():
                 ssid = gui_get_my_current_wlan_ssid()
                 self.lbl_cell_wifi_txt.setText(ssid)
+            elif via == 'cell':
+                self.lbl_cell_wifi_txt.setText('cell')
+
 
 
         # refresh ICON POWER in main tab left column less often

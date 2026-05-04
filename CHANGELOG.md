@@ -134,3 +134,8 @@
 5.0.29  04/27/26
 
     we do again cell firmware shield being written to /li/.fw_cell_ver
+
+5.0.30  05/04/26
+
+    label cell/wifi in left column fixed
+
