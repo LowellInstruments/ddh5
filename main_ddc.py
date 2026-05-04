@@ -689,6 +689,8 @@ def _ddc_run_check():
         gfv, _ = gps_hat_get_firmware_version(port_ctrl)
         is_2022 = gfv and b'2022' in gfv
         is_2025 = gfv and b'2025' in gfv
+        if is_2022:
+            _w(f'cell firmware 2022 is fine, but 2025 is available')
         return is_2022 or is_2025
 
 
