@@ -139,3 +139,6 @@
 
     label cell/wifi in left column fixed
 
+5.0.31  05/04/26
+
+    better get_hat_cell_firmware_version and DDC report on cell fw year
