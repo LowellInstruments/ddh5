@@ -29,13 +29,6 @@ p_name = NAME_EXE_NET
 
 
 
-def ddh_net_get_internet_via():
-    via = r.get(RD_DDH_NET_PROCESS_OUTPUT)
-    return via.decode() if via else None
-
-
-
-
 def ddh_net_calculate_via():
 
     # check ANY NET via
