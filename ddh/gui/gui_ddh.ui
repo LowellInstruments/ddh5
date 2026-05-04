@@ -41,7 +41,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_info">
        <property name="sizePolicy">
@@ -543,7 +543,7 @@
                  </property>
                  <property name="font">
                   <font>
-                   <pointsize>18</pointsize>
+                   <pointsize>16</pointsize>
                   </font>
                  </property>
                  <property name="frameShape">
@@ -556,7 +556,7 @@
                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                  </property>
                  <property name="wordWrap">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
