@@ -228,12 +228,12 @@ class Ui_MainWindow(object):
         self.lbl_date_txt.setSizePolicy(sizePolicy)
         self.lbl_date_txt.setMinimumSize(QtCore.QSize(0, 40))
         font = QtGui.QFont()
-        font.setPointSize(18)
+        font.setPointSize(16)
         self.lbl_date_txt.setFont(font)
         self.lbl_date_txt.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         self.lbl_date_txt.setText("")
         self.lbl_date_txt.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
-        self.lbl_date_txt.setWordWrap(True)
+        self.lbl_date_txt.setWordWrap(False)
         self.lbl_date_txt.setObjectName("lbl_date_txt")
         self.horizontalLayout_18.addWidget(self.lbl_date_txt)
         self.verticalLayout_9.addLayout(self.horizontalLayout_18)
@@ -840,7 +840,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.tabs.setCurrentIndex(3)
+        self.tabs.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
