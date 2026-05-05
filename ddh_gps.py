@@ -307,23 +307,25 @@ def _ddh_gps(ignore_gui):
 
     # additional initialization of GPS
     if port_ctrl:
-        gfv, gfm = gps_hat_get_firmware_version(port_ctrl)
-        gfv = gfv.replace(b'AT+CVERSION\r', b'').decode()
-        lg.a(f'hat firmware version is {gfv}')
 
-        # old DDHv4 trick
-        # gfv: VERSION: EG25GGBR07A08M2GMay 18 2022 20:48:14Authors: QCT
-        with open(LI_PATH_CELL_FW, 'w') as f:
-            f.write(gfv)
+        if not os.path.exists(LI_PATH_CELL_FW) or os.path.getsize(LI_PATH_CELL_FW) == 0:
+            gfv, gfm = gps_hat_get_firmware_version(port_ctrl)
+            gfv = gfv.replace(b'AT+CVERSION\r', b'').decode()
+            lg.a(f'hat firmware version is {gfv}')
 
-        r.set(RD_DDH_GPS_NO_EXPIRES_HAT_GFV, gfv)
-        lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
-        rv = gps_hat_init(port_ctrl)
-        if rv:
-            lg.a(f'OK activate hat NMEA stream on {port_nmea}')
-            r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
-        else:
-            lg.a(f'error activate hat NMEA stream on {port_nmea}')
+            # do as in the old DDH v4
+            # gfv: VERSION: EG25GGBR07A08M2GMay 18 2022 20:48:14Authors: QCT
+            with open(LI_PATH_CELL_FW, 'w') as f:
+                f.write(gfv)
+
+            r.set(RD_DDH_GPS_NO_EXPIRES_HAT_GFV, gfv)
+            lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
+            rv = gps_hat_init(port_ctrl)
+            if rv:
+                lg.a(f'OK activate hat NMEA stream on {port_nmea}')
+                r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
+            else:
+                lg.a(f'error activate hat NMEA stream on {port_nmea}')
 
     else:
         # not hat, can still be puck or adafruit
