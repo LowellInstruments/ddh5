@@ -308,7 +308,7 @@ def _ddh_gps(ignore_gui):
     # additional initialization of GPS
     if port_ctrl:
 
-        if not os.path.exists(LI_PATH_CELL_FW) or os.path.getsize(LI_PATH_CELL_FW) == 0:
+        if (not os.path.exists(LI_PATH_CELL_FW)) or os.path.getsize(LI_PATH_CELL_FW) == 0:
             gfv, gfm = gps_hat_get_firmware_version(port_ctrl)
             gfv = gfv.replace(b'AT+CVERSION\r', b'').decode()
             lg.a(f'hat firmware version is {gfv}')
