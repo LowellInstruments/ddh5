@@ -20,6 +20,7 @@ fake_gps_position = [ 0, -0,]
 [monitored_macs]
 # example
 # "aa:bb:cc:dd:ee:ff" = "1234556"
+# "F0:5E:CD:25:A0:3D" = "2699991"
 
 
 

@@ -300,6 +300,7 @@ def _ddh_gps(ignore_gui):
         # None
         while 1:
             lg.a(f'error, we have no GPS at all, not even dummy')
+            lg.a(f'error, to solve this -> $ touch {LI_PATH_GPS_DUMMY}')
             r.delete(RD_DDH_GPS_NO_EXPIRES_ANTENNA)
             time.sleep(5)
 

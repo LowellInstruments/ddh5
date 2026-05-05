@@ -189,7 +189,7 @@ async def ble_download_tdo(d, full_query=False):
                         return 2
                     lg.a("logger has been in water, we download it")
         else:
-            lg.a('logger NOT running, not sending HBW command')
+            lg.a('warning, logger NOT running, not sending HBW command')
     else:
         lg.a("warning, not sending HBW command, disabled in configuration file")
 
