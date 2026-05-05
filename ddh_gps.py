@@ -308,6 +308,7 @@ def _ddh_gps(ignore_gui):
     # additional initialization of GPS
     if port_ctrl:
 
+        # obtain HAT GPS firmware version
         if (not os.path.exists(LI_PATH_CELL_FW)) or os.path.getsize(LI_PATH_CELL_FW) == 0:
             gfv, gfm = gps_hat_get_firmware_version(port_ctrl)
             gfv = gfv.replace(b'AT+CVERSION\r', b'').decode()
@@ -319,13 +320,16 @@ def _ddh_gps(ignore_gui):
                 f.write(gfv)
 
             r.set(RD_DDH_GPS_NO_EXPIRES_HAT_GFV, gfv)
-            lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
-            rv = gps_hat_init(port_ctrl)
-            if rv:
-                lg.a(f'OK activate hat NMEA stream on {port_nmea}')
-                r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
-            else:
-                lg.a(f'error activate hat NMEA stream on {port_nmea}')
+
+
+        # make HAT start reading GPS
+        lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
+        rv = gps_hat_init(port_ctrl)
+        if rv:
+            lg.a(f'OK activate hat NMEA stream on {port_nmea}')
+            r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
+        else:
+            lg.a(f'error activate hat NMEA stream on {port_nmea}')
 
     else:
         # not hat, can still be puck or adafruit
