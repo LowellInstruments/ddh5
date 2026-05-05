@@ -1616,11 +1616,12 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.lbl_power_img.setPixmap(QPixmap(p))
             r.delete(k)
             s = f'{hat}'
-            m_t = r.get(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE).decode()
+            self.lbl_power_txt.setText(s)
+            m_t = r.get(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE)
             self.lbl_cpu_temp.setText('')
             if m_t:
                 self.lbl_cpu_temp.setText(f'CPU {m_t}°C')
-            self.lbl_power_txt.setText(s)
+
 
 
 

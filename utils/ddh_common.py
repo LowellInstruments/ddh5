@@ -890,7 +890,7 @@ lang_msg_db = {
 def t_str(s):
     # putting this here allows for dynamic changing of language
     if s not in lang_msg_db.keys():
-        print(f"\033[33m** warning, no translation for text '{s}'\033[0m")
+        print(f"\033[33mwarning, no translation for text '{s}'\033[0m")
         return s
     if g_lang == 'en':
         return s
