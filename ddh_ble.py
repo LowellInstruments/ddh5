@@ -235,7 +235,7 @@ async def _ble_logger_id_and_download(d):
 
 
     # we can speed up things with this strategy
-    fq = not r.exists(RD_DDH_BLE_FULL_QUERY)
+    fq = not r.exists(RD_DDH_BLE_NO_NEED_FOR_FULL_QUERY)
 
 
     # first IDENTIFY, then DOWNLOAD
@@ -270,7 +270,12 @@ async def _ble_logger_id_and_download(d):
 
     # speed up things
     if rv == 0 and fq:
-        r.setex(RD_DDH_BLE_FULL_QUERY, 86400, 1)
+        r.setex(RD_DDH_BLE_NO_NEED_FOR_FULL_QUERY, 86400, 1)
+
+
+    if rv == 0:
+        now = datetime.datetime.now().strftime('%Y %B, %d at %H:%M:%S')
+        r.set(RD_DDH_BLE_LAST_OK_DL_FOR_MAC_ + mac, str(now) + ' / localtime')
 
 
     return rv
@@ -351,7 +356,7 @@ def _ddh_ble_scan_loggers(antenna_idx):
             # todo: do better key naming according to rd_ctt
             k = f"_ddh_smart_lock_out_tell_{m}"
             if not r.exists(k):
-                lg.a(f'debug: smart-lock-out prevents downloading {m}')
+                lg.a(f'debug, smart-lock-out prevents downloading {m}')
                 r.setex(k, 300, 1)
             slo_add(m)
 
@@ -375,7 +380,7 @@ def _ddh_ble_scan_loggers(antenna_idx):
         m = d.address
         if m not in ls_macs_nope:
             # m: '11:22:33:44:55:66'
-            lg.a(f'debug: it seems {m} is good to be downloaded')
+            lg.a(f'debug, it seems {m} is good to be downloaded')
 
 
     return ls_devs
