@@ -102,7 +102,7 @@ from utils.ddh_common import (
     STR_TAB_NAME_MORE_INFO, STR_TAB_NAME_MAPS_NEW, STR_DESC_INTERNAL,
     STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
-    STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_slo,
+    STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_slo, exp_get_skip_hbw,
 )
 import datetime
 import os
@@ -1882,10 +1882,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         lg.a("OK, finished booting GUI")
 
         # summary of experimental
-        if exp_get_skip_slo() == 1:
-            lg.a('note, this DDH will NOT ❌ use smart-lock-out')
+        if exp_get_skip_hbw() == 1:
+            lg.a('note, this DDH will NOT ❌ use feature has-been-in-water')
         else:
-            lg.a('note, this DDH WILL USE smart-lock-out')
+            lg.a('note, this DDH WILL USE feature has-been-in-water')
+        if exp_get_skip_slo() == 1:
+            lg.a('note, this DDH will NOT ❌ use feature smart-lock-out')
+        else:
+            lg.a('note, this DDH WILL USE feature smart-lock-out')
 
 
 
