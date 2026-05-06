@@ -582,11 +582,6 @@ def exp_get_custom_side_buttons_debounce_time():
 
 
 
-def exp_get_skip_hbw():
-    return _get_exp_key_from_cfg('use_skip_hbw')
-
-
-
 def exp_get_skip_slo():
     return _get_exp_key_from_cfg('skip_slo')
 

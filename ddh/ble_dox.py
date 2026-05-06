@@ -18,7 +18,7 @@ from utils.ddh_common import (
     TESTMODE_FILENAME_PREFIX,
     calculate_path_to_folder_within_dl_files_from_mac_address,
     ddh_config_does_flag_file_download_test_mode_exist,
-    exp_get_conf_dox, exp_get_skip_hbw, linux_is_rpi,
+    exp_get_conf_dox, linux_is_rpi,
 )
 from ddh_log import lg_ble as lg
 
@@ -101,29 +101,30 @@ async def ble_download_dox(d):
     lg.a(f"STS | logger was {state}")
 
 
-    # feature has-logger-been-in-water
+
+    # feature has-logger-been-in-water for this MAC address
     flag_ignore_hbw = ddh_get_template_of_path_of_hbw_flag_file().format(mac)
-    if exp_get_skip_hbw() != 1:
+    if os.path.exists(flag_ignore_hbw):
+        os.unlink(flag_ignore_hbw)
+        lg.a('detected file flag to ignore HBW, FORCE download it')
+    else:
+        # we might download it, or not
         if state == 'running':
             if v >= MIN_VERSION_HBW_CMD:
-                if os.path.exists(flag_ignore_hbw):
-                    os.unlink(flag_ignore_hbw)
-                    lg.a('file flag to ignore HBW exists, FORCE download it')
-                else:
-                    # normal HBW command
-                    lg.a('sending command Has-Been-in-Water')
-                    rv, v = await lc.cmd_hbw()
-                    _rae(rv, "hbw")
-                    lg.a(f"HBW | {v}")
-                    if v == 0:
-                        lg.a('logger has NOT been in water, no need to download it')
-                        await lc.ble_disconnect()
-                        return 2
-                    lg.a("logger has been in water, we download it")
+                lg.a('note, sending command Has-Been-in-Water')
+                rv, v = await lc.cmd_hbw()
+                _rae(rv, "hbw")
+                lg.a(f"HBW | {v}")
+                if v == 0:
+                    lg.a(f'this {logger_type} logger has NOT been in water, no need to download it')
+                    await lc.ble_disconnect()
+                    return 2
+                lg.a(f"this {logger_type} logger HAS been in water, we download it")
+            else:
+                lg.a(f"this {logger_type} logger does not support HBW command")
         else:
-            lg.a('warning, logger NOT running, not sending HBW command')
-    else:
-        lg.a("warning, not sending HBW command, disabled in configuration file")
+            lg.a('logger NOT running, not sending HBW command, will download it')
+
 
 
     rv = await lc.cmd_sws(g)
