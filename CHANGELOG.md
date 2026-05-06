@@ -142,3 +142,8 @@
 5.0.31  05/04/26
 
     better get_hat_cell_firmware_version and DDC report on cell fw year
+
+5.0.32  05/05/26
+
+    display summary of experimental features
+    GPS automatic port selection works better 
