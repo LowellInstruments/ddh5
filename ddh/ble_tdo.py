@@ -25,7 +25,7 @@ from utils.ddh_common import (
     exp_get_skip_hbw, linux_is_rpi,
 )
 from ddh_log import lg_ble as lg
-from utils.redis import RD_DDH_BLE_FULL_QUERY
+from utils.redis import RD_DDH_BLE_NO_NEED_FOR_FULL_QUERY
 
 lc = LoggerBle()
 

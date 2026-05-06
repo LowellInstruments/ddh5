@@ -146,4 +146,8 @@
 5.0.32  05/05/26
 
     display summary of experimental features
-    GPS automatic port selection works better 
+    GPS automatic port selection works better
+
+5.0.33  05/06/26
+
+    added redis key "ddh:ble:last_ok_dl_for_mac_"
