@@ -174,7 +174,7 @@ def utils_graph_fetch_csv_data(
 
 
     # ---------------------------------------------------------
-    # include any file NOT having a NO_WC flag
+    # include files NOT having a NO_WC flag
     # water mode graph filtering properly done on a file basis
     # ---------------------------------------------------------
     if ddh_do_we_graph_out_of_water_data():
