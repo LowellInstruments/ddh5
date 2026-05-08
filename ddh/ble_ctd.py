@@ -25,15 +25,14 @@ from utils.ddh_common import (
     exp_get_skip_hbw, linux_is_rpi,
 )
 from ddh_log import lg_ble as lg
-from utils.redis import RD_DDH_BLE_PREVENT_FULL_QUERY
+
+
+
+
 
 lc = LoggerBle()
-
-
-
-
 g_debug_not_delete_files = False
-BAT_FACTOR_TDO = 0.5454
+BAT_FACTOR_CTD = 0.5454
 MIN_VERSION_HBW_CMD = "4.2.21"
 
 
@@ -45,7 +44,7 @@ class BLEAppException(Exception):
 
 def _rae(rv, s):
     if rv:
-        raise BLEAppException("TDO interact " + s)
+        raise BLEAppException("CTD interact " + s)
 
 
 
@@ -58,18 +57,18 @@ def _une(rv, d, e, ce=0):
 
 
 
-async def _tdo_reconfigure_profiling(ver):
+async def _ctd_reconfigure_profiling(ver):
     if ver <= '4.0.20':
-        lg.a('warning, not reconfiguring TDO profiling on loggers <= v4.0.20')
+        lg.a('warning, not reconfiguring CTD profiling on loggers <= v4.0.20')
         return
-    lg.a(f'firmware v{ver} supports TDO profiling reconfiguration')
+    lg.a(f'firmware v{ver} supports CTD profiling reconfiguration')
 
 
     # check we want to load a dynamic SCF file
     d_prf_file = {}
-    fol_ddh = f'{ddh_get_path_to_folder_scripts()}/..'
+    fol = f'{ddh_get_path_to_folder_scripts()}/..'
     for i in ('slow', 'mid', 'fast', 'fixed5min'):
-        pdf = f'{fol_ddh}/.decided_scf_{i}.toml'
+        pdf = f'{fol}/.ctd_decided_scf_{i}.toml'
         if os.path.exists(pdf):
             lg.a(f'loading SCF file {os.path.basename(pdf)}')
             d_prf_file = toml.load(pdf)['profiling']
@@ -77,16 +76,16 @@ async def _tdo_reconfigure_profiling(ver):
             break
 
     if not d_prf_file:
-        lg.a('no SCF dictionary from file, not configuring TDO on-the-fly')
+        lg.a('no SCF dictionary from file, not configuring CTD on-the-fly')
         return
 
     rv, str_gcf = await lc.cmd_gcf()
     if rv:
-        lg.a('GCF failed, not configuring TDO on-the-fly')
+        lg.a('GCF failed, not configuring CTD on-the-fly')
         return
 
     # banner
-    lg.a(f"reconfiguring TDO profiling to {d_prf_file['mode']}")
+    lg.a(f"reconfiguring CTD profiling to {d_prf_file['mode']}")
 
     # str_gcf: 'GCF 2d000040000100001000600000200003000010719900030'
     str_gcf = str_gcf[6:]
@@ -116,7 +115,7 @@ async def _tdo_reconfigure_profiling(ver):
 
 
 
-async def ble_download_tdo(d, full_query=False):
+async def ble_download_ctd(d, full_query=False):
 
     # d: {'battery_level': 65535,
     #     'error': 'error comm.',
@@ -124,7 +123,7 @@ async def ble_download_tdo(d, full_query=False):
     #     'dl_files': [],
     #     'rerun': False,
     #     'gfv': '',
-    #     'dev': BLEDevice(D0:2E:AB:D9:29:48, TDO_AAA),
+    #     'dev': BLEDevice(D0:2E:AB:D9:29:48, CTD_AAA),
     #     'gps_pos': ('+41.610100', '-70.609300', datetime.datetime(2025, 8, 8, 15, 12, 29), '0'),
     #     'antenna_idx': 0,
     #     'antenna_desc': 'internal',
@@ -142,9 +141,9 @@ async def ble_download_tdo(d, full_query=False):
     _rae(not rv, "connecting")
     lg.a(f"connected to {mac}")
     if full_query:
-        lg.a(f'OK, TDO download full query ON')
+        lg.a(f'OK, CTD download full query ON')
     else:
-        lg.a(f'note, TDO download full query OFF')
+        lg.a(f'note, CTD download full query OFF')
 
 
 
@@ -152,7 +151,7 @@ async def ble_download_tdo(d, full_query=False):
         lg.a(f"warning, logger reset file {mac} found, deleting it")
         await lc.cmd_rst()
         # out of here for sure
-        raise BLEAppException("TDO interact logger reset file")
+        raise BLEAppException("CTD interact logger reset file")
 
 
 
@@ -207,14 +206,15 @@ async def ble_download_tdo(d, full_query=False):
         lg.a(f"UTM | {t}")
 
 
+
     rv, b = await lc.cmd_bat()
     _rae(rv, "bat")
     adc_b = b
-    b /= BAT_FACTOR_TDO
+    b /= BAT_FACTOR_CTD
     lg.a(f"BAT | ADC {adc_b} mV -> battery {int(b)} mV")
     d["battery_level"] = b
     if adc_b < 982:
-        ln = LoggerNotification(mac, sn, 'TDO', adc_b)
+        ln = LoggerNotification(mac, sn, 'CTD', adc_b)
         notify_logger_error_low_battery(g, ln)
         app_state_set(EV_BLE_LOW_BATTERY, t_str(STR_EV_BLE_LOW_BATTERY))
         d['error'] = 'low battery'
@@ -324,14 +324,14 @@ async def ble_download_tdo(d, full_query=False):
 
 
 
-    # check sensor Pressure, always full query because HBW
+    # check sensor Pressure, always because HBW
     rv = await lc.cmd_gsp()
     # rv: (0, 1241)
     bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
     if bad_rv:
         _une(bad_rv, d, "P_sensor_error", ce=1)
         lg.a(f'GSP | error {rv}')
-        ln = LoggerNotification(mac, sn, 'TDO', b)
+        ln = LoggerNotification(mac, sn, 'CTD', b)
         notify_logger_error_sensor_pressure(g, ln)
         d['error'] = 'sensor P'
     _rae(bad_rv, "gsp")
@@ -339,7 +339,7 @@ async def ble_download_tdo(d, full_query=False):
 
 
     # reconfigure the logger settings
-    await _tdo_reconfigure_profiling(d['gfv'])
+    await _ctd_reconfigure_profiling(d['gfv'])
 
 
     # wake mode

@@ -81,7 +81,7 @@ def _file_lowell_raw_csv_to_emolt_lt_csv(filename):
             ol = '{},{},{}'.format(ilc.replace('\n', ''), lat, lon)
             f.write(ol)
 
-    lg.a(f'OK: generated trawling CST file {cst_filename}')
+    lg.a(f'OK, generated trawling CST file {cst_filename}')
 
 
 def file_lowell_raw_csv_to_emolt_lt_csv(filename):

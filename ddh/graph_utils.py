@@ -46,7 +46,9 @@ def utils_graph_classify_file_wc_mode(p):
     bn = os.path.basename(p)
     _is_tdo = p.endswith('_TDO.csv')
     _is_dox = p.endswith('_DissolvedOxygen.csv')
-    if not _is_tdo and not _is_dox:
+    _is_ctd = p.endswith('_CTD.csv')
+
+    if not _is_tdo and not _is_dox and not _is_ctd:
         lg.a('error, bad file to set water column mode')
         return False
 
@@ -67,7 +69,7 @@ def utils_graph_classify_file_wc_mode(p):
 
     # decision for DO-1 loggers
     if _is_dox and 'Water' not in h:
-        lg.a(f'graph water column mode = True for DO-1 file {bn}')
+        lg.a(f'note, graph water column mode = True for DO-1 file {bn}')
         pathlib.Path(f_wc).touch()
         return True
 
@@ -79,17 +81,19 @@ def utils_graph_classify_file_wc_mode(p):
         for i in ll[3:]:
             w_cur = float(i.split(',')[-1])
             if w_cur > 50:
-                lg.a(f'graph water column mode = True for DO2 file {bn}')
+                lg.a(f'note, graph water column mode = True for DO2 file {bn}')
                 pathlib.Path(f_wc).touch()
                 return True
 
-        lg.a(f'graph water column mode = False for DO2 file {bn}')
+        lg.a(f'note, graph water column mode = False for DO2 file {bn}')
         pathlib.Path(f_nowc).touch()
         return False
 
+
     # decision for TDO loggers, check pressure threshold
-    if _is_tdo:
-        lg.a(f'processing water column mode for TDO file {bn}')
+    if _is_tdo or _is_ctd:
+        _t = 'TDO' if _is_tdo else 'CTD'
+        lg.a(f'processing water column mode for {_t} file {bn}')
         df = _utils_graph_cached_read_csv(p)
 
         # df_iw: dataframe of values in water
@@ -97,15 +101,17 @@ def utils_graph_classify_file_wc_mode(p):
 
         been_in_water = len(df_iw) > 0
         if been_in_water:
-            lg.a(f'graph water column mode = True for TDO file {bn}')
+            lg.a(f'note, graph water column mode = True for {_t} file {bn}')
             pathlib.Path(f_wc).touch()
             return True
 
-        lg.a(f'graph water column mode = False for TDO file {bn}')
+        lg.a(f'note, graph water column mode = False for {_t} {bn}')
         pathlib.Path(f_nowc).touch()
         return False
 
+
     lg.a(f'error, _utils_graph_classify_file_wc_mode = Unknown for file {p}')
+    return False
 
 
 
@@ -301,7 +307,7 @@ def utils_graph_fetch_csv_data(
 
     # summary
     rv: dict
-    s = "graph parameters:\n\tmetric {}\n\tfolder {}\n\thauls {}\n\thi {}"
+    s = "note, graph parameters\n\tmetric {}\n\tfolder {}\n\thauls {}\n\thi {}"
     lg.a(s.format(met, basename(fol), htv, hi))
 
 

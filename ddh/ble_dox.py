@@ -121,7 +121,7 @@ async def ble_download_dox(d):
                         return 2
                     lg.a("logger has been in water, we download it")
         else:
-            lg.a('warning, logger NOT running, not sending HBW command')
+            lg.a('logger NOT running, not sending HBW command')
     else:
         lg.a("warning, not sending HBW command, disabled in configuration file")
 
