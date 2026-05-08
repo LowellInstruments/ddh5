@@ -178,12 +178,12 @@ def utils_graph_fetch_csv_data(
     # water mode graph filtering properly done on a file basis
     # ---------------------------------------------------------
     if ddh_do_we_graph_out_of_water_data():
-        lg.a('out of water data, detected user setting so INCLUDING it in graph')
+        lg.a('note, detected out-of-water GUI check, so GRAPHING all data')
         _g_ff_dot_wc = _g_ff_dot
         _g_ff_tdo_wc = _g_ff_tdo
         _g_ff_ctd_wc = _g_ff_ctd
     else:
-        lg.a('out of water data, did NOT detect user setting so NOT INCLUDING it in graph')
+        lg.a('note, empty out-of-water GUI check, so NOT-GRAPHING such data')
         _g_ff_dot_wc = [
             i for i in _g_ff_dot
             if not os.path.exists(_gfm_build_filename_no_wc(i))
@@ -253,7 +253,7 @@ def utils_graph_fetch_csv_data(
     if pressed_haul_next:
         d_last_haul_index[fol] = (d_last_haul_index[fol] - 1) % nh
         hi = d_last_haul_index[fol]
-        lg.a(f'asked haul #{hi} / {nh} for folder {fol}')
+        lg.a(f'asked haul #{hi} / {nh} for folder {os.path.dirname(fol)}')
 
 
     # type of haul to graph
@@ -313,6 +313,7 @@ def utils_graph_fetch_csv_data(
 
     # calculate time performance of data-grabbing procedure
     start_ts = time.perf_counter()
+
 
     # ================
     # read cached CSV
