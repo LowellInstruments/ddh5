@@ -1343,8 +1343,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_graph_btn_reset(self):
-        self.g.getPlotItem().enableAutoRange()
+        self.pw.getPlotItem().enableAutoRange()
         graph_request(reason='user')
+
 
 
     def click_btn_plt_units(self):
@@ -1817,9 +1818,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # graphing tab
-        self.g = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
-        self.lay_g_h2.addWidget(self.g)
-        self.g.setBackground('w')
+        self.pw = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
+        self.lay_g_h2.addWidget(self.pw)
+        self.pw.setBackground('w')
         self.btn_g_next_haul.setEnabled(False)
         self.btn_g_next_haul.setVisible(False)
         self.lbl_graph_busy.setVisible(False)

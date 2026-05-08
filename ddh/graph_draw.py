@@ -1,3 +1,4 @@
+import glob
 import random
 
 import redis
@@ -30,8 +31,8 @@ pg.setConfigOption('leftButtonPan', False)
 
 
 # plot objects
-p1 = None
-p2 = None
+pw_it = None
+pw_vb = None
 just_booted = True
 
 # this one is dynamic so it needs a backup
@@ -77,7 +78,7 @@ def _sty(color):
 
 
 
-def _get_color_by_label(lbl):
+def _graph_get_color_by_label(lbl):
     # google for SVG 1.0 color names
     if 'Temperature' in lbl:
         return 'red'
@@ -89,6 +90,8 @@ def _get_color_by_label(lbl):
         return 'blue'
     if 'Ax' in lbl:
         return 'limegreen'
+    if 'Conductivity' in lbl:
+        return 'magenta'
     return 'green'
 
 
@@ -182,46 +185,253 @@ def _graph_check_mac_has_dl_files(mac, fol_ls):
 
 def _graph_update_views():
     # used when resizing
-    global p1, p2, p3
+    global pw_it, pw_vb, p3
     # for the second line
-    p2.setGeometry(p1.vb.sceneBoundingRect())
-    p2.linkedViewChanged(p1.vb, p2.XAxis)
+    pw_vb.setGeometry(pw_it.vb.sceneBoundingRect())
+    pw_vb.linkedViewChanged(pw_it.vb, pw_vb.XAxis)
     # for the 3+ line
     if p3:
-        p3.setGeometry(p1.vb.sceneBoundingRect())
-        p3.linkedViewChanged(p1.vb, p3.XAxis)
+        p3.setGeometry(pw_it.vb.sceneBoundingRect())
+        p3.linkedViewChanged(pw_it.vb, p3.XAxis)
+
+
+
+def _graph_update_views_ctd():
+    # used when resizing, for the second line
+    global pw_it, pw_vb
+    pw_vb.setGeometry(pw_it.vb.sceneBoundingRect())
+    pw_vb.linkedViewChanged(pw_it.vb, pw_vb.YAxis)
 
 
 
 
-def _graph_busy_sign_show(a):
-    a.lbl_graph_busy.setVisible(True)
-    QCoreApplication.processEvents()
-
-
-
-
-def _graph_busy_sign_hide(a):
-    a.lbl_graph_busy.setVisible(False)
-
-
-
-
-def clear_graph(a):
-    global p1
-    global p2
+def _graph_clear():
+    global pw_it
+    global pw_vb
     global p3
     global p3_bak
-    if p1:
-        p1.scene().removeItem(p3_bak)
-        p1.getAxis('right').setVisible(False)
-        p1.getAxis('left').setVisible(False)
-        p1.getAxis('bottom').setVisible(False)
-        p1.clear()
-    if p2:
-        p2.clear()
+    if pw_it:
+        pw_it.scene().removeItem(p3_bak)
+        pw_it.getAxis('right').setVisible(False)
+        pw_it.getAxis('left').setVisible(False)
+        pw_it.getAxis('bottom').setVisible(False)
+        pw_it.clear()
+    if pw_vb:
+        pw_vb.clear()
     if p3:
         p3.clear()
+
+
+
+def _graph_are_we_plotting_ctd(fol) -> bool:
+    # path: /home/kaz/PycharmProjects/ddh/dl_files/<mac>
+    mask_ctd = f'{fol}/*_CTD.csv'
+    n_ctd = len(glob.glob(mask_ctd))
+    return n_ctd > 0
+
+
+
+
+
+
+
+def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
+
+    pw = a.pw
+
+
+    # CLEAR graph and start from scratch
+    global pw_it
+    global pw_vb
+    global p3
+    global p3_bak
+    if pw_it:
+        pw_it.scene().removeItem(p3_bak)
+        pw_it.clear()
+    if pw_vb:
+        pw_vb.clear()
+    if p3:
+        p3.clear()
+    pw_it = pw.plotItem
+    pw.showGrid(x=True, y=True)
+
+
+    # prevents weird things in units when setting axis titles
+    pw_it.getAxis('left').enableAutoSIPrefix(enable=False)
+
+
+    # 2nd line in the plot
+    pw_vb = pg.ViewBox(enableMenu=True)
+    pw_it.showAxis('top')
+    pw_it.scene().addItem(pw_vb)
+    pw_it.getAxis('top').linkToView(pw_vb)
+    pw_vb.setYLink(pw_it)
+
+
+    # connect thing when resizing
+    _graph_update_views_ctd()
+    pw_it.vb.sigResized.connect(_graph_update_views_ctd)
+
+
+    # font: TICKS TEXT
+    font = QtGui.QFont()
+    font.setPixelSize(16)
+    font.setBold(True)
+    pw_it.getAxis("top").setStyle(tickFont=font)
+    pw_it.getAxis("left").setStyle(tickFont=font)
+
+
+
+    # data: get CTD CSV points
+    pressed_haul_next = plot_reason == 'hauls_next'
+    data = utils_graph_fetch_csv_data(
+        fol,
+        _haul_time_view,
+        pressed_haul_next
+    )
+    if not data:
+        lg.a(f'warning, no data to plot in folder {fol}')
+        raise GraphException(f'no data to plot')
+    if 'error' in data.keys():
+        raise GraphException(f'{data["error"]}')
+    if 'ISO 8601 Time' not in data.keys():
+        raise GraphException(f'error, no time data for {fol}')
+    if data['metric'] != 'CTD':
+        lg.a('error, should not happen metric not CTD')
+
+
+    # data: format like labels, fathoms to meters, Fahrenheit to Celsius
+    lbl1 = 'Depth (fathoms) TP'
+    lbl2 = 'Temperature (F) TDO'
+    lbl3 = 'Conductivity (mS/cm)'
+    y1 = data[lbl1]
+    y2 = data[lbl2]
+    y3 = data[lbl3]
+    imp_or_metric = a.btn_plt_units.text()
+    if imp_or_metric == "Metric":
+        lbl1 = 'Depth (m) TDO'
+        lbl2 = 'Temperature (C) TDO'
+        y1 = [y * 1.8288 for y in y1]
+        y2 = [((y - 32) * (5 / 9)) for y in y2]
+    elif imp_or_metric == "Metric":
+        lbl2 = 'Temperature (C) TDO'
+        y2 = [((y - 32) * (5 / 9)) for y in y2]
+
+    # set any pressure value < 0 to 0
+    arr = np.array(y1)
+    arr[arr < 0] = 0
+    y1 = list(arr)
+
+
+    # colors
+    lbl1 = lbl1.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
+    lbl2 = lbl2.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
+    lbl3 = lbl3.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
+    clr_1 = _graph_get_color_by_label(lbl1)
+    clr_2 = _graph_get_color_by_label(lbl2)
+    clr_3 = _graph_get_color_by_label(lbl3)
+    pen1 = pg.mkPen(color=clr_1, width=2)
+    pen2 = pg.mkPen(color=clr_2, width=2)
+    pen3 = pg.mkPen(color=clr_3, width=1)
+    pw_it.getAxis('top').setTextPen('black')
+    pw_it.getAxis('left').setTextPen(clr_2)
+    # avoids small glitch when re-zooming
+    pw.getPlotItem().enableAutoRange()
+
+
+
+    # graph CTD loggers
+    pw_it.getAxis('left').setTextPen(clr_1)
+    pw_it.setLabel("left", 'Depth (fathoms)' + ' ─', **_sty(clr_1))
+    if imp_or_metric == "Metric":
+        pw_it.setLabel("left", 'Depth (m)' + ' ─', **_sty(clr_1))
+    pw.getPlotItem().hideAxis('right')
+    pw_it.plot(x=y1, y=y2, pen=pen2, hoverable=True)
+    pw_it.plot(x=y1, y=y3, pen=pen3, hoverable=True)
+    pw_it.setYRange(.1, np.nanmax(y1), padding=0)
+
+
+    # solves problem of dancing x-axis ticks
+    bt = []
+    _i = np.nanmin(y2)
+    while _i < np.nanmax(y2):
+        bt.append(_i)
+        # _i += 1
+        _i += ((np.nanmax(y2) - np.nanmin(y2)) / 10)
+    pw_it.getAxis('bottom').setTicks(([[(v, '{:5.1f}'.format(v)) for v in bt]]))
+
+
+
+    # statistics: benchmark and number of points
+    # end_ts = time.perf_counter()
+    # el_ts = int((end_ts - start_ts) * 1000)
+    # lg.a(f'it took {el_ts} ms to PLOT {len(x)} {met} data points')
+
+
+    # # ------------------------------------
+    # # statistics: summary box in main tab
+    # # ------------------------------------
+    # r.delete(RD_DDH_GUI_GRAPH_STATISTICS)
+    # is_rpi = linux_is_rpi()
+    #
+    # try:
+    #     been_water = False
+    #     if met == 'TDO':
+    #         if (not is_rpi) or (is_rpi and plot_reason == 'BLE'):
+    #             dp = y1
+    #             dt = y2
+    #
+    #             # calculate 80th percentile to target bottom sea values
+    #             p80 = _percentile(dp, 80)
+    #             lg.a(f'statistics TDO, pressure percentile 80 = {p80} for {imp_or_metric}')
+    #
+    #             ls_p, ls_t = [], []
+    #             for i, p in enumerate(dp):
+    #                 if p >= p80:
+    #                     been_water = True
+    #                     ls_p.append(dp[i])
+    #                     ls_t.append(dt[i])
+    #
+    #             s = f'{sn}\nhaul summary\nTDO\n'
+    #             units_p = 'fathoms' if imp_or_metric == 'Imperial' else 'm'
+    #             units_t = 'F' if imp_or_metric == 'Imperial' else 'C'
+    #             if been_water:
+    #                 s += f'{t1}\n{t2}\n'
+    #                 stats_p = np.nanmean(ls_p)
+    #                 stats_t = np.nanmean(ls_t)
+    #                 s += '{:5.2f} {}\n'.format(stats_p, units_p)
+    #                 s += '{:5.2f} °{}'.format(stats_t, units_t)
+    #                 lg.a(f"statistics TDO for SN {sn}")
+    #                 lg.a(s)
+    #             else:
+    #                 s += f'{t1}\n{t2}\n(not available)'
+    #             r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
+    #
+    # except (Exception,) as ex:
+    #     lg.a(f'warning, exception {ex} while doing summary box for {imp_or_metric}')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -229,7 +439,7 @@ def clear_graph(a):
 def _graph_process_n_draw(a, plot_reason=''):
 
     # get graph from passed app
-    g = a.g
+    pw = a.pw
 
 
     # benchmark this graphing function
@@ -246,9 +456,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     _haul_time_view = d[a.cb_g_cycle_haul.currentIndex()]
 
 
-    # ------------------------------
     # get reason passed for graph
-    # ------------------------------
     sn = ''
     if plot_reason == 'BLE':
         # reason is an automatic download
@@ -275,6 +483,7 @@ def _graph_process_n_draw(a, plot_reason=''):
             raise GraphException(f'error, no files for SN {sn} mac {mac}')
         lg.a(f'selected dropdown SN {sn} / mac {mac}')
         fol = str(calculate_path_to_folder_within_dl_files_from_mac_address(mac))
+
 
 
     # get number of hauls inside this folder
@@ -305,46 +514,57 @@ def _graph_process_n_draw(a, plot_reason=''):
     a.cb_g_switch_tp.setVisible(False)
 
 
+
+    # -----------------------------------
+    # fol: MAC folder to plot
+    # plot_reason: who asked this plot
+    # -----------------------------------
+    if _graph_are_we_plotting_ctd(fol):
+        _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view)
+        return
+
+
     # ----------------------------------------
     # let's CLEAR graph and start from scratch
     # ----------------------------------------
-    global p1
-    global p2
+    global pw_it
+    global pw_vb
     global p3
     global p3_bak
-    if p1:
-        p1.scene().removeItem(p3_bak)
-        p1.clear()
-    if p2:
-        p2.clear()
+    if pw_it:
+        pw_it.scene().removeItem(p3_bak)
+        pw_it.clear()
+    if pw_vb:
+        pw_vb.clear()
     if p3:
         p3.clear()
-    p1 = g.plotItem
+    pw_it = pw.plotItem
+
 
 
     # this prevents weird things in units when setting axis titles
-    p1.getAxis('left').enableAutoSIPrefix(enable=False)
-    p1.getAxis('right').enableAutoSIPrefix(enable=False)
+    pw_it.getAxis('left').enableAutoSIPrefix(enable=False)
+    pw_it.getAxis('right').enableAutoSIPrefix(enable=False)
 
 
 
     # patch for bottom ticks, x are floats meaning timestamps
     # solves the problem of the x-axis ticks changing
-    g.setAxisItems({"bottom": pg.DateAxisItem()})
+    pw.setAxisItems({"bottom": pg.DateAxisItem()})
 
     # grid or not
-    g.showGrid(x=True, y=True)
+    pw.showGrid(x=True, y=True)
 
 
 
     # ---------------------
     # 2nd line in the plot
     # ---------------------
-    p2 = pg.ViewBox(enableMenu=True)
-    p1.showAxis('right')
-    p1.scene().addItem(p2)
-    p1.getAxis('right').linkToView(p2)
-    p2.setXLink(p1)
+    pw_vb = pg.ViewBox(enableMenu=True)
+    pw_it.showAxis('right')
+    pw_it.scene().addItem(pw_vb)
+    pw_it.getAxis('right').linkToView(pw_vb)
+    pw_vb.setXLink(pw_it)
 
 
 
@@ -356,29 +576,29 @@ def _graph_process_n_draw(a, plot_reason=''):
     if 'x-time' in tdo_graph_type:
         p3 = pg.ViewBox()
         ax3 = pg.AxisItem('right')
-        p1.scene().addItem(p3)
+        pw_it.scene().addItem(p3)
         ax3.linkToView(p3)
-        p3.setXLink(p1)
+        p3.setXLink(pw_it)
         ax3.setZValue(-10000)
         # so we can remove it later
         p3_bak = ax3
     else:
         p3_bak.setStyle(showValues=False)
-        p1.scene().removeItem(p3_bak)
+        pw_it.scene().removeItem(p3_bak)
 
 
     # connect thing when resizing
     _graph_update_views()
-    p1.vb.sigResized.connect(_graph_update_views)
+    pw_it.vb.sigResized.connect(_graph_update_views)
 
 
     # font: TICKS TEXT
     font = QtGui.QFont()
     font.setPixelSize(16)
     font.setBold(True)
-    p1.getAxis("bottom").setStyle(tickFont=font)
-    p1.getAxis("left").setStyle(tickFont=font)
-    p1.getAxis("right").setStyle(tickFont=font)
+    pw_it.getAxis("bottom").setStyle(tickFont=font)
+    pw_it.getAxis("left").setStyle(tickFont=font)
+    pw_it.getAxis("right").setStyle(tickFont=font)
 
 
 
@@ -460,15 +680,15 @@ def _graph_process_n_draw(a, plot_reason=''):
 
 
     # see if we need Depth-axis inverted
-    p1.invertY('Depth' in lbl1)
+    pw_it.invertY('Depth' in lbl1)
 
     # colors
     lbl1 = lbl1.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
     lbl2 = lbl2.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
     lbl3 = lbl3.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
-    clr_1 = _get_color_by_label(lbl1)
-    clr_2 = _get_color_by_label(lbl2)
-    clr_3 = _get_color_by_label(lbl3)
+    clr_1 = _graph_get_color_by_label(lbl1)
+    clr_2 = _graph_get_color_by_label(lbl2)
+    clr_3 = _graph_get_color_by_label(lbl3)
     clr_4 = 'magenta'
     lbl1 = lbl1 + ' ─'
     lbl2 = lbl2 + ' - -'
@@ -483,22 +703,22 @@ def _graph_process_n_draw(a, plot_reason=''):
     pen3 = pg.mkPen(color=clr_3, width=1)
     pen4 = pg.mkPen(color=clr_4, width=2)
     pen5 = pg.mkPen(color=clr_2, width=2, style=Qt.PenStyle.DotLine)
-    p1.getAxis('left').setTextPen(clr_1)
-    p1.getAxis('right').setTextPen(clr_2)
-    p1.getAxis('bottom').setTextPen('black')
+    pw_it.getAxis('left').setTextPen(clr_1)
+    pw_it.getAxis('right').setTextPen(clr_2)
+    pw_it.getAxis('bottom').setTextPen('black')
 
     # avoids small glitch when re-zooming
-    g.getPlotItem().enableAutoRange()
+    pw.getPlotItem().enableAutoRange()
 
     # -----------------
     # graph DO loggers
     # -----------------
     if met == 'DO':
         # draw DO (y1) and T (y2) lines
-        p1.setLabel("left", lbl1, **_sty(clr_1))
-        p1.getAxis('right').setLabel(lbl2, **_sty(clr_2))
-        p1.plot(x, y1, pen=pen1, hoverable=True)
-        p2.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True, connect='finite'))
+        pw_it.setLabel("left", lbl1, **_sty(clr_1))
+        pw_it.getAxis('right').setLabel(lbl2, **_sty(clr_2))
+        pw_it.plot(x, y1, pen=pen1, hoverable=True)
+        pw_vb.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True, connect='finite'))
 
         # dynamic upper top of DO
         upper_top_do = 10
@@ -507,28 +727,28 @@ def _graph_process_n_draw(a, plot_reason=''):
         upper_top_do = int(ceil(upper_top_do))
 
         # y-axis ranges, bottom-axis label
-        p1.setYRange(0, upper_top_do, padding=0)
-        p2.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
-        p1.getAxis('bottom').setLabel(title, **_sty('black'))
+        pw_it.setYRange(0, upper_top_do, padding=0)
+        pw_vb.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
+        pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
 
         # alpha, for zones, the lower, the more transparent
         alpha = 85
-        g.addItem(FiniteLinearRegionItem(values=(0, 2),
+        pw.addItem(FiniteLinearRegionItem(values=(0, 2),
                                          limits=4,
                                          orientation="horizontal",
                                          brush=(255, 0, 0, alpha),
                                          movable=False))
-        g.addItem(FiniteLinearRegionItem(values=(2, 4),
+        pw.addItem(FiniteLinearRegionItem(values=(2, 4),
                                          limits=4,
                                          orientation="horizontal",
                                          brush=(255, 170, 6, alpha),
                                          movable=False))
-        g.addItem(FiniteLinearRegionItem(values=(4, 6),
+        pw.addItem(FiniteLinearRegionItem(values=(4, 6),
                                          limits=4,
                                          orientation="horizontal",
                                          brush=(255, 255, 66, alpha),
                                          movable=False))
-        g.addItem(FiniteLinearRegionItem(values=(6, upper_top_do),
+        pw.addItem(FiniteLinearRegionItem(values=(6, upper_top_do),
                                          limits=4,
                                          orientation="horizontal",
                                          brush=(176, 255, 66, alpha),
@@ -539,15 +759,15 @@ def _graph_process_n_draw(a, plot_reason=''):
     # -----------------------------------------
     if met == 'TP':
         # draw T and D lines
-        p1.setLabel("left", lbl1, )
-        p1.getAxis('right').setLabel(lbl2, **_sty(clr_2))
-        p1.plot(x, y1, pen=pen1, hoverable=True)
-        p2.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True))
+        pw_it.setLabel("left", lbl1, )
+        pw_it.getAxis('right').setLabel(lbl2, **_sty(clr_2))
+        pw_it.plot(x, y1, pen=pen1, hoverable=True)
+        pw_vb.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True))
 
         # y-axis ranges, bottom-axis label
-        p1.setYRange(0, max(y1) + _axis_room(y1), padding=0)
-        p2.setYRange(min(y2), max(y2), padding=0)
-        p1.getAxis('bottom').setLabel(title, **_sty('black'))
+        pw_it.setYRange(0, max(y1) + _axis_room(y1), padding=0)
+        pw_vb.setYRange(min(y2), max(y2), padding=0)
+        pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
 
 
     # ------------------
@@ -559,16 +779,16 @@ def _graph_process_n_draw(a, plot_reason=''):
 
         # type of TDO plot 1/2: D (y1) & T (y2) vs time
         if 'x-time' in tdo_graph_type:
-            p1.setLabel('left', lbl1, units='', **_sty(clr_1))
-            p1.getAxis('right').setLabel(lbl2, **_sty(clr_2))
+            pw_it.setLabel('left', lbl1, units='', **_sty(clr_1))
+            pw_it.getAxis('right').setLabel(lbl2, **_sty(clr_2))
 
             # display any pressure value < 0 as 0
             arr = np.array(y1)
             arr[arr < 0] = 0
             y1 = list(arr)
-            p1.plot(x, y1, pen=pen1, hoverable=True)
-            p2.addItem(pg.PlotCurveItem(x, y2, pen=pen2,
-                                        hoverable=True, connect='finite'))
+            pw_it.plot(x, y1, pen=pen1, hoverable=True)
+            pw_vb.addItem(pg.PlotCurveItem(x, y2, pen=pen2,
+                                           hoverable=True, connect='finite'))
 
             # fast check
             if np.isnan(y1).all() and np.isnan(y2).all():
@@ -577,12 +797,12 @@ def _graph_process_n_draw(a, plot_reason=''):
 
             # left y inverted: 1st parameter y-up, 2nd y-low
             # .1 prevents displaying negative pressure values
-            p1.setYRange(.01, np.nanmax(y1), padding=0)
+            pw_it.setYRange(.01, np.nanmax(y1), padding=0)
             # right y not inverted: 1st parameter y-low, 2nd y-up
-            p2.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
+            pw_vb.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
 
             # bottom-axis label
-            p1.getAxis('bottom').setLabel(title, **_sty('black'))
+            pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
 
 
             # ----------------------------------------
@@ -601,8 +821,8 @@ def _graph_process_n_draw(a, plot_reason=''):
                 if y1[i] >= max_depth_80:
                     x_bottom.append(x[i])
                     y2_bottom.append(mean_t_80)
-            p2.addItem(pg.PlotCurveItem(x_bottom, y2_bottom, pen=pen5,
-                                        hoverable=True, connect='finite'))
+            pw_vb.addItem(pg.PlotCurveItem(x_bottom, y2_bottom, pen=pen5,
+                                           hoverable=True, connect='finite'))
 
 
 
@@ -650,13 +870,13 @@ def _graph_process_n_draw(a, plot_reason=''):
 
         # type of TDO plot 2/2: T (y2) / D (y1) vs time
         elif 'x-Temp' in tdo_graph_type:
-            p1.getAxis('left').setTextPen(clr_4)
-            p1.setLabel("left", 'Depth (fathoms)' + ' ─', **_sty(clr_4))
+            pw_it.getAxis('left').setTextPen(clr_4)
+            pw_it.setLabel("left", 'Depth (fathoms)' + ' ─', **_sty(clr_4))
             if imp_or_metric == "Metric":
-                p1.setLabel("left", 'Depth (m)' + ' ─', **_sty(clr_4))
+                pw_it.setLabel("left", 'Depth (m)' + ' ─', **_sty(clr_4))
 
             # remove whole right axis
-            g.getPlotItem().hideAxis('right')
+            pw.getPlotItem().hideAxis('right')
 
             # set any pressure value < 0 to 0
             arr = np.array(y1)
@@ -672,18 +892,18 @@ def _graph_process_n_draw(a, plot_reason=''):
             # p1.plot(x=cy2, y=cy1, pen=pen4, hoverable=True)
 
             # don't modify
-            p1.plot(x=y2, y=y1, pen=pen4, hoverable=True)
+            pw_it.plot(x=y2, y=y1, pen=pen4, hoverable=True)
 
             # left y inverted: 1st parameter y-up, 2nd y-low
             # .1 prevents displaying negative pressure values
-            p1.setYRange(.1, np.nanmax(y1), padding=0)
+            pw_it.setYRange(.1, np.nanmax(y1), padding=0)
 
             # title and bottom axis
             if imp_or_metric == "Imperial":
                 title = f'Temperature (F) {title}'
             else:
                 title = f'Temperature (C) {title}'
-            p1.getAxis('bottom').setLabel(title, **_sty('black'))
+            pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
 
             # patch for bottom ticks, y2 are floats
             # solves the problem of the x-axis ticks changing
@@ -693,7 +913,7 @@ def _graph_process_n_draw(a, plot_reason=''):
                 bt.append(_i)
                 # _i += 1
                 _i += ((np.nanmax(y2) - np.nanmin(y2)) / 10)
-            p1.getAxis('bottom').setTicks(([[(v, '{:5.1f}'.format(v)) for v in bt]]))
+            pw_it.getAxis('bottom').setTicks(([[(v, '{:5.1f}'.format(v)) for v in bt]]))
 
             # or we could set the x-axis label on top
             # a.g.setTitle(e, color="red", size="15pt")
@@ -788,29 +1008,30 @@ def _graph_process_n_draw(a, plot_reason=''):
 
 
 
-def graph_process_n_draw(a, reason=''):
+def graph_process_n_draw(app, reason=''):
     try:
-        _graph_busy_sign_show(a)
-        _graph_process_n_draw(a, reason)
+        app.lbl_graph_busy.setVisible(True)
+        QCoreApplication.processEvents()
+        _graph_process_n_draw(app, reason)
         # remove any past error
-        a.g.setTitle('')
+        app.pw.setTitle('')
 
     except GraphException as e:
         # errors such as "no data files to graph"
-        a.g.setTitle(e, color="red", size="15pt")
-        a.g.getAxis('bottom').setLabel("")
-        clear_graph(a)
+        app.pw.setTitle(e, color="red", size="15pt")
+        app.pw.getAxis('bottom').setLabel("")
+        _graph_clear()
 
     except (Exception,) as ex:
         # not GraphException, but python errors such as IndexError
         e = 'undefined error, see log'
-        a.g.setTitle(e, color="red", size="15pt")
+        app.pw.setTitle(e, color="red", size="15pt")
         lg.a(f"error, graph_embed -> {str(ex)}")
-        a.g.getAxis('bottom').setLabel("")
-        clear_graph(a)
+        app.pw.getAxis('bottom').setLabel("")
+        _graph_clear()
 
     finally:
-        _graph_busy_sign_hide(a)
+        app.lbl_graph_busy.setVisible(False)
 
 
 
