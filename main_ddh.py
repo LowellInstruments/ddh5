@@ -1819,6 +1819,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # graphing tab
         self.pw = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
+        self.pw_ctd = None
         self.lay_g_h2.addWidget(self.pw)
         self.pw.setBackground('w')
         self.btn_g_next_haul.setEnabled(False)
