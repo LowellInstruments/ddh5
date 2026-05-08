@@ -218,12 +218,16 @@ def get_total_number_of_hauls(path):
         mask_do = f'{path}/*_DissolvedOxygen.csv'
         mask_mat = f'{path}/*_Pressure.csv'
         mask_tdo = f'{path}/*_TDO.csv'
+        mask_ctd = f'{path}/*_CTD.csv'
         n_do = len(glob.glob(mask_do))
         n_tdo = len(glob.glob(mask_tdo))
+        n_ctd = len(glob.glob(mask_ctd))
         if n_tdo:
             mask = mask_tdo
         elif n_do:
             mask = mask_do
+        elif n_ctd:
+            mask = mask_ctd
         else:
             mask = mask_mat
     elif ls_bin:

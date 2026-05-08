@@ -91,7 +91,7 @@ def _graph_get_color_by_label(lbl):
     if 'Ax' in lbl:
         return 'limegreen'
     if 'Conductivity' in lbl:
-        return 'magenta'
+        return 'green'
     return 'green'
 
 
@@ -237,48 +237,14 @@ def _graph_are_we_plotting_ctd(fol) -> bool:
 
 def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
 
-    pw = a.pw
-
-
     # CLEAR graph and start from scratch
-    global pw_it
-    global pw_vb
-    global p3
-    global p3_bak
-    if pw_it:
-        pw_it.scene().removeItem(p3_bak)
-        pw_it.clear()
-    if pw_vb:
-        pw_vb.clear()
-    if p3:
-        p3.clear()
-    pw_it = pw.plotItem
-    pw.showGrid(x=True, y=True)
-
-
-    # prevents weird things in units when setting axis titles
-    pw_it.getAxis('left').enableAutoSIPrefix(enable=False)
-
-
-    # 2nd line in the plot
-    pw_vb = pg.ViewBox(enableMenu=True)
-    pw_it.showAxis('top')
-    pw_it.scene().addItem(pw_vb)
-    pw_it.getAxis('top').linkToView(pw_vb)
-    pw_vb.setYLink(pw_it)
-
-
-    # connect thing when resizing
-    _graph_update_views_ctd()
-    pw_it.vb.sigResized.connect(_graph_update_views_ctd)
-
-
-    # font: TICKS TEXT
-    font = QtGui.QFont()
-    font.setPixelSize(16)
-    font.setBold(True)
-    pw_it.getAxis("top").setStyle(tickFont=font)
-    pw_it.getAxis("left").setStyle(tickFont=font)
+    start_ts = time.perf_counter()
+    for i in reversed(range(a.lay_g_h2.count())):
+        a.lay_g_h2.itemAt(i).widget().setParent(None)
+    a.pw_ctd = pg.GraphicsLayoutWidget(show=True, title="Subplot Example")
+    pw = a.pw_ctd
+    a.lay_g_h2.addWidget(pw)
+    pw.setBackground('w')
 
 
 
@@ -300,22 +266,20 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
         lg.a('error, should not happen metric not CTD')
 
 
+
     # data: format like labels, fathoms to meters, Fahrenheit to Celsius
-    lbl1 = 'Depth (fathoms) TP'
+    lbl1 = 'Depth (fathoms) TDO'
     lbl2 = 'Temperature (F) TDO'
     lbl3 = 'Conductivity (mS/cm)'
     y1 = data[lbl1]
     y2 = data[lbl2]
     y3 = data[lbl3]
-    imp_or_metric = a.btn_plt_units.text()
-    if imp_or_metric == "Metric":
+    i_m = a.btn_plt_units.text()
+    if i_m == "Metric":
         lbl1 = 'Depth (m) TDO'
         lbl2 = 'Temperature (C) TDO'
         y1 = [y * 1.8288 for y in y1]
-        y2 = [((y - 32) * (5 / 9)) for y in y2]
-    elif imp_or_metric == "Metric":
-        lbl2 = 'Temperature (C) TDO'
-        y2 = [((y - 32) * (5 / 9)) for y in y2]
+        y2 = [((y -32) * (5/9)) for y in y2]
 
     # set any pressure value < 0 to 0
     arr = np.array(y1)
@@ -323,49 +287,54 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
     y1 = list(arr)
 
 
+
     # colors
-    lbl1 = lbl1.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
-    lbl2 = lbl2.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
-    lbl3 = lbl3.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
+    lbl1 = lbl1.replace(' TDO', '')
+    lbl2 = lbl2.replace(' TDO', '')
     clr_1 = _graph_get_color_by_label(lbl1)
     clr_2 = _graph_get_color_by_label(lbl2)
     clr_3 = _graph_get_color_by_label(lbl3)
     pen1 = pg.mkPen(color=clr_1, width=2)
     pen2 = pg.mkPen(color=clr_2, width=2)
     pen3 = pg.mkPen(color=clr_3, width=1)
-    pw_it.getAxis('top').setTextPen('black')
-    pw_it.getAxis('left').setTextPen(clr_2)
-    # avoids small glitch when re-zooming
-    pw.getPlotItem().enableAutoRange()
+
+
+    # fonts
+    font = QtGui.QFont()
+    font.setPixelSize(16)
+    font.setBold(True)
 
 
 
-    # graph CTD loggers
-    pw_it.getAxis('left').setTextPen(clr_1)
-    pw_it.setLabel("left", 'Depth (fathoms)' + ' ─', **_sty(clr_1))
-    if imp_or_metric == "Metric":
-        pw_it.setLabel("left", 'Depth (m)' + ' ─', **_sty(clr_1))
-    pw.getPlotItem().hideAxis('right')
-    pw_it.plot(x=y1, y=y2, pen=pen2, hoverable=True)
-    pw_it.plot(x=y1, y=y3, pen=pen3, hoverable=True)
-    pw_it.setYRange(.1, np.nanmax(y1), padding=0)
+    # data
+    p1 = pw.addPlot()
+    p1.getAxis('left').setLabel(lbl1)
+    p1.getAxis('left').label.setFont(font)
+    p1.getAxis('left').setStyle(tickFont=font)
+    p1.getAxis('bottom').setStyle(tickFont=font)
+    p1.getAxis('bottom').setTextPen(pen2)
+    p1.getAxis('bottom').setLabel(lbl2)
+    p1.getAxis('bottom').label.setFont(font)
+    # p1.getAxis('bottom').setXRange(0,100, padding=0)
+    p1.enableAutoRange()
+    p1.plot(y2, y1, pen=pen2)
+    p2 = pw.addPlot()
+    p2.getAxis('left').setStyle(tickFont=font)
+    p2.getAxis('bottom').setStyle(tickFont=font)
+    p2.getAxis('bottom').setTextPen(pen3)
+    p2.getAxis('bottom').setLabel(lbl3)
+    p2.getAxis('bottom').label.setFont(font)
+    p2.enableAutoRange()
+    p2.plot(y3, y1, pen=pen3)
+    p2.setYLink(p1)
 
-
-    # solves problem of dancing x-axis ticks
-    bt = []
-    _i = np.nanmin(y2)
-    while _i < np.nanmax(y2):
-        bt.append(_i)
-        # _i += 1
-        _i += ((np.nanmax(y2) - np.nanmin(y2)) / 10)
-    pw_it.getAxis('bottom').setTicks(([[(v, '{:5.1f}'.format(v)) for v in bt]]))
 
 
 
     # statistics: benchmark and number of points
-    # end_ts = time.perf_counter()
-    # el_ts = int((end_ts - start_ts) * 1000)
-    # lg.a(f'it took {el_ts} ms to PLOT {len(x)} {met} data points')
+    end_ts = time.perf_counter()
+    el_ts = int((end_ts - start_ts) * 1000)
+    lg.a(f'it took {el_ts} ms to PLOT {len(y1)} CTD data points')
 
 
     # # ------------------------------------
@@ -438,8 +407,14 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
 
 def _graph_process_n_draw(a, plot_reason=''):
 
+    # CLEAR graph and start from scratch
+    for i in reversed(range(a.lay_g_h2.count())):
+        a.lay_g_h2.itemAt(i).widget().setParent(None)
+
+
     # get graph from passed app
     pw = a.pw
+
 
 
     # benchmark this graphing function
@@ -522,6 +497,8 @@ def _graph_process_n_draw(a, plot_reason=''):
     if _graph_are_we_plotting_ctd(fol):
         _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view)
         return
+    a.lay_g_h2.addWidget(pw)
+
 
 
     # ----------------------------------------
