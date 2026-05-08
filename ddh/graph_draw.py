@@ -334,7 +334,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
     # statistics: benchmark and number of points
     end_ts = time.perf_counter()
     el_ts = int((end_ts - start_ts) * 1000)
-    lg.a(f'it took {el_ts} ms to PLOT {len(y1)} CTD data points')
+    lg.a(f'it took {el_ts} ms to DISPLAY {len(y1)} CTD data points')
 
 
     # # ------------------------------------
@@ -898,7 +898,7 @@ def _graph_process_n_draw(a, plot_reason=''):
     # statistics: benchmark and number of points
     end_ts = time.perf_counter()
     el_ts = int((end_ts - start_ts) * 1000)
-    lg.a(f'it took {el_ts} ms to PLOT {len(x)} {met} data points')
+    lg.a(f'it took {el_ts} ms to DISPLAY {len(x)} {met} data points')
 
 
     # ------------------------------------

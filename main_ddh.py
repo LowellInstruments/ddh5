@@ -327,7 +327,7 @@ def gui_setup_view(my_win):
     # advanced tab SCF dropdown
     a.cbox_scf.addItems(['none', 'slow', 'mid', 'fast', 'fixed5min'])
 
-    # advanced tab graphs include out of water data
+    # advanced tab graphs choice to include out of water data
     if os.path.exists(LI_PATH_PLT_ONLY_INSIDE_WATER):
         a.chk_ow.setChecked(False)
     else:
@@ -1889,13 +1889,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # summary of experimental
         if exp_get_skip_hbw() == 1:
-            lg.a('note, this DDH will NOT ❌ use command has-been-in-water')
+            lg.a('note, DDH will NOT ❌ use command has-been-in-water')
         else:
-            lg.a('note, this DDH USES command has-been-in-water')
+            lg.a('note, DDH USES command has-been-in-water')
         if exp_get_skip_slo() == 1:
-            lg.a('note, this DDH will NOT ❌ use smart-lock-out')
+            lg.a('note, DDH will NOT ❌ use smart-lock-out')
         else:
-            lg.a('note, this DDH USES smart-lock-out')
+            lg.a('note, DDH USES smart-lock-out')
 
 
 
