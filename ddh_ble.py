@@ -18,6 +18,7 @@ from ble.ble_linux import (
     ble_linux_logger_disconnect_all,
 )
 from ble.ble_oop import ble_scan_slow, LoggerBle
+from ddh.ble_ctd import ble_download_ctd
 from ddh.ble_dox import ble_download_dox
 from ddh_gps import (
     ddh_gps_get_fix_upon_cold_boot,
@@ -208,6 +209,10 @@ def _ble_logger_is_tdo(info: str):
 
 
 
+def _ble_logger_is_ctd(info: str):
+    return "CTD" in info
+
+
 
 def _ble_logger_is_moana(info: str):
     return "MOANA" in info
@@ -235,7 +240,7 @@ async def _ble_logger_id_and_download(d):
 
 
     # we can speed up things with this strategy
-    fq = not r.exists(RD_DDH_BLE_NO_NEED_FOR_FULL_QUERY)
+    fq = not r.exists(RD_DDH_BLE_PREVENT_FULL_QUERY)
 
 
     # first IDENTIFY, then DOWNLOAD
@@ -243,6 +248,10 @@ async def _ble_logger_id_and_download(d):
         if _ble_logger_is_tdo(name):
             lg.a(f'processing TDO logger SN {sn}')
             rv = await ble_download_tdo(d, full_query=fq)
+
+        elif _ble_logger_is_ctd(name):
+            lg.a(f'processing CTD logger SN {sn}')
+            rv = await ble_download_ctd(d, full_query=fq)
 
         elif _ble_logger_is_do1_or_do2(name):
             rv = await ble_download_dox(d)
@@ -270,7 +279,7 @@ async def _ble_logger_id_and_download(d):
 
     # speed up things
     if rv == 0 and fq:
-        r.setex(RD_DDH_BLE_NO_NEED_FOR_FULL_QUERY, 86400, 1)
+        r.setex(RD_DDH_BLE_PREVENT_FULL_QUERY, 86400, 1)
 
 
     if rv == 0:

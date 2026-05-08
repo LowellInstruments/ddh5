@@ -155,10 +155,10 @@ def _aws_sync(past_year):
         y = yyyy
         sy = str(y)[2:]
         if ddh_this_box_has_grouped_s3_uplink():
-            lg.a(f'S3 upload-sync GROUPed for folder {um}, year {y}, dry-run = {dev}')
+            lg.a(f'start S3 upload-sync GROUPed for folder {um}, year {y}, dry-run = {dev}')
             um = f"{str(y)}/{vessel}/{um}"
         else:
-            lg.a(f'S3 upload-sync NON-GROUPed mode for folder {um}, year {y}, dry-run = {dev}')
+            lg.a(f'start S3 upload-sync NON-GROUPed mode for folder {um}, year {y}, dry-run = {dev}')
 
         # format AWS sync command
         cmd = (
@@ -238,10 +238,10 @@ def _aws_cp(path):
     f_bn = os.path.basename(path)
     y = datetime.datetime.utcnow().year
     if ddh_this_box_has_grouped_s3_uplink():
-        lg.a(f'S3 upload-cp GROUPed for folder {um}, year {y}, dry-run = {dev}')
+        lg.a(f'start S3 upload-cp GROUPed for folder {um}, year {y}, dry-run = {dev}')
         um = f"{str(y)}/{vessel}/{um}"
     else:
-        lg.a(f'S3 upload-cp NON-GROUPed for folder {um}, year {y}, dry-run = {dev}')
+        lg.a(f'start S3 upload-cp NON-GROUPed for folder {um}, year {y}, dry-run = {dev}')
     cmd = (
         f"AWS_ACCESS_KEY_ID={_k} AWS_SECRET_ACCESS_KEY={_s} "
         f"timeout 60 {_bin} s3 cp {path} s3://{_n}/{um}/{f_bn} {dr} "

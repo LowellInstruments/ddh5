@@ -76,7 +76,7 @@ def _convert_lid_file_v1(f, suf):
     # do the v1 conversion
     _params = default_parameters()
     DataConverter(f, _params).convert()
-    lg.a(f"OK: converted LID file v1 {dn}/{bn} for suffix {suf}")
+    lg.a(f"OK, converted LID file v1 {dn}/{bn} for suffix {suf}")
     return 0
 
 
@@ -90,14 +90,14 @@ def _convert_lid_file_v2(f, suf):
     dn = os.path.dirname(f).split('/')[-1]
     lg.a(f"converting LID file v2 {dn}/{bn} suffix {suf}")
     rv = parse_lid_v2_data_file(f)
-    lg.a(f"OK: converted LID file v2 {dn}/{bn} suffix {suf}")
+    lg.a(f"OK, converted LID file v2 {dn}/{bn} suffix {suf}")
     return rv
 
 
 
 def _convert_file(p):
 
-    for suf in ("_DissolvedOxygen", "_Temperature", "_Pressure", "_TDO"):
+    for suf in ("_DissolvedOxygen", "_Temperature", "_Pressure", "_TDO", "_CTD"):
         if os.path.basename(p).startswith('test'):
             return 1
         if TESTMODE_FILENAME_PREFIX in os.path.basename(p):
@@ -123,6 +123,7 @@ def _convert_file(p):
             if rv_v1 == 0 or rv_v2 == 0:
                 graph_request(reason='ble')
                 return 0
+
         except (ValueError, Exception) as ex:
             bn = os.path.basename(p)
             lg.a(f"error, converting file {bn}, metric {suf} --> {str(ex)}")
@@ -177,7 +178,7 @@ def _ddh_cnv(ignore_gui):
         time.sleep(1)
 
 
-        # this queue has files when 1) CNV boot 2) BLE downloads
+        # queue CONTAINS files when 1) CNV boot 2) BLE downloads
         ls_converted_files = []
         q = RD_DDH_CNV_QUEUE
         for i in range(r.llen(q)):
@@ -185,6 +186,10 @@ def _ddh_cnv(ignore_gui):
             p = p.decode()
             bn = os.path.basename(p)
             lg.a(f'dequeing and converting file {bn}')
+
+            # ------------------------
+            # try to convert lid file
+            # ------------------------
             rv = _convert_file(p)
             if rv == 0:
                 ls_converted_files.append(p)
@@ -192,7 +197,7 @@ def _ddh_cnv(ignore_gui):
                 lg.a(f'error, file {bn}')
 
 
-        # push to AWS COPY queue any new CSV file
+        # push so it will AWS COPY queue any new CSV file
         for pb in ls_converted_files:
             mask = pb.replace('.lid', '') + '*.csv'
             ls_csv = glob.glob(mask)

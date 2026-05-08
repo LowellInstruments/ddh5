@@ -119,7 +119,6 @@ from ddh.preferences import (
 )
 from ddh.utils_models import gui_populate_models_tab
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
-from ddh.timecache import is_it_time_to
 import subprocess as sp
 import pyqtgraph as pg
 from utils.ddh_common import (
@@ -441,6 +440,7 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
     a = my_app
     a.cb_g_sn.clear()
 
+
     # from HISTORY database, grab serial numbers, most recent first
     db = DbHis(ddh_get_path_to_db_history_file())
     rows = db.get_all().values()
@@ -453,9 +453,13 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
             h_sn.append(h['SN'].lower())
 
 
+    # make them unique
+    h_sn = list(set(h_sn))
+
+
     # from CONFIGURATION file, grab serial numbers
     c_sn = ddh_config_get_list_of_monitored_serial_numbers()
-    c_sn = [i.upper() for i in c_sn]
+    c_sn = [i.lower() for i in c_sn if i not in h_sn]
 
 
     # add first HISTORY ones, next CONFIGURATION ones
@@ -1082,7 +1086,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 lg.a(f"error, {ex}")
                 return
 
-        lg.a("pressed note button 'OK'")
+        lg.a("pressed GUI button 'OK' to clear one specific logger time-out")
         flag = ddh_get_path_to_app_override_flag_file()
         pathlib.Path(flag).touch()
         lg.a("BLE op conditions override set as 1")
@@ -1117,13 +1121,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 for f in ff:
                     os.unlink(f)
                     bn = os.path.basename(f)
-                    lg.a(f"warning, clicked purge lock-out for {bn}")
+                    lg.a(f"purged lock-out for {bn}")
 
             except (OSError, Exception) as ex:
                 lg.a(f"error click_btn_note_yes -> {ex}")
                 return
 
-        lg.a("pressed note button specific 'OK'")
+        lg.a("pressed GUI button 'OK' to clear all loggers time-out")
         flag = ddh_get_path_to_app_override_flag_file()
         pathlib.Path(flag).touch()
         lg.a("BLE op conditions override set as 1")
@@ -1138,7 +1142,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def click_btn_note_no(self):
         gui_tabs_hide_note(self)
         self.tabs.setCurrentIndex(0)
-        lg.a("pressed note button 'CANCEL'")
+        lg.a("pressed GUI button 'CANCEL'")
 
 
 
@@ -1204,7 +1208,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     
     def click_lbl_commit_pressed(self, ev):
         r.setex(RD_DDH_GUI_BEACON_FLAG, 120, 1)
-        lg.a("pressed button beacon")
+        lg.a("pressed GUI button beacon")
 
 
 
@@ -1477,7 +1481,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             # p_r: 'ble', 'user', 'hauls_next', 'hauls_labels'
             # BLE needs a FOLDER path written on another redis key
             p_r = p_r.decode()
-            lg.a(f"received plot request, reason = {p_r}")
+            lg.a(f"note, received plot request, reason = {p_r}")
             graph_process_n_draw(self, reason=p_r)
             r.delete(RD_DDH_GUI_PLOT_REASON)
 
@@ -1887,11 +1891,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         if exp_get_skip_hbw() == 1:
             lg.a('note, this DDH will NOT ❌ use command has-been-in-water')
         else:
-            lg.a('note, this DDH WILL USE command has-been-in-water')
+            lg.a('note, this DDH USES command has-been-in-water')
         if exp_get_skip_slo() == 1:
             lg.a('note, this DDH will NOT ❌ use smart-lock-out')
         else:
-            lg.a('note, this DDH WILL USE smart-lock-out')
+            lg.a('note, this DDH USES smart-lock-out')
 
 
 
