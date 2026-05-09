@@ -114,7 +114,7 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
 
 
 
-# gets from redis as a dict and returns as a tuple
+# gets FROM REDIS as a dict and returns as tuple (lat, lon, dt, speed)
 def _ddh_gps_get():
 
     # hooks
@@ -124,7 +124,7 @@ def _ddh_gps_get():
         return None
 
 
-    # get from redis the number of satellites notification
+    # number of satellites: get from redis
     ns = r.get(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES)
     ns = int(ns.decode()) if ns else 0
     k = RD_DDH_GPS_LIST_LOW_NUMBER_SATELLITES
@@ -132,7 +132,7 @@ def _ddh_gps_get():
         r.setex(f'{k}_{int(time.time())}', 3600, 1)
 
 
-    # generate alarm or not, check every hour
+    # number of satellites: generate alarm or not every hour
     if is_it_time_to("check_alarm_number_of_satellites", 3600):
         ls = list(r.scan_iter(f'{k}_*', count=10))
         if len(ls) >= 5:
@@ -141,7 +141,7 @@ def _ddh_gps_get():
             r.delete(i)
 
 
-    # get from redis the GPS fix
+    # position: get from redis
     g = r.get(RD_DDH_GPS_FIX_POSITION)
     if g:
         d = json.loads(g)
@@ -156,7 +156,7 @@ def _ddh_gps_get():
         lon = "{:+.6f}".format(float(d['lon']))
 
 
-        # this is extra for API
+        # extra: used for DDH_API
         try:
             d = {
                 "lat": lat,
@@ -322,7 +322,9 @@ def _ddh_gps(ignore_gui):
             r.set(RD_DDH_GPS_NO_EXPIRES_HAT_GFV, gfv)
 
 
+        # ---------------------------
         # make HAT start reading GPS
+        # ---------------------------
         lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
         rv = gps_hat_init(port_ctrl)
         if rv:
@@ -380,12 +382,16 @@ def _ddh_gps(ignore_gui):
                             r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
                         else:
                             lg.a(f'error activate hat NMEA stream on {port_nmea}')
+
                 else:
-                    # GPS is ok, so clean UP
+                    # GPS is OK, so clean UP
                     for i in list(r.scan_iter(f'{k}_*')):
                         r.delete(i)
 
-        # get bytes from hardware USB port
+
+        # --------------------------------------------------
+        # get bytes from hardware USB port, we use 'd' here
+        # --------------------------------------------------
         d = dict()
         if using_dummy_gps:
             time.sleep(1)
@@ -400,15 +406,22 @@ def _ddh_gps(ignore_gui):
             rv = 'error_gps' in d.keys()
             k = RD_DDH_GPS_ERROR_STRING_INEXISTENT_NUMBER
 
-            # when GPS error, we create a timestamped entry
+
+            # when GPS error, we timestamp it, too many -> SQS notification
             if rv:
                 r.setex(f'{k}_{int(time.time())}', 60, 1)
             ls = list(r.scan_iter(f'{k}_*', count=20))
-
-            # too many of these entries mean generating a notification
             if len(ls) >= 10:
                 lg.a('warning, too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
+
+                # v5.0.34
+                if port_type == 'hat':
+                    lg.a('HAT USB ports re-enumeration started')
+                    port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
+                    lg.a(f'    - NMEA {port_nmea}')
+                    lg.a(f'    - CTRL {port_ctrl}')
+                    lg.a(f'    - TYPE {port_type}')
 
 
             # remove GPS error redis entries when OK or when generated notification
