@@ -156,3 +156,6 @@
 
     added port re-enumeration on ddh_gps.py after some hat errors
 
+5.0.35  05/11/26
+
+    added caching on webview
