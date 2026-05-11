@@ -170,6 +170,11 @@ def _ddh_gps_get():
             lg.a(f'error: saving {TMP_PATH_GPS_LAST_JSON} -> {ex}')
         return lat, lon, dt, speed
 
+    else:
+        # so we don't keep old GPS positions
+        if os.path.exists(TMP_PATH_GPS_LAST_JSON):
+            os.unlink(TMP_PATH_GPS_LAST_JSON)
+
 
     return None
 
