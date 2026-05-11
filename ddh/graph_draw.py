@@ -1,6 +1,4 @@
 import glob
-import random
-
 import redis
 import math
 import time
@@ -311,6 +309,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
     p1.getAxis('left').setLabel(lbl1)
     p1.getAxis('left').label.setFont(font)
     p1.getAxis('left').setStyle(tickFont=font)
+    p1.invertY(True)
     p1.getAxis('bottom').setStyle(tickFont=font)
     p1.getAxis('bottom').setTextPen(pen2)
     p1.getAxis('bottom').setLabel(lbl2)
@@ -320,6 +319,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
     p1.plot(y2, y1, pen=pen2)
     p2 = pw.addPlot()
     p2.getAxis('left').setStyle(tickFont=font)
+    p2.invertY(True)
     p2.getAxis('bottom').setStyle(tickFont=font)
     p2.getAxis('bottom').setTextPen(pen3)
     p2.getAxis('bottom').setLabel(lbl3)
