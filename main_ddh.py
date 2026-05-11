@@ -8,7 +8,6 @@ import setproctitle
 from PyQt6 import QtCore
 from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt, QPoint, QUrl
 from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie
-from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import (
     QApplication,
     QTableWidgetItem, QTableWidget,
