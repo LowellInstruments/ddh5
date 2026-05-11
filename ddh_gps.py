@@ -436,7 +436,9 @@ def _ddh_gps(ignore_gui):
                 lg.a('warning, too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
 
-                # v5.0.34
+                # --------------------------------------------
+                # v5.0.34, better re-enumeration of hat port
+                # --------------------------------------------
                 if port_type == 'hat':
                     lg.a('HAT USB ports re-enumeration started')
                     port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
