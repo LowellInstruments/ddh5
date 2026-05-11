@@ -8,6 +8,7 @@ import setproctitle
 from PyQt6 import QtCore
 from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt, QPoint, QUrl
 from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie
+from PyQt6.QtWebEngineCore import QWebEngineSettings
 from PyQt6.QtWidgets import (
     QApplication,
     QTableWidgetItem, QTableWidget,
@@ -1399,7 +1400,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         if linux_is_rpi():
             # get RAM usage
             m = psutil.virtual_memory()
-            if int(m.percent) > 75:
+            if int(m.percent) > 90:
                 ma = m.available / 1e9
                 s = "statistics, {:.2f}% GB of RAM used, {:.2f} GB available"
                 lg.a(s.format(m.percent, ma))
@@ -1882,6 +1883,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if linux_is_rpi():
                 self.resize(800, 480)
                 self.showFullScreen()
+            self.browse.settings().setAttribute(
+                QWebEngineSettings.OfflineWebApplicationCacheEnabled, True)
+
 
 
         gui_translate(self)

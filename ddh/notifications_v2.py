@@ -137,17 +137,23 @@ class _DDHNotification:
         self.extra = str(extra)
 
 
-    def display_details(self):
+    def display_details(self, file_basename):
         if self.logger_mac:
-            s = "file details, {} for logger {} ({}) at {}"
-            lg.a(s.format(self.reason,
-                          self.logger_sn,
-                          self.logger_mac,
-                          self.ddh_gps_position))
+            s = "SQS file {} details, {} for logger {} ({}) at {}"
+            lg.a(s.format(
+                file_basename,
+                self.reason,
+                self.logger_sn,
+                self.logger_mac,
+                self.ddh_gps_position)
+            )
         else:
-            s = "file details, {} at {}"
-            lg.a(s.format(self.reason,
-                          self.ddh_gps_position))
+            s = "SQS file {} details, {} at {}"
+            lg.a(s.format(
+                file_basename,
+                self.reason,
+                self.ddh_gps_position)
+            )
 
 
     def to_file(self):
@@ -158,8 +164,7 @@ class _DDHNotification:
         with open(path, "w") as f:
             json.dump(vars(self), f, indent=4)
         _bn = os.path.basename(path)
-        lg.a(f"generated SQS file {_bn}, details next")
-        self.display_details()
+        self.display_details(_bn)
 
 
 def _n(s, g='', ln=None, v=2, extra=''):
