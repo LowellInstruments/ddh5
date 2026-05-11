@@ -32,7 +32,8 @@ from ddh_log import lg_ble as lg
 
 lc = LoggerBle()
 g_debug_not_delete_files = False
-BAT_FACTOR_CTD = 0.5454
+# (12k +  8k) / 8k = .4
+BAT_FACTOR_CTD = 0.4000
 MIN_VERSION_HBW_CMD = "4.2.21"
 
 
