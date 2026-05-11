@@ -32,7 +32,7 @@ from ddh_log import lg_gps as lg
 import os
 import redis
 import time
-from ddh.in_ports_geo import ddh_ask_in_port_to_ddn, ddh_ask_in_port_to_local_db
+from ddh.in_ports_geo import ddh_ask_in_port_to_ddn
 from utils.ddh_common import (
     ddh_get_path_to_app_override_flag_file,
     ddh_config_get_list_of_monitored_macs, \
@@ -97,10 +97,10 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
 
 
     # discover if we are in port
-    if exp_get_use_local_geo_port() == 1:
-        are_we_in_port = ddh_ask_in_port_to_local_db(gps_pos)
-    else:
-        are_we_in_port = ddh_ask_in_port_to_ddn(gps_pos)
+    # local one makes DDH crash :(
+    # if exp_get_use_local_geo_port() == 1:
+    #     are_we_in_port = ddh_ask_in_port_to_local_db(gps_pos)
+    are_we_in_port = ddh_ask_in_port_to_ddn(gps_pos)
     if are_we_in_port:
         app_state_set(EV_GPS_IN_PORT, t_str(STR_EV_GPS_IN_PORT))
         r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 10, 1)
