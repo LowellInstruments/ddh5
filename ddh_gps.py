@@ -3,26 +3,41 @@ import setproctitle
 from tzlocal import get_localzone
 from gps.gps_adafruit import gps_adafruit_init
 from gps.gps_puck import gps_puck_detect_usb_port
-from gps.gps_quectel import gps_hat_get_firmware_version, gps_hat_init, gps_hat_power_cycle_ddc
+from gps.gps_quectel import (
+    gps_hat_get_firmware_version,
+    gps_hat_init, gps_hat_power_cycle_ddc
+)
 from utils.redis import *
 from gps.gps import (
     gps_find_any_usb_port,
     gps_hardware_read,
-    gps_parse_sentence_type_rmc, gps_parse_sentence_type_gga
+    gps_parse_sentence_type_rmc,
+    gps_parse_sentence_type_gga
 )
-from gpiozero import LED
 from ddh.notifications_v2 import (
-    notify_ddh_number_of_gps_satellites, notify_ddh_error_hw_gps,
+    notify_ddh_number_of_gps_satellites,
+    notify_ddh_error_hw_gps,
 )
-from utils.redis import RD_DDH_GPS_NO_EXPIRES_HAT_GFV, RD_DDH_GPS_FIX_POSITION, RD_DDH_GPS_FIX_SPEED
+from utils.redis import (
+    RD_DDH_GPS_NO_EXPIRES_HAT_GFV,
+    RD_DDH_GPS_FIX_POSITION,
+    RD_DDH_GPS_FIX_SPEED
+)
 from utils.ddh_common import (
-    NAME_EXE_GPS, ddh_config_is_gps_error_forced_enabled, LI_PATH_GPS_DUMMY,
-    LI_PATH_CELL_FW, EV_GPS_WAITING_BOOT, app_state_set, t_str,
+    NAME_EXE_GPS,
+    ddh_config_is_gps_error_forced_enabled,
+    LI_PATH_GPS_DUMMY,
+    LI_PATH_CELL_FW,
+    EV_GPS_WAITING_BOOT,
+    app_state_set, t_str,
     EV_GPS_IN_PORT,
     STR_EV_GPS_IN_PORT,
     ddh_this_process_needs_to_quit,
-    TMP_PATH_GPS_LAST_JSON, linux_is_rpi, EV_GPS_HAT_POWER_CYCLE, STR_EV_GPS_HAT_POWER_CYCLE, app_state_get,
-    EV_GPS_SYNC_CLOCK, STR_EV_GPS_WAITING_BOOT, STR_EV_GPS_SYNC_CLOCK, exp_get_use_local_geo_port
+    TMP_PATH_GPS_LAST_JSON,
+    linux_is_rpi,
+    EV_GPS_HAT_POWER_CYCLE,
+    STR_EV_GPS_HAT_POWER_CYCLE,
+    app_state_get,
 )
 import datetime
 import json
@@ -35,7 +50,7 @@ import time
 from ddh.in_ports_geo import ddh_ask_in_port_to_ddn
 from utils.ddh_common import (
     ddh_get_path_to_app_override_flag_file,
-    ddh_config_get_list_of_monitored_macs, \
+    ddh_config_get_list_of_monitored_macs
 )
 
 
@@ -97,7 +112,6 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
 
 
     # discover if we are in port
-    # local one makes DDH crash :(
     # if exp_get_use_local_geo_port() == 1:
     #     are_we_in_port = ddh_ask_in_port_to_local_db(gps_pos)
     are_we_in_port = ddh_ask_in_port_to_ddn(gps_pos)

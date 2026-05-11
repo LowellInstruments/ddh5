@@ -50,5 +50,3 @@ use_skip_hbw = 0
 skip_slo = 0
 # override_ft set to 1 for Andrew's tests
 override_ft = 0
-# geo_port set to 1, don't ask DDN but resolve geo locally
-use_local_geo_port = 0
