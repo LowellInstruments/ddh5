@@ -22,7 +22,7 @@ from utils.ddh_common import (
     STR_EV_GPS_IN_PORT,
     ddh_this_process_needs_to_quit,
     TMP_PATH_GPS_LAST_JSON, linux_is_rpi, EV_GPS_HAT_POWER_CYCLE, STR_EV_GPS_HAT_POWER_CYCLE, app_state_get,
-    EV_GPS_SYNC_CLOCK, STR_EV_GPS_WAITING_BOOT, STR_EV_GPS_SYNC_CLOCK
+    EV_GPS_SYNC_CLOCK, STR_EV_GPS_WAITING_BOOT, STR_EV_GPS_SYNC_CLOCK, exp_get_use_local_geo_port
 )
 import datetime
 import json
@@ -32,7 +32,7 @@ from ddh_log import lg_gps as lg
 import os
 import redis
 import time
-from ddh.in_ports_geo import ddh_ask_in_port_to_ddn
+from ddh.in_ports_geo import ddh_ask_in_port_to_ddn, ddh_ask_in_port_to_local_db
 from utils.ddh_common import (
     ddh_get_path_to_app_override_flag_file,
     ddh_config_get_list_of_monitored_macs, \
@@ -96,8 +96,11 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
             return True
 
 
-    # are we in port
-    are_we_in_port = ddh_ask_in_port_to_ddn(gps_pos)
+    # discover if we are in port
+    if exp_get_use_local_geo_port() == 1:
+        are_we_in_port = ddh_ask_in_port_to_local_db(gps_pos)
+    else:
+        are_we_in_port = ddh_ask_in_port_to_ddn(gps_pos)
     if are_we_in_port:
         app_state_set(EV_GPS_IN_PORT, t_str(STR_EV_GPS_IN_PORT))
         r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 10, 1)
@@ -174,7 +177,6 @@ def _ddh_gps_get():
         # so we don't keep old GPS positions
         if os.path.exists(TMP_PATH_GPS_LAST_JSON):
             os.unlink(TMP_PATH_GPS_LAST_JSON)
-
 
     return None
 

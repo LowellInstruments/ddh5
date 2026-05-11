@@ -159,3 +159,7 @@
 5.0.35  05/11/26
 
     added caching on webview
+
+5.0.36  05/11/26
+
+    use global-land-mask
