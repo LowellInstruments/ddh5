@@ -4,6 +4,7 @@ from ddh.notifications_v2 import notify_ddh_in_port
 from ddh.timecache import annotate_time_this_occurred, is_it_time_to, query_is_it_time_to
 from ddh_log import lg_gps as lg
 from utils.ddh_common import ddh_config_is_skip_in_port_enabled
+from global_land_mask import is_land
 
 
 
@@ -54,18 +55,51 @@ def ddh_ask_in_port_to_ddn(_g, notify=True, tc=TIMEOUT_CACHE_IN_PORT_SECS):
         lg.a('warning, no API response, consider NOT in port')
 
 
+
+
+def ddh_ask_in_port_to_local_db(_g, notify=True, tc=TIMEOUT_CACHE_IN_PORT_SECS):
+
+    if ddh_config_is_skip_in_port_enabled() == 0:
+        # the skip-when-in-port feature is disabled
+        # so we return "NOT in port" to force a download
+        return 0
+
+
+    global g_last_in_port
+    s = 'tell_we_in_port'
+    if not query_is_it_time_to(s):
+        # use cache to avoid repeated queries
+        return g_last_in_port
+
+
+    lat, lon, tg, speed = _g
+    if not lat:
+        # NOT in port on error 'lat'
+        return 0
+
+
+    annotate_time_this_occurred(s, tc)
+    try:
+        g_last_in_port = is_land(lat, lon)
+        if g_last_in_port and notify:
+            if is_it_time_to('notify_we_in_port', 43200):
+                notify_ddh_in_port(_g)
+        return g_last_in_port
+
+    except (Exception,) as err:
+        g_last_in_port = 0
+        lg.a(f'error, in function ddh_ask_in_port_to_local_db lat {lat}, lon {lon} -> {err}')
+
+
+
+
 # ------
 # test
 # ------
 if __name__ == '__main__':
 
-    g = (41.6389, -70.9205, None, 1)
-    rv = 'in_port_ge', ddh_ask_in_port_to_ddn(g, notify=False, tc=1)
-    print(rv)
-
-
-    # # NO PORT
-    # g = (-9, -9, None, 1)
+    # NO PORT
+    g = (-9, -9, None, 1)
     # rv = 'in_port_no', ddh_ask_in_port_to_ddn(g, notify=False, tc=1)
     # print(rv)
     #

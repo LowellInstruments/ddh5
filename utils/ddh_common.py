@@ -591,6 +591,11 @@ def exp_get_skip_hbw():
 
 
 
+def exp_get_use_local_geo_port():
+    return _get_exp_key_from_cfg('use_local_geo_port')
+
+
+
 def exp_get_skip_slo():
     return _get_exp_key_from_cfg('skip_slo')
 
