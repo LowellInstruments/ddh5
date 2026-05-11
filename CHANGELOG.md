@@ -151,3 +151,8 @@
 5.0.33  05/06/26
 
     added redis key "ddh:ble:last_ok_dl_for_mac_"
+
+
+5.0.35  05/11/26
+
+    added caching on webview

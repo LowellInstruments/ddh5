@@ -118,8 +118,8 @@ def _sqs_serve():
 
 
         # display basename
-        _bn = os.path.basename(i_f)
-        lg.a(f"serving file {_bn}")
+        # _bn = os.path.basename(i_f)
+        # lg.a(f"serving file {_bn}")
 
 
         try:
