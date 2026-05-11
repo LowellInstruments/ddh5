@@ -1883,8 +1883,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if linux_is_rpi():
                 self.resize(800, 480)
                 self.showFullScreen()
-            self.browse.settings().setAttribute(
-                QWebEngineSettings.OfflineWebApplicationCacheEnabled, True)
 
 
 
