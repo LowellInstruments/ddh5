@@ -4,7 +4,6 @@ from ddh.notifications_v2 import notify_ddh_in_port
 from ddh.timecache import annotate_time_this_occurred, is_it_time_to, query_is_it_time_to
 from ddh_log import lg_gps as lg
 from utils.ddh_common import ddh_config_is_skip_in_port_enabled
-from global_land_mask import is_land
 
 
 
@@ -58,6 +57,10 @@ def ddh_ask_in_port_to_ddn(_g, notify=True, tc=TIMEOUT_CACHE_IN_PORT_SECS):
 
 
 def ddh_ask_in_port_to_local_db(_g, notify=True, tc=TIMEOUT_CACHE_IN_PORT_SECS):
+
+    # ---------------------------------
+    # this DOES NOT work on raspberry
+    # ---------------------------------
 
     if ddh_config_is_skip_in_port_enabled() == 0:
         # the skip-when-in-port feature is disabled
