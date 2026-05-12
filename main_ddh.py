@@ -1862,7 +1862,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         cm_action_quit.triggered.connect(self.close_my_ddh)
         cm_action_edit_tab.triggered.connect(self._gui_tabs_show_edit)
         cm_action_advanced_tab.triggered.connect(self._gui_tabs_show_advanced)
-        cm_action_minimize.triggered.connet(self._gui_minimize_ddh)
+        cm_action_minimize.triggered.connect(self._gui_minimize_ddh)
 
 
         # left panel
