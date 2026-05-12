@@ -364,7 +364,7 @@ def _ddh_gps(ignore_gui):
     # GPS infinite loop
     d = dict()
     gps_hat_needs_power_cycle = False
-    ddh_uses_gps_hat = r.get(RD_DDH_GPS_NO_EXPIRES_ANTENNA) == 'internal'
+    ddh_uses_gps_hat = r.get(RD_DDH_GPS_NO_EXPIRES_ANTENNA) in ('internal', 'hat')
     while 1:
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name):
