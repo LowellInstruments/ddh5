@@ -461,11 +461,6 @@ def _ddh_gps(ignore_gui):
 
 def main_ddh_gps(ignore_gui=False):
 
-    # start with clean sheet of GPS RMC errors
-    k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
-    for i in list(r.scan_iter(f'{k}_*')):
-        r.delete(i)
-
     while 1:
         try:
             _ddh_gps(ignore_gui)
