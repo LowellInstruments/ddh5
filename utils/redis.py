@@ -63,7 +63,7 @@ RD_DDH_GPS_NO_EXPIRES_ANTENNA = p + 'antenna_gps'
 RD_DDH_GPS_LIST_LOW_NUMBER_SATELLITES = p + 'low_sat'
 RD_DDH_GPS_LAST_ERROR_NOTIFICATION = p + 'gps_last_error_notification'
 RD_DDH_GPS_LAST_HAT_POWER_CYCLE = p + 'hat_last_power_cycle'
-RD_DDH_GPS_LAST_HAT_USB_PORT_RE_ENUMERATION = p + 'hat_last_port_reenumeration'
+RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM = p + 'hat_last_port_reenumeration'
 
 
 
