@@ -163,3 +163,9 @@
 5.0.36  05/11/26
 
     use global-land-mask
+
+5.0.37  05/12/26
+
+    simpler GPS
+    minimize button is back
+
