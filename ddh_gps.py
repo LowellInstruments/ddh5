@@ -383,7 +383,7 @@ def _ddh_gps(ignore_gui):
             gps_hat_needs_ports_re_enumeration = False
             if not r.get(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM):
                 # todo ---> change this interval
-                r.setex(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM, 30, 1)
+                r.setex(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM, 300, 1)
                 gps_hat_needs_ports_re_enumeration = True
 
 
