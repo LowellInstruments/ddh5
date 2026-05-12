@@ -1157,6 +1157,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
+    def _gui_minimize_ddh(self):
+        self.showMinimized()
+
+
+
     def closeEvent(self, ev):
         ev.accept()
         self.close_my_ddh()
@@ -1850,12 +1855,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # build context menu shortcuts
         self.context_menu = QMenu(self)
         self.context_menu.setStyleSheet("QMenu { font-size: 22px; }")
+        cm_action_minimize = self.context_menu.addAction("minimize")
         cm_action_quit = self.context_menu.addAction("quit")
         cm_action_edit_tab = self.context_menu.addAction("edit tab")
         cm_action_advanced_tab = self.context_menu.addAction("advanced tab")
         cm_action_quit.triggered.connect(self.close_my_ddh)
         cm_action_edit_tab.triggered.connect(self._gui_tabs_show_edit)
         cm_action_advanced_tab.triggered.connect(self._gui_tabs_show_advanced)
+        cm_action_minimize.triggered.connet(self._gui_minimize_ddh)
 
 
         # left panel

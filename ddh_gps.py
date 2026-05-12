@@ -242,11 +242,11 @@ def ddh_gps_get_fix_upon_cold_boot():
     # Wikipedia: GPS-Time-To-First-Fix for cold start is typ.
     # 2 to 5 minutes, warm <= 45 secs, hot <= 22 secs
 
-    p = PERIOD_GPS_AT_BOOT_SECS
-    r.setex(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT, p, 1)
+    r.setex(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT,
+            PERIOD_GPS_AT_BOOT_SECS, 1)
     app_state_set(EV_GPS_WAITING_BOOT, 'GPS boot')
-    lg.a(f"boot, wait up to {p} seconds")
-    till = time.perf_counter() + p
+    lg.a(f"boot, wait up to {PERIOD_GPS_AT_BOOT_SECS} seconds")
+    till = time.perf_counter() + PERIOD_GPS_AT_BOOT_SECS
 
     while time.perf_counter() < till:
         t_left = int(till - time.perf_counter())
@@ -312,16 +312,16 @@ def _ddh_gps(ignore_gui):
 
     # set to REDIS the type of GPS antenna
     if using_dummy_gps:
-        lg.a(f'using dummy')
+        lg.a(f'boot, using dummy')
         r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'dummy')
     elif port_type:
-        lg.a(f'using type {port_type.upper()} on NMEA port {port_nmea}')
+        lg.a(f'boot, using type {port_type.upper()} on NMEA port {port_nmea}')
         r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, ant_type)
     else:
         # None
         while 1:
-            lg.a(f'error, we have no GPS at all, not even dummy')
-            lg.a(f'error, to solve this -> $ touch {LI_PATH_GPS_DUMMY}')
+            lg.a(f'boot error, we have no GPS at all, not even dummy')
+            lg.a(f'boot error, to solve this -> $ touch {LI_PATH_GPS_DUMMY}')
             r.delete(RD_DDH_GPS_NO_EXPIRES_ANTENNA)
             time.sleep(5)
 
@@ -333,7 +333,7 @@ def _ddh_gps(ignore_gui):
         if (not os.path.exists(LI_PATH_CELL_FW)) or os.path.getsize(LI_PATH_CELL_FW) == 0:
             gfv, gfm = gps_hat_get_firmware_version(port_ctrl)
             gfv = gfv.replace(b'AT+CVERSION\r', b'').decode()
-            lg.a(f'hat firmware version is {gfv}')
+            lg.a(f'boot, hat firmware version is {gfv}')
 
             # do as in the old DDH v4
             # gfv: VERSION: EG25GGBR07A08M2GMay 18 2022 20:48:14Authors: QCT
@@ -346,13 +346,13 @@ def _ddh_gps(ignore_gui):
         # ---------------------------
         # make HAT start reading GPS
         # ---------------------------
-        lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
+        lg.a(f'boot, activate hat\'s NMEA on {port_nmea} by set ctrl {port_ctrl}')
         rv = gps_hat_init(port_ctrl)
         if rv:
-            lg.a(f'OK activate hat NMEA stream on {port_nmea}')
+            lg.a(f'boot, OK activate hat NMEA stream on {port_nmea}')
             r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
         else:
-            lg.a(f'error activate hat NMEA stream on {port_nmea}')
+            lg.a(f'boot, error activate hat NMEA stream on {port_nmea}')
 
     else:
         # not hat, can still be puck or adafruit
@@ -362,12 +362,12 @@ def _ddh_gps(ignore_gui):
 
 
     # GPS infinite loop
-    d = dict()
-    gps_hat_needs_power_cycle = False
+    _using_hat = False
     _ = r.get(RD_DDH_GPS_NO_EXPIRES_ANTENNA)
-    ddh_uses_gps_hat = False
-    if _:
-        ddh_uses_gps_hat = _.decode() in ('internal', 'hat')
+    if _ and _.decode() in ('internal', 'hat'):
+        _using_hat = True
+    gps_hat_needs_power_cycle = False
+
     while 1:
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name):
@@ -377,24 +377,18 @@ def _ddh_gps(ignore_gui):
         # -----------------------------------------------------
         # see need for HAT power-cycling because of SIXFAB bug
         # -----------------------------------------------------
-        print('using dummy', using_dummy_gps)
-        print('ddh_uses_gps_hat', ddh_uses_gps_hat)
-        if not using_dummy_gps and ddh_uses_gps_hat:
+        if not using_dummy_gps and _using_hat:
 
             # periodically enumerate ports and sent AT+QGPS=1
             gps_hat_needs_ports_re_enumeration = False
-            k = RD_DDH_GPS_LAST_HAT_USB_PORT_RE_ENUMERATION
-            if not r.get(k):
+            if not r.get(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM):
                 # todo ---> change this interval
-                r.setex(k, 30, 1)
+                r.setex(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM, 30, 1)
                 gps_hat_needs_ports_re_enumeration = True
 
 
-            # do the power-cycle for hat
-            if r.exists(RD_DDH_GPS_LAST_HAT_POWER_CYCLE):
-                gps_hat_needs_power_cycle = False
+            # do the power-cycle for hat, this is set a few lines below
             if gps_hat_needs_power_cycle:
-                r.setex(RD_DDH_GPS_LAST_HAT_POWER_CYCLE, 43200, 1)
                 gps_hat_needs_power_cycle = False
                 # grab GUI state to restore it later
                 _sc, _st = app_state_get()
@@ -408,18 +402,15 @@ def _ddh_gps(ignore_gui):
 
 
             if gps_hat_needs_ports_re_enumeration:
-                lg.a('GPS USB ports re-enumeration started')
+                lg.a('USB ports re-enumeration started')
                 port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
                 lg.a(f'    - NMEA {port_nmea}')
                 lg.a(f'    - CTRL {port_ctrl}')
                 lg.a(f'    - TYPE {port_type}')
-                lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
+                r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
                 rv = gps_hat_init(port_ctrl)
-                if rv:
-                    lg.a(f'OK activate hat NMEA stream on {port_nmea}')
-                    r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
-                else:
-                    lg.a(f'error activate hat NMEA stream on {port_nmea}')
+                if not rv:
+                    lg.a(f'error, re-enumerate activate hat NMEA on {port_nmea}')
 
 
 
@@ -437,12 +428,18 @@ def _ddh_gps(ignore_gui):
 
         # check GPS is doing OK, otherwise, alarm
         if not bb_g and 'error_gps' in d.keys():
-            if not r.get(RD_DDH_GPS_LAST_ERROR_NOTIFICATION):
+            if not r.exists(RD_DDH_GPS_LAST_ERROR_NOTIFICATION):
+                r.setex(RD_DDH_GPS_LAST_ERROR_NOTIFICATION, 3600, 1)
                 lg.a('warning, too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
-                r.setex(RD_DDH_GPS_LAST_ERROR_NOTIFICATION, 3600, 1)
-            if ddh_uses_gps_hat:
-                gps_hat_needs_power_cycle = True
+
+            if _using_hat:
+                if not r.exists(RD_DDH_GPS_LAST_HAT_POWER_CYCLE):
+                    r.setex(RD_DDH_GPS_LAST_HAT_POWER_CYCLE, 43200, 1)
+                    gps_hat_needs_power_cycle = True
+                else:
+                    gps_hat_needs_power_cycle = False
+
 
             # we don't have GPS fix so re-loop
             continue
