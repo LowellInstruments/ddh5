@@ -364,7 +364,10 @@ def _ddh_gps(ignore_gui):
     # GPS infinite loop
     d = dict()
     gps_hat_needs_power_cycle = False
-    ddh_uses_gps_hat = r.get(RD_DDH_GPS_NO_EXPIRES_ANTENNA) in ('internal', 'hat')
+    _ = r.get(RD_DDH_GPS_NO_EXPIRES_ANTENNA)
+    ddh_uses_gps_hat = False
+    if _:
+        ddh_uses_gps_hat = _.decode() in ('internal', 'hat')
     while 1:
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name):
@@ -374,6 +377,8 @@ def _ddh_gps(ignore_gui):
         # -----------------------------------------------------
         # see need for HAT power-cycling because of SIXFAB bug
         # -----------------------------------------------------
+        print('using dummy', using_dummy_gps)
+        print('ddh_uses_gps_hat', ddh_uses_gps_hat)
         if not using_dummy_gps and ddh_uses_gps_hat:
 
             # periodically enumerate ports and sent AT+QGPS=1
