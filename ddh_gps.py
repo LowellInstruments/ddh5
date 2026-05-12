@@ -402,15 +402,14 @@ def _ddh_gps(ignore_gui):
 
 
             if gps_hat_needs_ports_re_enumeration:
-                lg.a('USB ports re-enumeration started')
+                # todo --> remove this banner
+                lg.a('note, USB ports re-enumeration')
                 port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
-                lg.a(f'    - NMEA {port_nmea}')
-                lg.a(f'    - CTRL {port_ctrl}')
-                lg.a(f'    - TYPE {port_type}')
+                lg.a(f'NMEA {port_nmea}, CTRL {port_ctrl}, TYPE {port_type}')
                 r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
                 rv = gps_hat_init(port_ctrl)
                 if not rv:
-                    lg.a(f'error, re-enumerate activate hat NMEA on {port_nmea}')
+                    lg.a(f'error, activate hat NMEA on RE-ENUM {port_nmea}')
 
 
 
@@ -429,7 +428,7 @@ def _ddh_gps(ignore_gui):
         # check GPS is doing OK, otherwise, alarm
         if not bb_g and 'error_gps' in d.keys():
             if not r.exists(RD_DDH_GPS_LAST_ERROR_NOTIFICATION):
-                r.setex(RD_DDH_GPS_LAST_ERROR_NOTIFICATION, 3600, 1)
+                r.setex(RD_DDH_GPS_LAST_ERROR_NOTIFICATION, 1800, 1)
                 lg.a('warning, too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
 
