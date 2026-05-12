@@ -5,9 +5,7 @@ import subprocess as sp
 import time
 import pytz
 import tzlocal
-
 from ble.ble_linux import ble_linux_get_bluez_version
-from ddh.timecache import is_it_time_to
 from mat.ble.ble_mat_utils import (
     ble_mat_get_antenna_type_v2,
 )
@@ -16,7 +14,10 @@ from utils.ddh_common import (
     ddh_get_local_software_commit_id,
     ddh_get_local_software_version,
     get_ddh_platform,
-    ddh_get_path_to_folder_sqs, ddh_config_get_vessel_name, ddh_config_get_box_project, ddh_config_get_box_sn,
+    ddh_get_path_to_folder_sqs,
+    ddh_config_get_vessel_name,
+    ddh_config_get_box_project,
+    ddh_config_get_box_sn,
     ddh_config_contains_monitored_lowell_loggers
 )
 
@@ -70,6 +71,7 @@ DDH_ALL_NOTIFICATIONS = [
 g_bluez_ver = ble_linux_get_bluez_version()
 
 
+
 class LoggerNotification:
     def __init__(self, mac, sn, kind, bat, dl_files=[], gfv=''):
         self.mac = str(mac)
@@ -81,6 +83,7 @@ class LoggerNotification:
         # more stuff
         self.dl_files = dl_files
         self.gfv = gfv
+
 
 
 class _DDHNotification:
@@ -139,7 +142,7 @@ class _DDHNotification:
 
     def display_details(self, file_basename):
         if self.logger_mac:
-            s = "SQS file {} details, {} for logger {} ({}) at {}"
+            s = "file {} details, {} for logger {} ({}) at {}"
             lg.a(s.format(
                 file_basename,
                 self.reason,
@@ -148,7 +151,7 @@ class _DDHNotification:
                 self.ddh_gps_position)
             )
         else:
-            s = "SQS file {} details, {} at {}"
+            s = "file {} details, {} at {}"
             lg.a(s.format(
                 file_basename,
                 self.reason,
@@ -176,31 +179,31 @@ def _n(s, g='', ln=None, v=2, extra=''):
 
 
 def notify_logger_download(g, ln):
-    return _n(DDH_NOTIFICATION_OK_LOGGER_DL, g, ln)
+    _n(DDH_NOTIFICATION_OK_LOGGER_DL, g, ln)
 
 
 def notify_boot(g):
-    return _n(DDH_NOTIFICATION_STATUS_BOOT, g)
+    _n(DDH_NOTIFICATION_STATUS_BOOT, g)
 
 
 def notify_logger_error_sensor_pressure(g, ln):
-    return _n(DDH_NOTIFICATION_ERROR_HW_LOGGER_PRESSURE, g, ln)
+    _n(DDH_NOTIFICATION_ERROR_HW_LOGGER_PRESSURE, g, ln)
 
 
 def notify_logger_error_low_battery(g, ln):
-    return _n(DDH_NOTIFICATION_ERROR_HW_LOGGER_BATTERY, g, ln)
+    _n(DDH_NOTIFICATION_ERROR_HW_LOGGER_BATTERY, g, ln)
 
 
 def notify_error_sw_aws_s3():
-    return _n(DDH_NOTIFICATION_ERROR_SW_AWS_S3)
+    _n(DDH_NOTIFICATION_ERROR_SW_AWS_S3)
 
 
 def notify_error_gps_clock_sync():
-    return _n(DDH_NOTIFICATION_ERROR_GPS_CLOCK_SYNC)
+    _n(DDH_NOTIFICATION_ERROR_GPS_CLOCK_SYNC)
 
 
 def notify_error_sw_crash():
-    return _n(DDH_NOTIFICATION_ERROR_SW_CRASH)
+    _n(DDH_NOTIFICATION_ERROR_SW_CRASH)
 
 
 def notify_error_api_crash():
@@ -208,42 +211,44 @@ def notify_error_api_crash():
 
 
 def notify_ddh_alive(g):
-    return _n(DDH_NOTIFICATION_STATUS_ALIVE, g)
+    _n(DDH_NOTIFICATION_STATUS_ALIVE, g)
 
 
 def notify_ddh_error_hw_ble(g):
-    return _n(DDH_NOTIFICATION_ERROR_HW_BLE, g)
+    _n(DDH_NOTIFICATION_ERROR_HW_BLE, g)
 
 
 
 def notify_ddh_error_hw_gps():
-    return _n(DDH_NOTIFICATION_ERROR_HW_GPS)
+    _n(DDH_NOTIFICATION_ERROR_HW_GPS)
 
 
 def notify_ddh_in_port(g):
-    return _n(DDH_NOTIFICATION_STATUS_IN_PORT, g)
+    _n(DDH_NOTIFICATION_STATUS_IN_PORT, g)
 
 
 def notify_ddh_number_of_gps_satellites(n):
     if n is None:
         n = 0
-    return _n(DDH_NOTIFICATION_GPS_NUM_SAT, extra=str(n))
+    _n(DDH_NOTIFICATION_GPS_NUM_SAT, extra=str(n))
 
 
 def notify_logger_dox_hypoxia(g, ln):
-    return _n(DDH_NOTIFICATION_OK_LOGGER_HYPOXIA, g, ln)
+    _n(DDH_NOTIFICATION_OK_LOGGER_HYPOXIA, g, ln)
 
 
 def notify_logger_error_retries(g, ln):
-    return _n(DDH_NOTIFICATION_ERROR_HW_LOGGER_RETRIES, g, ln)
+    _n(DDH_NOTIFICATION_ERROR_HW_LOGGER_RETRIES, g, ln)
 
 
 def notify_logger_error_sensor_oxygen(g, ln):
-    return _n(DDH_NOTIFICATION_ERROR_HW_LOGGER_OXYGEN, g, ln)
+    _n(DDH_NOTIFICATION_ERROR_HW_LOGGER_OXYGEN, g, ln)
 
 
 def notify_via_sms(s):
-    return _n(DDH_NOTIFICATION_SMS, g='', ln=None, v=2, extra=s)
+    _n(DDH_NOTIFICATION_SMS, g='', ln=None, v=2, extra=s)
+
+
 
 
 if __name__ == '__main__':

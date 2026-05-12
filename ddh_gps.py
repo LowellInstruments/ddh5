@@ -63,6 +63,7 @@ from utils.ddh_common import (
 
 
 r = redis.Redis('localhost', port=6379)
+r.delete(RD_DDH_GPS_LAST_ERROR_NOTIFICATION)
 PERIOD_GPS_AT_BOOT_SECS = 600 if linux_is_rpi() else 10
 NUM_RMC_ERRORS_POWER_CYCLE = 1200
 PERIOD_GPS_NOTI_NUM_GPS_SAT = 1800
@@ -363,6 +364,9 @@ def _ddh_gps(ignore_gui):
 
     # GPS infinite loop
     d = dict()
+    gps_hat_needs_power_cycle = False
+    gps_hat_needs_ports_re_enumeration = False
+    ddh_uses_gps_hat = r.get(RD_DDH_GPS_NO_EXPIRES_ANTENNA) == 'internal'
     while 1:
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name):
@@ -372,47 +376,70 @@ def _ddh_gps(ignore_gui):
         # -----------------------------------------------------
         # see need for HAT power-cycling because of SIXFAB bug
         # -----------------------------------------------------
-        if not using_dummy_gps:
-            if port_type == 'hat' and 'err_rmc_comma' in d.keys():
-                k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
-                if d['err_rmc_comma']:
-                    r.setex(f'{k}_{int(time.time())}', 3600, 1)
-                    ls = list(r.scan_iter(f'{k}_*', count=NUM_RMC_ERRORS_POWER_CYCLE))
-                    lg.a(f'warning, RMC comma, n = {len(ls)}, port_ctrl = {port_ctrl}')
+        if not using_dummy_gps and ddh_uses_gps_hat:
 
-                    # there are enough errors, power-cycle the hat
-                    if len(ls) >= NUM_RMC_ERRORS_POWER_CYCLE - 5:
-                        for i in ls:
-                            r.delete(i)
+            # detect too many empty GPS strings
+            k = RD_DDH_GPS_ERROR_STRING_EXISTENT_BUT_EMPTY_NUMBER
+            if d['err_rmc_comma']:
+                r.setex(f'{k}_{int(time.time())}', 3600, 1)
+                ls = list(r.scan_iter(f'{k}_*', count=NUM_RMC_ERRORS_POWER_CYCLE))
+                lg.a(f'warning, RMC with just comma, n = {len(ls)}, '
+                     f'port_ctrl = {port_ctrl}, port_nmea = {port_nmea}')
 
-                        # grab GUI state to restore it after GPS hat power-cycle
-                        _sc, _st = app_state_get()
-                        lg.a("warning, starting power-cycle GPS hat shield")
-                        app_state_set(EV_GPS_HAT_POWER_CYCLE, t_str(STR_EV_GPS_HAT_POWER_CYCLE))
-                        r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 5, 1)
-                        gps_hat_power_cycle_ddc(port_ctrl, use_print=False)
-                        lg.a("warning, end power-cycle GPS hat shield")
-                        app_state_set(_sc, t_str(_st))
-
-                        # after GPS hat power-cycle, re-detect ports and re-init GPS output
-                        port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
-                        lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
-                        rv = gps_hat_init(port_ctrl)
-                        if rv:
-                            lg.a(f'OK activate hat NMEA stream on {port_nmea}')
-                            r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
-                        else:
-                            lg.a(f'error activate hat NMEA stream on {port_nmea}')
-
-                else:
-                    # GPS is OK, so clean UP
-                    for i in list(r.scan_iter(f'{k}_*')):
+                # there are enough errors, power-cycle the hat
+                if len(ls) >= NUM_RMC_ERRORS_POWER_CYCLE - 5:
+                    for i in ls:
                         r.delete(i)
+                    gps_hat_needs_power_cycle = True
+
+            else:
+                # GPS is OK, not having RMC errors, so clean up them
+                for i in list(r.scan_iter(f'{k}_*')):
+                    r.delete(i)
 
 
-        # --------------------------------------------------
-        # get bytes from hardware USB port, we use 'd' here
-        # --------------------------------------------------
+            # do the power-cycle for hat, grab GUI state to restore it later
+            if r.exists(RD_DDH_GPS_LAST_HAT_POWER_CYCLE):
+                gps_hat_needs_power_cycle = False
+            if gps_hat_needs_power_cycle:
+                r.setex(RD_DDH_GPS_LAST_HAT_POWER_CYCLE, 43200, 1)
+                gps_hat_needs_power_cycle = False
+                _sc, _st = app_state_get()
+                lg.a("warning, starting power-cycle GPS hat shield")
+                app_state_set(EV_GPS_HAT_POWER_CYCLE, t_str(STR_EV_GPS_HAT_POWER_CYCLE))
+                r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 5, 1)
+                gps_hat_power_cycle_ddc(port_ctrl, use_print=False)
+                lg.a("warning, end power-cycle GPS hat shield")
+                app_state_set(_sc, t_str(_st))
+                gps_hat_needs_ports_re_enumeration = True
+
+
+            if not r.exists(RD_DDH_GPS_LAST_HAT_USB_PORT_RE_ENUMERATION):
+                # todo ---> change this interval
+                r.setex(RD_DDH_GPS_LAST_HAT_USB_PORT_RE_ENUMERATION, 30, 1)
+                gps_hat_needs_ports_re_enumeration = True
+
+
+            if gps_hat_needs_ports_re_enumeration:
+                gps_hat_needs_ports_re_enumeration = False
+                lg.a('GPS USB ports re-enumeration started')
+                port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
+                lg.a(f'    - NMEA {port_nmea}')
+                lg.a(f'    - CTRL {port_ctrl}')
+                lg.a(f'    - TYPE {port_type}')
+                lg.a(f'activating hat\'s NMEA on {port_nmea} by write to ctrl port {port_ctrl}')
+                rv = gps_hat_init(port_ctrl)
+                if rv:
+                    lg.a(f'OK activate hat NMEA stream on {port_nmea}')
+                    r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
+                else:
+                    lg.a(f'error activate hat NMEA stream on {port_nmea}')
+
+
+
+        # ---------------------------------------------------------
+        # ALWAYS get bytes from hardware USB port, we use 'd' here
+        # ----------------------------------------------------------
         d = dict()
         if using_dummy_gps:
             time.sleep(1)
@@ -423,34 +450,15 @@ def _ddh_gps(ignore_gui):
 
 
         # check GPS is doing OK, otherwise, alarm
-        if not bb_g:
-            rv = 'error_gps' in d.keys()
-            k = RD_DDH_GPS_ERROR_STRING_INEXISTENT_NUMBER
-
-
-            # when GPS error, we timestamp it, too many -> SQS notification
-            if rv:
-                r.setex(f'{k}_{int(time.time())}', 60, 1)
-            ls = list(r.scan_iter(f'{k}_*', count=20))
-            if len(ls) >= 10:
+        if not bb_g and 'error_gps' in d.keys():
+            if not r.get(RD_DDH_GPS_LAST_ERROR_NOTIFICATION):
                 lg.a('warning, too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
+                r.setex(RD_DDH_GPS_LAST_ERROR_NOTIFICATION, 3600, 1)
+                if ddh_uses_gps_hat:
+                    gps_hat_needs_power_cycle = True
 
-                # --------------------------------------------
-                # v5.0.34, better re-enumeration of hat port
-                # --------------------------------------------
-                if port_type == 'hat':
-                    lg.a('HAT USB ports re-enumeration started')
-                    port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
-                    lg.a(f'    - NMEA {port_nmea}')
-                    lg.a(f'    - CTRL {port_ctrl}')
-                    lg.a(f'    - TYPE {port_type}')
-
-
-            # remove GPS error redis entries when OK or when generated notification
-            if rv == 0 or len(ls) >= 10:
-                for i in ls:
-                    r.delete(i)
+            # we don't have GPS fix so re-loop
             continue
 
 
