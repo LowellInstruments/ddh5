@@ -304,7 +304,7 @@ def _menu_cb_gps_signal_quality():
             ser_ctl.reset_input_buffer()
             time.sleep(1)
         except (Exception, ) as ex:
-            print(f'error: gps_power_cycle_ddc_0 -> {ex}')
+            print(f'error on gps_power_cycle_ddc_0 -> {ex}')
         finally:
             if ser_ctl and ser_ctl.is_open:
                 ser_ctl.close()
