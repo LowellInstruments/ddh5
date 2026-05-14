@@ -1763,17 +1763,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def changeEvent(self, event):
-        # 1. Check if the event is a window state change
         if event.type() == QEvent.Type.WindowStateChange:
-            # 2. Check if the window is now maximized
             if self.isMaximized():
-                print("Window was MAXIMIZED")
-            # You can also check if it was RESTORED (from maximized)
+                lg.a('note, DDH window was maximized')
             elif self.windowState() == Qt.WindowState.WindowNoState:
-                # This check ensures we handle coming back from maximized
-                print("Window was RESTORED to normal size")
-
-        # 3. Always call the superclass implementation
+                lg.a('note, DDH window was restored to normal size')
         super().changeEvent(event)
 
 
