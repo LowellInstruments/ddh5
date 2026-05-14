@@ -6,7 +6,7 @@ import glob
 import pathlib
 import setproctitle
 from PyQt6 import QtCore
-from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt, QPoint, QUrl
+from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt, QPoint, QUrl, QEvent
 from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie
 from PyQt6.QtWidgets import (
     QApplication,
@@ -102,7 +102,7 @@ from utils.ddh_common import (
     STR_TAB_NAME_MORE_INFO, STR_TAB_NAME_MAPS_NEW, STR_DESC_INTERNAL,
     STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
-    STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo,
+    STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
 )
 import datetime
 import os
@@ -1162,6 +1162,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
+
     def closeEvent(self, ev):
         ev.accept()
         self.close_my_ddh()
@@ -1466,6 +1467,18 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def _cb_timer_gui_one_second(self):
 
+        # solves the touch bug
+        if self.isMinimized():
+            pathlib.Path(PATH_MIN_BUG).touch()
+        else:
+            if os.path.exists(PATH_MIN_BUG):
+                lg.a('note, fixing touch shift bug')
+                os.unlink(PATH_MIN_BUG)
+                self.showMaximized()
+                time.sleep(.1)
+                self.showFullScreen()
+
+
         # detect any of the DDH processes is not there
         k = RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING
         if not r.exists(k):
@@ -1749,6 +1762,23 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
+    def changeEvent(self, event):
+        # 1. Check if the event is a window state change
+        if event.type() == QEvent.Type.WindowStateChange:
+            # 2. Check if the window is now maximized
+            if self.isMaximized():
+                print("Window was MAXIMIZED")
+            # You can also check if it was RESTORED (from maximized)
+            elif self.windowState() == Qt.WindowState.WindowNoState:
+                # This check ensures we handle coming back from maximized
+                print("Window was RESTORED to normal size")
+
+        # 3. Always call the superclass implementation
+        super().changeEvent(event)
+
+
+
+
     # =============
     # DDH GUI boot
     # =============
@@ -1807,6 +1837,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.n_good_models = 0
         self.filename_model = None
 
+        # solves touch shift bug
+        if os.path.exists(PATH_MIN_BUG):
+            os.unlink(PATH_MIN_BUG)
+
 
         gui_setup_view(self)
         gui_setup_center_window(self)
@@ -1863,6 +1897,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         cm_action_edit_tab.triggered.connect(self._gui_tabs_show_edit)
         cm_action_advanced_tab.triggered.connect(self._gui_tabs_show_advanced)
         cm_action_minimize.triggered.connect(self._gui_minimize_ddh)
+
 
 
         # left panel

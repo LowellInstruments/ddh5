@@ -169,3 +169,6 @@
     simpler GPS
     minimize button is back
 
+5.0.38  05/12/26
+
+    fixes touch screen bug shift after minimizing    
