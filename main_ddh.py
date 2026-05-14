@@ -1345,7 +1345,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         c = f'cp {org_scf_file} {fol_ddh}/.decided_scf_{v}.toml'
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode:
-            lg.a(f'error: copying SCF files {rv.stderr}')
+            lg.a(f'error copying SCF files {rv.stderr}')
             return
 
         lg.a(f'set .decided_scf_{v}.toml as SCF file')
@@ -1940,11 +1940,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 def main_ddh_gui():
     if linux_is_process_running_strict(NAME_EXE_BRT):
-        print('error: BRT running, DDH should not')
+        print('error, BRT running, DDH will not run')
         return
 
     if linux_is_process_running_strict(NAME_EXE_DDH):
-        print('error: DDH myself already running, leaving')
+        print('error, DDH myself already running, leaving')
         return
 
     setproctitle.setproctitle(NAME_EXE_DDH)

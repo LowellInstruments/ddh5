@@ -201,7 +201,7 @@ def _aws_sync(past_year):
     # AWS S3 sync went OK or not
     _t = datetime.datetime.now()
     if all_rv == 0:
-        lg.a(f"success: cloud sync on {_t} for year {yyyy}")
+        lg.a(f"success, cloud sync on {_t} for year {yyyy}")
         if past_year:
             pathlib.Path(yyyy_prev_flag).touch()
             lg.a(f"created last year flag {yyyy_prev_flag} so next runs skip this")

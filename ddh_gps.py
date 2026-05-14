@@ -184,7 +184,7 @@ def _ddh_gps_get():
             with open(TMP_PATH_GPS_LAST_JSON, "w") as f:
                 json.dump(d, f)
         except (Exception,) as ex:
-            lg.a(f'error: saving {TMP_PATH_GPS_LAST_JSON} -> {ex}')
+            lg.a(f'error saving {TMP_PATH_GPS_LAST_JSON} -> {ex}')
         return lat, lon, dt, speed
 
     else:

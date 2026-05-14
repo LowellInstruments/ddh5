@@ -877,8 +877,8 @@ lang_msg_db = {
         'sp': 'reiniciar'
     },
     STR_ERROR_GRAPH_SN_NOT_IN_CONFIG: {
-        'pt': 'error: número de série não está no config.toml',
-        'sp': 'error: número de serie no esta en config.toml'
+        'pt': 'error, número de série não está no config.toml',
+        'sp': 'error, número de serie no esta en config.toml'
     },
     STR_DESC_HAULS: {
         'pt': 'lances',
@@ -909,7 +909,7 @@ def t_str(s):
         return s
     d_s = lang_msg_db[s]
     if g_lang not in d_s.keys():
-        print(f"\033[31merror: no language '{g_lang}' for text '{s}'\033[0m")
+        print(f"\033[31merror, no language '{g_lang}' for text '{s}'\033[0m")
         return s
     return lang_msg_db[s][g_lang]
 
