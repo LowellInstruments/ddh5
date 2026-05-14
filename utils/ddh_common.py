@@ -39,6 +39,10 @@ DDN_API_PORT = 9000
 
 
 
+PATH_MIN_BUG = '/tmp/.ddh_is_minimized'
+
+
+
 _sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 r = redis.Redis('localhost')
 ael = asyncio.get_event_loop()
