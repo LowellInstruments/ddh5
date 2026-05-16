@@ -9,6 +9,7 @@ from utils.ddh_common import ddh_config_is_skip_in_port_enabled
 
 g_last_in_port = False
 TIMEOUT_CACHE_IN_PORT_SECS = 300
+d_gps_n = {}
 
 
 
@@ -25,11 +26,32 @@ def ddh_ask_in_port_to_ddn(_g, notify=True, tc=TIMEOUT_CACHE_IN_PORT_SECS):
         # use our cache to avoid repeated queries
         return g_last_in_port
 
+
+
     # build the query to API
     lat, lon, tg, speed = _g
     if not lat:
         # NOT in port on error 'lat'
         return 0
+    
+    
+    
+    # cache expired but maybe we already know the answer
+    global d_gps_n
+    try:
+        lat_n = f'{float(lat):.2f}')
+        lon_n = f'{float(lon):.2f}')
+        k = f'{lat_n},{lon_n}'
+        if k in d_gps_n.keys():
+            annotate_time_this_occurred(s, tc)
+            g_last_in_port = 1
+            return g_last_in_port
+    except (Exception, ):
+        pass
+
+    
+    
+    
     addr_ddn_api = 'ddn.lowellinstruments.com'
     port_ddn_api = 9000
     ep = 'gps_in_port'
@@ -46,6 +68,11 @@ def ddh_ask_in_port_to_ddn(_g, notify=True, tc=TIMEOUT_CACHE_IN_PORT_SECS):
         if g_last_in_port and notify:
             if is_it_time_to('notify_we_in_port', 43200):
                 notify_ddh_in_port(_g)
+            # add to our small database
+            lat_n = f'{float(lat):.2f}')
+            lon_n = f'{float(lon):.2f}')
+            k = f'{lat_n},{lon_n}'
+            d_gps_n[k] = 1
         return g_last_in_port
 
     except (Exception,) as err:
