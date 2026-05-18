@@ -40,6 +40,7 @@ DDN_API_PORT = 9000
 
 
 PATH_MIN_BUG = '/tmp/.ddh_is_minimized'
+PATH_FLAG_DDH_GPS_ERR = '/tmp/.ddh_gps_err'
 
 
 
