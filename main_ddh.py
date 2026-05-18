@@ -103,6 +103,7 @@ from utils.ddh_common import (
     STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
     STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
+    PATH_FLAG_DDH_GPS_ERR,
 )
 import datetime
 import os
@@ -1715,8 +1716,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.bar_dl.setValue(v)
         elif code in (EV_GPS_HW_ERROR, ):
             pi = PATH_MAIN_GPS_HW_ERROR
+            # for ATU
+            if not os.path.exists(PATH_FLAG_DDH_GPS_ERR):
+                pathlib.Path(PATH_FLAG_DDH_GPS_ERR).touch()
         elif code in (EV_GPS_HAT_POWER_CYCLE, ):
             pi = PATH_MAIN_GPS_POWER_CYCLE
+            # for ATU
+            if os.path.exists(PATH_FLAG_DDH_GPS_ERR):
+                os.unlink(PATH_FLAG_DDH_GPS_ERR)
         elif code in (EV_BLE_SCAN, ):
             # reset progress bar
             if os.path.exists(DEV_SHM_DL_PROGRESS):
@@ -1919,6 +1926,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 self.resize(800, 480)
                 self.showFullScreen()
 
+
+        # for ATU
+        if os.path.exists(PATH_FLAG_DDH_GPS_ERR):
+            os.unlink(PATH_FLAG_DDH_GPS_ERR)
 
 
         gui_translate(self)
