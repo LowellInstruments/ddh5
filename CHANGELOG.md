@@ -177,6 +177,8 @@
 
     caching for GPS positions in land in file in_ports_geo.py
 
-5.0.40    05/16/26
+5.0.40    05/18/26
 
-    indicate to a file-system flag the GUI has GPS error    
+    indicate to a file-system flag the GUI has GPS error
+    be able to close advanced tab
+
