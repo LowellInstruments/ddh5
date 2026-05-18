@@ -41,7 +41,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab_info">
        <property name="sizePolicy">
@@ -1574,6 +1574,27 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
          <layout class="QGridLayout" name="gridLayout_6">
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="chk_rerun">
+            <property name="text">
+             <string> Run logger after download</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QCheckBox" name="chk_ow">
+            <property name="text">
+             <string> Graphs show out-of-water data</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QPushButton" name="btn_adv_purge_lo">
+            <property name="text">
+             <string>Open loggers lock-out tab</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
            <spacer name="horizontalSpacer_12">
             <property name="orientation">
@@ -1583,6 +1604,22 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
              <size>
               <width>40</width>
               <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="1">
+           <spacer name="verticalSpacer_11">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>60</height>
              </size>
             </property>
            </spacer>
@@ -1600,41 +1637,7 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
             </property>
            </spacer>
           </item>
-          <item row="0" column="1">
-           <spacer name="verticalSpacer_11">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="2" column="1">
-           <widget class="QCheckBox" name="chk_ow">
-            <property name="text">
-             <string> Graphs show out-of-water data</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QPushButton" name="btn_adv_purge_lo">
-            <property name="text">
-             <string>Open loggers lock-out tab</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QCheckBox" name="chk_rerun">
-            <property name="text">
-             <string> Run logger after download</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
+          <item row="7" column="1">
            <spacer name="verticalSpacer_13">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -1647,7 +1650,7 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
             </property>
            </spacer>
           </item>
-          <item row="3" column="1">
+          <item row="4" column="1">
            <layout class="QHBoxLayout" name="horizontalLayout_17">
             <item>
              <widget class="QLabel" name="label_6">
@@ -1666,6 +1669,36 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
             </item>
             <item>
              <widget class="QComboBox" name="cbox_scf"/>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_11">
+            <item>
+             <spacer name="horizontalSpacer_28">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_close_advanced_tab">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>x</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
