@@ -508,6 +508,8 @@ def gui_setup_buttons(my_app):
     a.btn_shortcuts.clicked.connect(a.click_btn_shortcuts)
     a.cbox_scf.activated.connect(a.click_chk_scf)
     a.line_sn.textChanged.connect(a.cb_line_sn_text_changed)
+    a.btn_close_advanced_tab.clicked.connect(a.click_btn_close_advanced_tab)
+
 
     # graph stuff
     a.btn_g_reset.clicked.connect(a.click_graph_btn_reset)
@@ -910,6 +912,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.tab_edit_hide = not self.tab_edit_hide
         gui_tabs_hide_setup(self)
         self.tabs.setCurrentIndex(0)
+
+
+    def click_btn_close_advanced_tab(self):
+        gui_tabs_hide_advanced(self)
 
 
 
@@ -1917,7 +1923,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             u = "https://ondeckdata.com/database/osm_fishbot_explorer.html"
             self.browser.setUrl(QUrl(u))
             self.lay_maps.addWidget(self.browser)
-            # web engine viewer is tricky to display ok in raspberry, patch it
+
+
+        # web engine viewer is tricky to display ok in raspberry, patch it
+        if linux_is_rpi():
             self.showMaximized()
             time.sleep(.1)
             self.showFullScreen()
