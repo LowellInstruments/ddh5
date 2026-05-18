@@ -506,7 +506,8 @@ def gui_setup_buttons(my_app):
     a.btn_map_next.clicked.connect(a.click_btn_map_next)
     a.chk_ow.toggled.connect(a.click_chk_ow)
     a.btn_shortcuts.clicked.connect(a.click_btn_shortcuts)
-
+    a.cbox_scf.activated.connect(a.click_chk_scf)
+    a.line_sn.textChanged.connect(a.cb_line_sn_text_changed)
 
     # graph stuff
     a.btn_g_reset.clicked.connect(a.click_graph_btn_reset)
@@ -515,11 +516,6 @@ def gui_setup_buttons(my_app):
     a.cb_g_cycle_haul.activated.connect(a.click_graph_lbl_haul_types)
     a.cb_g_switch_tp.activated.connect(a.click_graph_cb_switch_tp)
     a.btn_plt_units.clicked.connect(a.click_btn_plt_units)
-
-
-    # advanced stuff
-    a.cbox_scf.activated.connect(a.click_chk_scf)
-    a.line_sn.textChanged.connect(a.cb_line_sn_text_changed)
 
 
 
@@ -647,10 +643,12 @@ def gui_tabs_show_graph(ui):
 
 
 def gui_tabs_show_advanced(ui):
-    # re-run and these things
     i = gui_tabs_get_index('tab_advanced')
-    ui.tabs.setTabVisible(i, True)
-    ui.tabs.setCurrentIndex(i)
+    if ui.tabs.isTabVisible(i):
+        ui.tabs.setTabVisible(i, False)
+    else:
+        ui.tabs.setTabVisible(i, True)
+        ui.tabs.setCurrentIndex(i)
 
 
 
