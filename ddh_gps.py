@@ -382,7 +382,6 @@ def _ddh_gps(ignore_gui):
             # periodically enumerate ports and sent AT+QGPS=1
             gps_hat_needs_ports_re_enumeration = False
             if not r.get(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM):
-                # todo ---> change this interval
                 r.setex(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM, 300, 1)
                 gps_hat_needs_ports_re_enumeration = True
 
@@ -402,12 +401,11 @@ def _ddh_gps(ignore_gui):
 
 
             if gps_hat_needs_ports_re_enumeration:
-                # todo --> remove this banner
-                lg.a('note, USB ports re-enumeration')
                 old_port_nmea = port_nmea
                 old_port_ctrl = port_ctrl
                 port_nmea, port_ctrl, port_type = gps_find_any_usb_port()
                 if old_port_nmea != port_nmea or old_port_ctrl != port_ctrl:
+                    lg.a('note, USB ports re-enumeration')
                     lg.a(f'note, old NMEA {old_port_nmea}, CTRL {old_port_ctrl}, TYPE {port_type}')
                     lg.a(f'note, new NMEA {port_nmea}, CTRL {port_ctrl}, TYPE {port_type}')
                 r.set(RD_DDH_GPS_NO_EXPIRES_ANTENNA, 'hat')
