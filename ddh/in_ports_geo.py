@@ -13,7 +13,11 @@ d_gps_n = {}
 
 
 
-def ddh_ask_in_port_to_ddn(_g, notify=True, tc=TIMEOUT_CACHE_IN_PORT_SECS):
+def ddh_ask_in_port_to_ddn(
+        _g,
+        notify=True,
+        tc=TIMEOUT_CACHE_IN_PORT_SECS
+):
 
     if ddh_config_is_skip_in_port_enabled() == 0:
         # the skip-when-in-port feature is disabled
@@ -69,8 +73,8 @@ def ddh_ask_in_port_to_ddn(_g, notify=True, tc=TIMEOUT_CACHE_IN_PORT_SECS):
             if is_it_time_to('notify_we_in_port', 43200):
                 notify_ddh_in_port(_g)
             # add to our small database
-            lat_n = f'{float(lat):.2f}')
-            lon_n = f'{float(lon):.2f}')
+            lat_n = f'{float(lat):.2f}'
+            lon_n = f'{float(lon):.2f}'
             k = f'{lat_n},{lon_n}'
             d_gps_n[k] = 1
         return g_last_in_port
