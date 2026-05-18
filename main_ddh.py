@@ -1908,21 +1908,19 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # self.btn_expand.setVisible(False)
 
 
-        # web engine viewer, put this on top
-        # todo: see if these makes display unresponsive
+        # web engine viewer (install with apt python3-pyqt6.qtwebengine)
         if not linux_is_rpi():
             # from PyQt6.QtWebEngineWidgets import QWebEngineView
             os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
             os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
             self.browser = QWebEngineView()
-            # u = "https://ondeckdata.com/database/soe_hypoxic_days_2025.html"
             u = "https://ondeckdata.com/database/osm_fishbot_explorer.html"
             self.browser.setUrl(QUrl(u))
             self.lay_maps.addWidget(self.browser)
             # web engine viewer is tricky to display ok in raspberry, patch it
-            if linux_is_rpi():
-                self.resize(800, 480)
-                self.showFullScreen()
+            self.showMaximized()
+            time.sleep(.1)
+            self.showFullScreen()
 
 
         # for ATU
