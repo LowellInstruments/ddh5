@@ -39,8 +39,8 @@ def ddh_ask_in_port_to_ddn(_g, notify=True, tc=TIMEOUT_CACHE_IN_PORT_SECS):
     # cache expired but maybe we already know the answer
     global d_gps_n
     try:
-        lat_n = f'{float(lat):.2f}')
-        lon_n = f'{float(lon):.2f}')
+        lat_n = f'{float(lat):.2f}'
+        lon_n = f'{float(lon):.2f}'
         k = f'{lat_n},{lon_n}'
         if k in d_gps_n.keys():
             annotate_time_this_occurred(s, tc)
