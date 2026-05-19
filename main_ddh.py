@@ -1873,6 +1873,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.btn_g_next_haul.setEnabled(False)
         self.btn_g_next_haul.setVisible(False)
         self.lbl_graph_busy.setVisible(False)
+        self.lbl_graph_err.setVisible(False)
         self.cb_g_switch_tp.setVisible(False)
 
 

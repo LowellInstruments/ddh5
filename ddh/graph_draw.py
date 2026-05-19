@@ -1,3 +1,5 @@
+import os
+
 import glob
 import redis
 import math
@@ -221,6 +223,8 @@ def _graph_clear():
 
 
 
+
+
 def _graph_are_we_plotting_ctd(fol) -> bool:
     # path: /home/kaz/PycharmProjects/ddh/dl_files/<mac>
     mask_ctd = f'{fol}/*_CTD.csv'
@@ -235,18 +239,24 @@ def _graph_are_we_plotting_ctd(fol) -> bool:
 
 def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
 
-    # CLEAR graph and start from scratch
-    start_ts = time.perf_counter()
+    # CLEAR graph LAYOUT
     for i in reversed(range(a.lay_g_h2.count())):
         a.lay_g_h2.itemAt(i).widget().setParent(None)
+
+
+    # create plot-widget for CTD graphs
     a.pw_ctd = pg.GraphicsLayoutWidget(show=True, title="Subplot Example")
     pw = a.pw_ctd
+
+
+    # for now, just display the default plot-widget
     a.lay_g_h2.addWidget(pw)
     pw.setBackground('w')
 
 
 
     # data: get CTD CSV points
+    start_ts = time.perf_counter()
     pressed_haul_next = plot_reason == 'hauls_next'
     data = utils_graph_fetch_csv_data(
         fol,
@@ -393,19 +403,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-def _graph_process_n_draw(a, plot_reason=''):
+def _graph_process_n_draw_non_ctd(a, plot_reason=''):
 
     # CLEAR graph and start from scratch
     for i in reversed(range(a.lay_g_h2.count())):
@@ -447,12 +445,16 @@ def _graph_process_n_draw(a, plot_reason=''):
         # reason is user pressing GUI graph buttons
         sn = a.cb_g_sn.currentText()
         if not sn:
-            raise GraphException('no one asked for a graph?')
+            e = 'error, no one asked for graph?'
+            lg.a(e)
+            raise GraphException(e)
         if sn.startswith('SN'):
             sn = sn[2:]
         mac = ddh_config_get_logger_mac_from_sn(sn)
         if not mac:
-            raise GraphException(t_str(STR_ERROR_GRAPH_SN_NOT_IN_CONFIG))
+            e = f'{t_str(STR_ERROR_GRAPH_SN_NOT_IN_CONFIG)}'
+            lg.a(e)
+            raise GraphException(e)
         mac = mac.replace(':', '-')
         if not _graph_check_mac_has_dl_files(mac, fol_ls):
             raise GraphException(f'error, no files for SN {sn} mac {mac}')
@@ -466,7 +468,8 @@ def _graph_process_n_draw(a, plot_reason=''):
     nh = get_total_number_of_hauls(fol)
     lg.a(f'found {nh} total hauls in dl_files/{bn_fol}')
     if nh == 0:
-        raise GraphException(f'error, no hauls for {fol}')
+        bn_fol = os.path.basename(fol)
+        raise GraphException(f'error, no hauls for {bn_fol}')
 
 
     # reason = user changed the single file to plot with '<' button
@@ -687,9 +690,11 @@ def _graph_process_n_draw(a, plot_reason=''):
     # avoids small glitch when re-zooming
     pw.getPlotItem().enableAutoRange()
 
-    # -----------------
-    # graph DO loggers
-    # -----------------
+
+
+    # -------------------
+    # graph DOX loggers
+    # -------------------
     if met == 'DO':
         # draw DO (y1) and T (y2) lines
         pw_it.setLabel("left", lbl1, **_sty(clr_1))
@@ -697,13 +702,13 @@ def _graph_process_n_draw(a, plot_reason=''):
         pw_it.plot(x, y1, pen=pen1, hoverable=True)
         pw_vb.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True, connect='finite'))
 
-        # dynamic upper top of DO
+        # dynamic upper top of DOX graphs
         upper_top_do = 10
         if np.nanmax(y1) > upper_top_do:
             upper_top_do = np.nanmax(y1) + 1
         upper_top_do = int(ceil(upper_top_do))
 
-        # y-axis ranges, bottom-axis label
+        # y-axis DOX ranges, bottom-axis label
         pw_it.setYRange(0, upper_top_do, padding=0)
         pw_vb.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
         pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
@@ -747,6 +752,7 @@ def _graph_process_n_draw(a, plot_reason=''):
         pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
 
 
+
     # ------------------
     # graph TDO loggers
     # ------------------
@@ -778,13 +784,14 @@ def _graph_process_n_draw(a, plot_reason=''):
             # right y not inverted: 1st parameter y-low, 2nd y-up
             pw_vb.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
 
+
             # bottom-axis label
             pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
 
 
-            # ----------------------------------------
-            # plot horizontal line bottom temperature
-            # ----------------------------------------
+            # --------------------------------------------
+            # plot RED horizontal line bottom temperature
+            # ---------------------------------------------
             x_bottom = []
             y2_bottom = []
             max_depth_80 = max(y1) * 0.80
@@ -844,6 +851,7 @@ def _graph_process_n_draw(a, plot_reason=''):
 
                 # range
                 # p3.setYRange(0, np.nanmax(y3), padding=0)
+
 
         # type of TDO plot 2/2: T (y2) / D (y1) vs time
         elif 'x-Temp' in tdo_graph_type:
@@ -987,23 +995,28 @@ def _graph_process_n_draw(a, plot_reason=''):
 
 def graph_process_n_draw(app, reason=''):
     try:
+        app.lbl_graph_err.setVisible(False)
         app.lbl_graph_busy.setVisible(True)
         QCoreApplication.processEvents()
-        _graph_process_n_draw(app, reason)
+        _graph_process_n_draw_non_ctd(app, reason)
         # remove any past error
         app.pw.setTitle('')
 
+
     except GraphException as e:
         # errors such as "no data files to graph"
-        app.pw.setTitle(e, color="red", size="15pt")
+        lg.a(f"graph_exception -> {str(e)}")
+        app.lbl_graph_err.setText(str(e))
+        app.lbl_graph_err.setVisible(True)
         app.pw.getAxis('bottom').setLabel("")
         _graph_clear()
 
+
     except (Exception,) as ex:
         # not GraphException, but python errors such as IndexError
-        e = 'undefined error, see log'
-        app.pw.setTitle(e, color="red", size="15pt")
-        lg.a(f"error, graph_embed -> {str(ex)}")
+        lg.a(f"graph_generic_exception -> {str(ex)}")
+        app.lbl_graph_err.setText('error graph_generic, see log')
+        app.lbl_graph_err.setVisible(True)
         app.pw.getAxis('bottom').setLabel("")
         _graph_clear()
 
