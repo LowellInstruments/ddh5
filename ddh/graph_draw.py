@@ -524,8 +524,9 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
 
     # this prevents weird things in units when setting axis titles
     pw_it.getAxis('left').enableAutoSIPrefix(enable=False)
+    pw_it.getAxis('left').autoSIPrefixScale = 1
     pw_it.getAxis('right').enableAutoSIPrefix(enable=False)
-
+    pw_it.getAxis('right').autoSIPrefixScale = 1
 
 
     # patch for bottom ticks, x are floats meaning timestamps

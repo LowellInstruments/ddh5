@@ -186,3 +186,7 @@
 
     fixed graph error messages
 
+5.0.42      05/20/26
+
+    fixed scott bug in plots autoSIPrefixScale = 1
+
