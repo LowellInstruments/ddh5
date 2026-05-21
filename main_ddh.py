@@ -1572,6 +1572,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lat = '{:+6.4f}'.format(float(lat))
             lon = '{:+6.4f}'.format(float(lon))
             self.lbl_gps.setText(f'{lat}\n{lon}')
+
+            # for ATU
+            if os.path.exists(PATH_FLAG_DDH_GPS_ERR):
+                os.unlink(PATH_FLAG_DDH_GPS_ERR)
         else:
             self.lbl_gps.setText("-\n-")
             self.lbl_gps_sat.setText("-")
@@ -1724,9 +1728,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 pathlib.Path(PATH_FLAG_DDH_GPS_ERR).touch()
         elif code in (EV_GPS_HAT_POWER_CYCLE, ):
             pi = PATH_MAIN_GPS_POWER_CYCLE
-            # for ATU
-            if os.path.exists(PATH_FLAG_DDH_GPS_ERR):
-                os.unlink(PATH_FLAG_DDH_GPS_ERR)
         elif code in (EV_BLE_SCAN, ):
             # reset progress bar
             if os.path.exists(DEV_SHM_DL_PROGRESS):
@@ -1932,7 +1933,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.showFullScreen()
 
 
-        # for ATU
+        # boot, for ATU
         if os.path.exists(PATH_FLAG_DDH_GPS_ERR):
             os.unlink(PATH_FLAG_DDH_GPS_ERR)
 
