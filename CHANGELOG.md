@@ -190,3 +190,8 @@
 
     fixed scott bug in plots autoSIPrefixScale = 1
 
+5.0.43      05/21/26
+
+    less AWS logs
+    plot reason BLE converted to user reason --> better auto-plotting upon download
+    

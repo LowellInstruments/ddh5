@@ -601,7 +601,7 @@ def _get_crontab(s):
 def _menu_cb_show_help():
     _p('test mode    -> prefixes downloaded filenames with "testfile_"')
     _p('GPS dummy    -> GPS is simulated, it uses position in config.toml')
-    _p('crontab      -> automatically starts or not DDH app upon boot')
+    _p('crontab      -> automatically starts or not DDH app at boot')
     # _p('kill DDH     -> forces DDH app to quit')
     _p('graph demo   -> the DDH plotting tab will use simulated data')
     _p('credentials  -> checks the DDH has all the passwords to run OK')
