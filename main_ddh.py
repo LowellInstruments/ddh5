@@ -312,11 +312,11 @@ def gui_setup_view(my_win):
     a.frame_lbl_summary_dl.setVisible(False)
 
 
-    # edit tab language dropdown
+    # tab 'setup' language dropdown
     a.combo_language.addItems(["en", "pt", "sp"])
 
 
-    # edit tab configuration dropdowns
+    # tab 'setup' configuration dropdowns
     a.cb_s3_uplink_type.addItems(["raw", "group"])
     a.cb_skip_in_port.addItems(["False", "True"])
 
@@ -525,7 +525,6 @@ def gui_tabs_get_index(s):
     d = {
         # main tab
         'tab_info': 0,
-        # edit tab
         'tab_setup': 1,
         'tab_note': 2,
         # details tab
@@ -908,7 +907,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_btn_edit_tab_close_wo_save(self):
-        lg.a('edit tab: pressed the close without save button')
+        lg.a('tab setup: pressed the close without save button')
         self.tab_edit_hide = not self.tab_edit_hide
         gui_tabs_hide_setup(self)
         self.tabs.setCurrentIndex(0)
@@ -1043,7 +1042,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_btn_load_current_json_file(self):
-        """ updates EDIT tab from current config file """
+        """ imports current config file to tab 'setup' """
         ves = ddh_config_get_vessel_name()
         f_t = gui_get_cfg_forget_time_secs()
         lang = ddh_config_get_language_index()
@@ -1897,8 +1896,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.context_menu.setStyleSheet("QMenu { font-size: 22px; }")
         cm_action_minimize = self.context_menu.addAction("minimize")
         cm_action_quit = self.context_menu.addAction("quit")
-        cm_action_edit_tab = self.context_menu.addAction("edit tab")
-        cm_action_advanced_tab = self.context_menu.addAction("advanced tab")
+        cm_action_edit_tab = self.context_menu.addAction("tab setup")
+        cm_action_advanced_tab = self.context_menu.addAction("tab advanced")
         cm_action_quit.triggered.connect(self.close_my_ddh)
         cm_action_edit_tab.triggered.connect(self._gui_tabs_show_edit)
         cm_action_advanced_tab.triggered.connect(self._gui_tabs_show_advanced)
