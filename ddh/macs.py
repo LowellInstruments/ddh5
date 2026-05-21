@@ -25,8 +25,8 @@ PERIOD_MACS_ORANGE_SECS = 15
 def macs_color_show_at_boot():
     b = macs_get_them_by_color('black')
     o = macs_get_them_by_color('orange')
-    lg.a(f"upon boot, macs_black  = {b}")
-    lg.a(f"upon boot, macs_orange = {o}")
+    lg.a(f"boot, macs_black  = {b}")
+    lg.a(f"boot, macs_orange = {o}")
 
 
 

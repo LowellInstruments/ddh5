@@ -143,7 +143,7 @@ def _boot_cnv():
         ls_csv = glob.glob(mask_one_csv, recursive=True)
         if not ls_csv:
             bn = os.path.basename(pb)
-            lg.a(f'upon boot, push {bn} to own queue')
+            lg.a(f'boot, push {bn} to own queue')
             r.rpush(RD_DDH_CNV_QUEUE, pb)
 
 

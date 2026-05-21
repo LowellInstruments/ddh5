@@ -51,6 +51,7 @@ q = RD_DDH_AWS_COPY_QUEUE
 vessel = (ddh_config_get_vessel_name()
           .replace("'", "").replace(" ", "_").upper())
 dev = not linux_is_rpi()
+this_box_has_grouped_s3_uplink = ddh_this_box_has_grouped_s3_uplink()
 
 
 
@@ -154,11 +155,10 @@ def _aws_sync(past_year):
         um = m.split('/')[-1]
         y = yyyy
         sy = str(y)[2:]
-        if ddh_this_box_has_grouped_s3_uplink():
-            lg.a(f'start S3 upload-sync GROUPed for folder {um}, year {y}, dry-run = {dev}')
+        if dev:
+            lg.a('warning, AWS dry-run for S3 upload-sync')
+        if this_box_has_grouped_s3_uplink:
             um = f"{str(y)}/{vessel}/{um}"
-        else:
-            lg.a(f'start S3 upload-sync NON-GROUPed mode for folder {um}, year {y}, dry-run = {dev}')
 
         # format AWS sync command
         cmd = (
@@ -201,12 +201,12 @@ def _aws_sync(past_year):
     # AWS S3 sync went OK or not
     _t = datetime.datetime.now()
     if all_rv == 0:
-        lg.a(f"success, cloud sync on {_t} for year {yyyy}")
+        lg.a(f"success, cloud S3 sync on {_t} for year {yyyy}")
         if past_year:
             pathlib.Path(yyyy_prev_flag).touch()
             lg.a(f"created last year flag {yyyy_prev_flag} so next runs skip this")
     else:
-        lg.a(f"error, cloud sync on {_t}, rv {all_rv}, year {yyyy}")
+        lg.a(f"error, cloud S3 sync on {_t}, rv {all_rv}, year {yyyy}")
     return all_rv
 
 
@@ -237,11 +237,10 @@ def _aws_cp(path):
     um = path.split('/')[-2]
     f_bn = os.path.basename(path)
     y = datetime.datetime.utcnow().year
-    if ddh_this_box_has_grouped_s3_uplink():
-        lg.a(f'start S3 upload-cp GROUPed for folder {um}, year {y}, dry-run = {dev}')
+    if dev:
+        lg.a('warning, AWS dry-run for S3 upload-cp')
+    if this_box_has_grouped_s3_uplink:
         um = f"{str(y)}/{vessel}/{um}"
-    else:
-        lg.a(f'start S3 upload-cp NON-GROUPed for folder {um}, year {y}, dry-run = {dev}')
     cmd = (
         f"AWS_ACCESS_KEY_ID={_k} AWS_SECRET_ACCESS_KEY={_s} "
         f"timeout 60 {_bin} s3 cp {path} s3://{_n}/{um}/{f_bn} {dr} "
@@ -251,9 +250,10 @@ def _aws_cp(path):
     # run AWS cp command
     rv = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     if rv.returncode:
-        lg.a(f"error, {rv.stderr}")
+        lg.a(f"error, S3 copy {os.path.basename(path)}, year {y}, {rv.stderr}")
+
         return 1
-    lg.a(f"success, S3 copy {os.path.basename(path)}")
+    lg.a(f"OK, S3 copy {os.path.basename(path)}, year {y}")
     return 0
 
 
@@ -335,7 +335,9 @@ def _ddh_aws(ignore_gui):
         did_aws = False
 
 
+        # --------------------------
         # AWS COPY individual files
+        # --------------------------
         for i in range(r.llen(q)):
             did_aws = True
             _, path_to_file_to_cp = r.blpop([q])

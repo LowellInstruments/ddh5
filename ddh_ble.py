@@ -299,7 +299,7 @@ def _ddh_ble_boot_gps_clock_sync():
         return
 
     if not linux_is_rpi():
-        lg.a("upon boot, when developing, not syncing clock via GPS")
+        lg.a("boot, when developing, not syncing clock via GPS")
         return
 
 

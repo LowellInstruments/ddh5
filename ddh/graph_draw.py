@@ -20,7 +20,8 @@ from utils.redis import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_G
 from utils.ddh_common import (
     calculate_path_to_folder_within_dl_files_from_mac_address,
     get_total_number_of_hauls,
-    ddh_config_get_logger_mac_from_sn, linux_is_rpi, STR_ERROR_GRAPH_SN_NOT_IN_CONFIG, t_str
+    ddh_config_get_logger_mac_from_sn, linux_is_rpi, STR_ERROR_GRAPH_SN_NOT_IN_CONFIG, t_str,
+    calculate_mac_address_from_folder_within_dl_files, ddh_config_get_logger_sn_from_mac
 )
 from ddh_log import lg_gra as lg
 
@@ -344,7 +345,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
     # statistics: benchmark and number of points
     end_ts = time.perf_counter()
     el_ts = int((end_ts - start_ts) * 1000)
-    lg.a(f'it took {el_ts} ms to DISPLAY {len(y1)} CTD data points')
+    lg.a(f'took {el_ts} ms to DISPLAY {len(y1)} CTD data points')
 
 
     # # ------------------------------------
@@ -405,7 +406,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
 
 def _graph_process_n_draw_non_ctd(a, plot_reason=''):
 
-    # CLEAR graph and start from scratch
+    # CLEAR graph LAYOUT of any plot widget
     for i in reversed(range(a.lay_g_h2.count())):
         a.lay_g_h2.itemAt(i).widget().setParent(None)
 
@@ -429,10 +430,8 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
     _haul_time_view = d[a.cb_g_cycle_haul.currentIndex()]
 
 
-    # get reason passed for graph
-    sn = ''
+    # transform reason BLE automatic download to user choice
     if plot_reason == 'BLE':
-        # reason is an automatic download
         fol = r.get(RD_DDH_GUI_PLOT_FOLDER)
         if not fol:
             e = f'error, wrong folder {fol} to plot'
@@ -440,26 +439,37 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
             raise GraphException(e)
         r.delete(RD_DDH_GUI_PLOT_FOLDER)
         fol = fol.decode()
+        mac = calculate_mac_address_from_folder_within_dl_files(fol)
+        sn = ddh_config_get_logger_sn_from_mac(mac)
 
-    else:
-        # reason is user pressing GUI graph buttons
-        sn = a.cb_g_sn.currentText()
-        if not sn:
-            e = 'error, no one asked for graph?'
+        # programmatically choose logger from GUI dropdown
+        idx = a.cb_g_sn.findText(sn, Qt.MatchFlag.MatchFixedString)
+        if idx == -1:
+            e = f'error, BLE asked for graph with unknown SN {sn}'
             lg.a(e)
             raise GraphException(e)
-        if sn.startswith('SN'):
-            sn = sn[2:]
-        mac = ddh_config_get_logger_mac_from_sn(sn)
-        if not mac:
-            e = f'{t_str(STR_ERROR_GRAPH_SN_NOT_IN_CONFIG)}'
-            lg.a(e)
-            raise GraphException(e)
-        mac = mac.replace(':', '-')
-        if not _graph_check_mac_has_dl_files(mac, fol_ls):
-            raise GraphException(f'error, no files for SN {sn} mac {mac}')
-        lg.a(f'selected dropdown SN {sn} / mac {mac}')
-        fol = str(calculate_path_to_folder_within_dl_files_from_mac_address(mac))
+        a.cb_g_sn.setCurrentIndex(idx)
+
+
+
+    # from this point on, all reason is user pressing GUI graph buttons
+    sn = a.cb_g_sn.currentText()
+    if not sn:
+        e = 'error, no one asked for graph?'
+        lg.a(e)
+        raise GraphException(e)
+    if sn.startswith('SN'):
+        sn = sn[2:]
+    mac = ddh_config_get_logger_mac_from_sn(sn)
+    if not mac:
+        e = f'\'{sn}\': {t_str(STR_ERROR_GRAPH_SN_NOT_IN_CONFIG)}'
+        lg.a(e)
+        raise GraphException(e)
+    mac = mac.replace(':', '-')
+    if not _graph_check_mac_has_dl_files(mac, fol_ls):
+        raise GraphException(f'error, no files for SN {sn} mac {mac}')
+    lg.a(f'selected dropdown SN {sn} / mac {mac}')
+    fol = str(calculate_path_to_folder_within_dl_files_from_mac_address(mac))
 
 
 
@@ -907,7 +917,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
     # statistics: benchmark and number of points
     end_ts = time.perf_counter()
     el_ts = int((end_ts - start_ts) * 1000)
-    lg.a(f'it took {el_ts} ms to DISPLAY {len(x)} {met} data points')
+    lg.a(f'took {el_ts} ms to DISPLAY {len(x)} {met} data points')
 
 
     # ------------------------------------
@@ -1027,5 +1037,5 @@ def graph_process_n_draw(app, reason=''):
 
 
 def graph_request(reason='user'):
-    lg.a(f"graph request sent, reason = '{reason}'")
+    lg.a(f"note, generating PLOT request towards GUI with reason = {reason}")
     r.set(RD_DDH_GUI_PLOT_REASON, reason)

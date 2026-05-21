@@ -1498,13 +1498,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             os.unlink('/tmp/ddh_minimize')
 
 
-        # is there something to plot?
+        # check there is something to plot
         p_r = r.get(RD_DDH_GUI_PLOT_REASON)
         if p_r:
-            # p_r: 'ble', 'user', 'hauls_next', 'hauls_labels'
+            # p_r: means plot_reason, can be 'ble', 'user', 'hauls_next', 'hauls_labels'
             # BLE needs a FOLDER path written on another redis key
             p_r = p_r.decode()
-            lg.a(f"note, received plot request, reason = {p_r}")
+            lg.a(f"note, GUI received PLOT request with reason = {p_r}")
             graph_process_n_draw(self, reason=p_r)
             r.delete(RD_DDH_GUI_PLOT_REASON)
 
@@ -1732,7 +1732,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             # reset progress bar
             if os.path.exists(DEV_SHM_DL_PROGRESS):
                 os.unlink(DEV_SHM_DL_PROGRESS)
-                lg.a('resetting download progress bar value')
+                # lg.a('clearing download progress bar value')
                 self.bar_dl.setValue(0)
             pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
         elif code in (
