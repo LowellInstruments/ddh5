@@ -118,7 +118,7 @@ def _ddh_ble_hardware_describe_antenna_type():
 
 
 
-def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
+def _ddh_ble_hardware_health_check(antenna_idx):
 
     brr = r.get(RD_DDH_BLE_NO_EXPIRES_RESET_REQ)
     aur = ble_linux_adapter_is_it_up_by_index(antenna_idx)
@@ -126,10 +126,7 @@ def _ddh_ble_hardware_health_check(antenna_idx, rv_previous_run):
     need_hw_reset = brr or aur
     rv = 0
 
-    if rv_previous_run or brr or nlc or aur:
-        if rv_previous_run != 2 and rv_previous_run != 0:
-            # 2 is when command has-been-in-water returns no need to download
-            lg.a(f"warning, last interaction had BLE error {rv_previous_run}")
+    if brr or nlc or aur:
         if brr:
             # on scan errors + required by some BLE dongles
             lg.a("warning, detected ble_reset_req flag")
@@ -658,13 +655,21 @@ def _ddh_ble(ignore_gui):
 
 
 
-        # see the rest non-GPSy APP conditions are OK
+        # see the rest GPS APP conditions are OK
         if not ddh_gps_check_app_operational_conditions(g):
             continue
 
 
-        # see BLE system OK
-        rv_ble_hw = _ddh_ble_hardware_health_check(antenna_idx, rv_prev_run)
+        # banner last interaction
+        if rv_prev_run != 2 and rv_prev_run != 0 and rv_prev_run != -1:
+            # 0 is ok, 2 is command has-been-in-water says no need to download
+            lg.a(f"warning, last interaction had BLE error {rv_prev_run}")
+            rv_prev_run = -1
+
+
+
+        # see BLE hardware is OK
+        rv_ble_hw = _ddh_ble_hardware_health_check(antenna_idx)
         _ddh_ble_hardware_error_notify_via_email(g, antenna_idx, rv_ble_hw)
         if rv_ble_hw:
             continue
@@ -688,7 +693,6 @@ def _ddh_ble(ignore_gui):
         # ----------------------
         # download such loggers
         # ----------------------
-
         dev = ls[0]
         rv_prev_run = _ddh_ble_logger_id_and_download(g, dev, antenna_idx, antenna_s)
 
