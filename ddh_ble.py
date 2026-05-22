@@ -483,6 +483,8 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
     # GUI update HISTORY tab's table
     # -------------------------------
     lat, lon, dt, _ = gps_pos
+    if using_dummy_gps:
+        dt = datetime.datetime.utcnow()
     rerun = d['rerun']
     u = d['uuid']
     tz_ddh = get_localzone()
