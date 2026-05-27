@@ -194,4 +194,7 @@
 
     less AWS logs
     plot reason BLE converted to user reason --> better auto-plotting upon download
-    
+
+5.0.44      05/27/26
+
+    improved ddh_ble.py function _ble_logger_is_do1_or_do2()
