@@ -198,3 +198,7 @@
 5.0.44      05/27/26
 
     improved ddh_ble.py function _ble_logger_is_do1_or_do2()
+
+5.0.45      05/28/26
+
+    support for DO-1 is in BETA
