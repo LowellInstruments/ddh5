@@ -39,8 +39,11 @@ def ddh_ask_in_port_to_ddn(
         return 0
     
     
-    
-    # cache expired but maybe we already know the answer
+
+    # ---------------------------------------------------------------
+    # cache expired but maybe we already know the answer locally
+    # 2 GPS decimals: ~1.11 km ~ a town or large village
+    # ---------------------------------------------------------------
     global d_gps_n
     try:
         lat_n = f'{float(lat):.2f}'
@@ -72,7 +75,9 @@ def ddh_ask_in_port_to_ddn(
         if g_last_in_port and notify:
             if is_it_time_to('notify_we_in_port', 43200):
                 notify_ddh_in_port(_g)
-            # add to our small database
+            # -------------------------------------------
+            # add to our small database of in_port ones
+            # -------------------------------------------
             lat_n = f'{float(lat):.2f}'
             lon_n = f'{float(lon):.2f}'
             k = f'{lat_n},{lon_n}'
