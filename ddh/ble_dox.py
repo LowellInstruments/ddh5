@@ -108,7 +108,7 @@ async def ble_download_dox(d):
             if v >= MIN_VERSION_HBW_CMD:
                 if os.path.exists(flag_ignore_hbw):
                     os.unlink(flag_ignore_hbw)
-                    lg.a('file flag to ignore HBW exists, FORCE download it')
+                    lg.a('file flag to override HBW exists, FORCE download it')
                 else:
                     # normal HBW command
                     lg.a('sending command Has-Been-in-Water')

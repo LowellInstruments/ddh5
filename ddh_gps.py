@@ -105,7 +105,7 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
     if os.path.exists(forced_flag):
         lg.a('debug, detected application override flag')
         os.unlink(forced_flag)
-        ls_slo_keys = r.keys(RD_DDH_SLO_LS + '*')
+        ls_slo_keys = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
         for k in ls_slo_keys:
             r.delete(k.decode())
             return True
@@ -212,24 +212,27 @@ def ddh_gps_get_clock_sync_if_so():
         return None
 
 
-    # sync local clock with GPS frame
-    z_utc = datetime.timezone.utc
-    dt_gps_utc = g[2].replace(tzinfo=z_utc)
+    # get our time as UTC
     utc_now = datetime.datetime.now(datetime.timezone.utc)
-    diff_secs = abs((dt_gps_utc - utc_now).total_seconds())
-    if diff_secs < 60:
+
+    # get UTC time from GPS frame
+    dt_gps_utc = g[2].replace(tzinfo=datetime.timezone.utc)
+
+    # see how much they do differ
+    secs = abs((dt_gps_utc - utc_now).total_seconds())
+    if secs < 60:
         return g
-    lg.a(f"warning, the difference between UTC and local time was = {diff_secs} seconds")
-    z_my = get_localzone()
-    dt_my = dt_gps_utc.astimezone(tz=z_my)
-    t = str(dt_my)[:-6]
+
+    lg.a(f"warning, seconds diff. between UTC and local time = {int(secs)}")
 
 
     # don't GPS clock sync when developing
     if not linux_is_rpi():
         return g
 
-
+    z_my = get_localzone()
+    dt_my = dt_gps_utc.astimezone(tz=z_my)
+    t = str(dt_my)[:-6]
     if linux_set_datetime(t):
         return g
 

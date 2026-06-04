@@ -385,7 +385,7 @@ def _ddh_ble_scan_loggers(antenna_idx):
         m = d.address
         if m not in ls_macs_nope:
             # m: '11:22:33:44:55:66'
-            lg.a(f'debug, it seems {m} is good to be downloaded')
+            lg.a(f'debug, it seems {m} is OK to be downloaded')
 
 
     return ls_devs
@@ -570,7 +570,7 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
     for p_dl in d_interaction['dl_files']:
         if p_dl.endswith('.lid'):
             bn = os.path.basename(p_dl)
-            lg.a(f'post download push of {bn} to CNV queue')
+            lg.a(f'post download push to CNV queue = {bn}')
             r.rpush(RD_DDH_CNV_QUEUE, p_dl)
 
 
@@ -580,11 +580,11 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
     # ------------------------------------------------
     ptf = get_path_current_track_file()
     bn = os.path.basename(ptf)
-    lg.a(f'post download push of track file {bn} to AWS COPY queue')
+    lg.a(f'post download push to AWS COPY queue = track file {bn}')
     r.rpush(RD_DDH_AWS_COPY_QUEUE, ptf)
     for p_dl in d_interaction['dl_files']:
         bn = os.path.basename(p_dl)
-        lg.a(f'post download push of file {bn} to AWS COPY queue')
+        lg.a(f'post download push to AWS COPY queue = file {bn}')
         r.rpush(RD_DDH_AWS_COPY_QUEUE, p_dl)
 
     return rv
