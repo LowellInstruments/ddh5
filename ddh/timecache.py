@@ -39,9 +39,3 @@ def query_is_it_time_to(k):
     return not r.exists(_add_prefix(k))
 
 
-
-if __name__ == '__main__':
-    mask = RD_DDH_SLO_LS + '*'
-    print(mask)
-    ls_slo_keys = r.keys(mask)
-    print(ls_slo_keys)

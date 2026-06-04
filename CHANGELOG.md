@@ -202,3 +202,7 @@
 5.0.45      05/28/26
 
     support for DO-1 is in BETA
+
+5.0.46      06/04/26
+
+    not critical, clearer logs and keys() redis calls removed

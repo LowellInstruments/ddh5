@@ -60,9 +60,9 @@ def _une(rv, d, e, ce=0):
 
 async def _ctd_reconfigure_profiling(ver):
     if ver <= '4.0.20':
-        lg.a('warning, not reconfiguring CTD profiling on loggers <= v4.0.20')
+        lg.a('warning, CTD profiling reconfiguration not available on loggers <= v4.0.20')
         return
-    lg.a(f'firmware v{ver} supports CTD profiling reconfiguration')
+    lg.a(f'CTD profiling reconfiguration, firmware v{ver} can do it')
 
 
     # check we want to load a dynamic SCF file
@@ -77,7 +77,7 @@ async def _ctd_reconfigure_profiling(ver):
             break
 
     if not d_prf_file:
-        lg.a('no SCF dictionary from file, not configuring CTD on-the-fly')
+        lg.a('CTD profiling reconfiguration, no SCF dictionary from file, not doing it')
         return
 
     rv, str_gcf = await lc.cmd_gcf()
@@ -86,7 +86,7 @@ async def _ctd_reconfigure_profiling(ver):
         return
 
     # banner
-    lg.a(f"reconfiguring CTD profiling to {d_prf_file['mode']}")
+    lg.a(f"CTD profiling reconfiguration to mode {d_prf_file['mode']}")
 
     # str_gcf: 'GCF 2d000040000100001000600000200003000010719900030'
     str_gcf = str_gcf[6:]
@@ -176,7 +176,7 @@ async def ble_download_ctd(d, full_query=False):
             if v >= MIN_VERSION_HBW_CMD:
                 if os.path.exists(flag_ignore_hbw):
                     os.unlink(flag_ignore_hbw)
-                    lg.a('file flag to ignore HBW exists, FORCE download it')
+                    lg.a('file flag to override HBW exists, FORCE download it')
                 else:
                     # normal HBW command
                     lg.a('sending command Has-Been-in-Water')

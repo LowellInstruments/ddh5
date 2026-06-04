@@ -185,7 +185,7 @@ def _ddh_cnv(ignore_gui):
             _, p = r.blpop([q])
             p = p.decode()
             bn = os.path.basename(p)
-            lg.a(f'dequeing and converting file {bn}')
+            lg.a(f'dequeuing file {bn}')
 
             # ------------------------
             # try to convert lid file
@@ -204,11 +204,11 @@ def _ddh_cnv(ignore_gui):
             for pc in ls_csv:
                 bn = os.path.basename(pc)
                 dn = os.path.dirname(pc)
-                lg.a(f'post conversion push of {bn} to AWS COPY queue')
+                lg.a(f'post conversion push to AWS COPY queue = {bn}')
                 r.rpush(RD_DDH_AWS_COPY_QUEUE, pc)
-                lg.a(f'post conversion analysis of water mode for file {bn}')
+                lg.a(f'post conversion analysis of water mode = {bn}')
                 utils_graph_classify_file_wc_mode(pc)
-                lg.a(f'post conversion plot of file {bn}')
+                lg.a(f'post conversion plot = {bn}')
                 r.set(RD_DDH_GUI_PLOT_REASON, 'BLE')
                 r.set(RD_DDH_GUI_PLOT_FOLDER, dn)
 
