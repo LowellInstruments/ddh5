@@ -38,15 +38,16 @@ def slo_contains(mac):
 
 
 def slo_get_all():
-    ls_slo_keys = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
+    ls = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
+    ls = [i.decode() for i in ls]
     # ls: ['ddh:slo:ls:<MAC1>', 'ddh:slo:ls:<MAC2>']
-    return [i.replace(RD_DDH_SLO_LS, '') for i in ls_slo_keys]
+    return [i.replace(RD_DDH_SLO_LS, '') for i in ls]
 
 
 
 def slo_print_all_ttl():
-    ls_slo_keys = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
-    return [(i, r.ttl(i)) for i in ls_slo_keys]
+    ls = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
+    return [(i.decode(), r.ttl(i)) for i in ls]
 
 
 
@@ -58,6 +59,6 @@ def slo_delete_all():
 
 
 if __name__ == '__main__':
-    print(slo_get_all())
+    slo_delete_all()
 
 
