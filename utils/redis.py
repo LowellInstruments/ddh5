@@ -17,6 +17,8 @@ RD_DDH_GUI_GRAPH_STATISTICS = p + 'graph_statistics'
 RD_DDH_GUI_RV = p + 'rv'
 # for beacon purposes
 RD_DDH_GUI_BEACON_FLAG = p + 'gui_beacon_flag'
+# personalized one
+RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE = p + 'graph_statistics:{}'
 
 
 

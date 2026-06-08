@@ -606,6 +606,11 @@ def exp_get_skip_slo():
 
 
 
+def exp_get_new_table_history():
+    return _get_exp_key_from_cfg('new_table_history')
+
+
+
 def exp_get_override_ft():
     return _get_exp_key_from_cfg('override_ft')
 

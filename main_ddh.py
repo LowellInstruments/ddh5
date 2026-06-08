@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QApplication,
     QTableWidgetItem, QTableWidget,
     QWidget, QMessageBox,
-    QMainWindow, QMenu
+    QMainWindow, QMenu, QHeaderView
 )
 import ddh.gui.gui_ddh as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
@@ -46,7 +46,7 @@ from utils.redis import (
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
     RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
-    RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, RD_DDH_GUI_BEACON_FLAG
+    RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -103,7 +103,7 @@ from utils.ddh_common import (
     STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
     STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
-    PATH_FLAG_DDH_GPS_ERR,
+    PATH_FLAG_DDH_GPS_ERR, exp_get_new_table_history,
 )
 import datetime
 import os
@@ -361,7 +361,7 @@ def gui_setup_center_window(my_app):
 
 
 
-def gui_tabs_populate_history(my_app):
+def _gui_tabs_populate_history_old(my_app):
     """
     fills history table on history tab
     """
@@ -420,6 +420,99 @@ def gui_tabs_populate_history(my_app):
 
     # show row numbers
     a.tbl_his.verticalHeader().setVisible(True)
+
+
+
+def _gui_tabs_populate_history_new(my_app):
+    t = my_app.tbl_his
+    t.clear()
+    t.tableWidget = None
+    t.tableWidget = QTableWidget()
+    t.tableWidget.setSortingEnabled(False)
+    t.setColumnCount(5)
+
+
+    # get history database and order by most recent first
+    db = DbHis(ddh_get_path_to_db_history_file())
+    ls_d_rows = db.get_all().values()
+    ls_d_rows = sorted(ls_d_rows, key=lambda x: x["ep_loc"], reverse=True)
+
+
+    # dictionary index columns
+    d_i_c = {
+        'SN': 0,
+        'ep_loc': 1,
+        'e': 2,
+        'rerun': 3,
+        'summary': 4
+    }
+    ls_sn_done = []
+
+
+    # logger, datetime, offload_result, restart, summary table
+    for i_r, d in enumerate(ls_d_rows):
+        sn = d.get('SN', '')
+        if sn in ls_sn_done:
+            continue
+        if sn == '':
+            continue
+        ls_sn_done.append(sn)
+        for k,v in d.items():
+            if k not in d_i_c.keys():
+                continue
+            if k == 'ep_loc':
+                dt = datetime.datetime.fromtimestamp(int(v))
+                v = dt.strftime("%b %d %H:%M")
+            if k == 'e':
+                if 'OK' not in v:
+                    v = '✅'
+                    k_summary = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
+                    v_summary = r.get(k_summary)
+                    v_summary = v_summary.decode() if v_summary else ''
+                    _it = QTableWidgetItem(str(v_summary))
+                    _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+                    t.setItem(i_r, 4, _it)
+                else:
+                    v = '❌'
+            if k == 'rerun':
+                v = '✅' if v == 'True' else '❌'
+
+            # fill the cell
+            _it = QTableWidgetItem(str(v))
+            _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            t.setItem(i_r, d_i_c[k], _it)
+
+
+    # table column widths
+    h = t.horizontalHeader()
+    h.setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignCenter | QtCore.Qt.AlignmentFlag.AlignVCenter)
+    h.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+    h.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+    h.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+    h.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+    h.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+
+
+
+    # table column titles
+    d_titles = {
+        'SN': 'logger SN',
+        'ep_loc': 'datetime',
+        'e': 'result',
+        'rerun': 're-run',
+        'summary': 'summary'
+    }
+    t.setHorizontalHeaderLabels(list(d_titles.values()))
+
+
+
+
+def gui_tabs_populate_history(my_app):
+    if exp_get_new_table_history() == 1:
+        _gui_tabs_populate_history_new(my_app)
+    else:
+        _gui_tabs_populate_history_old(my_app)
+
 
 
 

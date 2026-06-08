@@ -16,7 +16,8 @@ from ddh.graph_utils import (
     utils_graph_get_abs_fol_list,
     utils_graph_fetch_csv_data,
 )
-from utils.redis import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_GRAPH_STATISTICS
+from utils.redis import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_GRAPH_STATISTICS, \
+    RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE
 from utils.ddh_common import (
     calculate_path_to_folder_within_dl_files_from_mac_address,
     get_total_number_of_hauls,
@@ -926,6 +927,9 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
     r.delete(RD_DDH_GUI_GRAPH_STATISTICS)
     is_rpi = linux_is_rpi()
 
+    # used for new history table fromat
+    s2 = ''
+
     try:
         been_water = False
         if met == 'TDO':
@@ -953,11 +957,15 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                     stats_t = np.nanmean(ls_t)
                     s += '{:5.2f} {}\n'.format(stats_p, units_p)
                     s += '{:5.2f} °{}'.format(stats_t, units_t)
+                    s2 = '{:5.2f} {} {:5.2f} °{}'.format(stats_p, units_p, stats_t, units_t)
                     lg.a(f"statistics TDO for SN {sn}")
                     lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
                 r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
+                k = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
+                r.set(k, s2)
+
 
 
         if met == 'DO':
@@ -991,11 +999,14 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                     s += '{:5.2f} mg_l\n'.format(np.nanmean(ls_do))
                     stats_dt = np.nanmean(ls_dt)
                     s += '{:5.2f} °{}'.format(stats_dt, units_t)
+                    s2 = '{:5.2f} mg/l {:5.2f} °{}'.format(np.nanmean(ls_do), stats_dt, units_t)
                     lg.a(f"statistics DOX for SN {sn}")
                     lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
                 r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
+                k = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
+                r.set(k, s2)
 
 
     except (Exception, ) as ex:
