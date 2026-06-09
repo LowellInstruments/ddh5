@@ -1,6 +1,7 @@
 import redis
 from utils.ddh_common import exp_get_skip_slo
 from utils.redis import RD_DDH_SLO_LS
+from ddh_log import lg_ble as lg
 
 
 
@@ -20,18 +21,21 @@ def slo_add(mac):
         slo_delete_all()
         print(f'warning, SLO disabled in config.toml, not working with mac {mac}')
         return
+    mac = mac.replace(':', '-')
     k = f"{RD_DDH_SLO_LS}{mac}"
     r.setex(k, 120, 1)
 
 
 
 def slo_delete(mac):
+    mac = mac.replace(':', '-')
     k = f"{RD_DDH_SLO_LS}{mac}"
     r.delete(k)
 
 
 
 def slo_contains(mac):
+    mac = mac.replace(':', '-')
     k = f"{RD_DDH_SLO_LS}{mac}"
     return r.exists(k)
 
@@ -41,7 +45,7 @@ def slo_get_all():
     ls = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
     ls = [i.decode() for i in ls]
     # ls: ['ddh:slo:ls:<MAC1>', 'ddh:slo:ls:<MAC2>']
-    return [i.decode().replace(RD_DDH_SLO_LS, '') for i in ls]
+    return [i.replace(RD_DDH_SLO_LS, '') for i in ls]
 
 
 
