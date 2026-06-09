@@ -1183,7 +1183,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 lg.a(f"error, {ex}")
                 return
 
-        lg.a("pressed GUI button 'OK' to clear one specific logger time-out")
+        lg.a("pressed GUI button 'OK' to clear ONE specific logger time-out")
         flag = ddh_get_path_to_app_override_flag_file()
         pathlib.Path(flag).touch()
         lg.a("BLE op conditions override set as 1")
@@ -1224,7 +1224,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 lg.a(f"error click_btn_note_yes -> {ex}")
                 return
 
-        lg.a("pressed GUI button 'OK' to clear all loggers time-out")
+        lg.a("pressed GUI button 'OK' to clear ALL loggers time-out")
         flag = ddh_get_path_to_app_override_flag_file()
         pathlib.Path(flag).touch()
         lg.a("BLE op conditions override set as 1")

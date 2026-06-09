@@ -103,12 +103,9 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
     # forced flag, when user presses button '2' for example
     forced_flag = ddh_get_path_to_app_override_flag_file()
     if os.path.exists(forced_flag):
-        lg.a('debug, detected application override flag')
+        lg.a('debug, GPS detected application override flag')
         os.unlink(forced_flag)
-        ls_slo_keys = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
-        for k in ls_slo_keys:
-            r.delete(k.decode())
-            return True
+        return True
 
 
     # discover if we are in port
