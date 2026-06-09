@@ -356,10 +356,10 @@ def _ddh_ble_scan_loggers(antenna_idx):
 
     # ignore smart lock-out logger macs
     ls_macs_slo = slo_get_all()
+    ls_macs_slo = [i.replace('-', ':') for i in ls_macs_slo]
     for m in ls_macs:
-        # a detected mac already in smart lock-out is refreshed
+        # a detected mac 'm' already in smart lock-out is refreshed
         if m in ls_macs_slo:
-            # todo: do better key naming according to rd_ctt
             k = f"_ddh_smart_lock_out_tell_{m}"
             if not r.exists(k):
                 lg.a(f'debug, smart-lock-out prevents downloading {m}')
