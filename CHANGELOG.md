@@ -206,3 +206,7 @@
 5.0.46      06/04/26
 
     not critical, clearer logs and keys() redis calls removed
+
+5.0.47      09/02/26
+
+    relaxed requirements for has-been-in-water
