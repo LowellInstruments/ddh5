@@ -688,10 +688,7 @@ def _ddh_ble(ignore_gui):
             lg.a(f'list of loggers to download')
             lg.a(f'\t{ls}')
         except (Exception, ) as ex:
-            if is_it_time_to('ble_tell_exception', 3600):
-                lg.a(f'error during _scan_loggers() -> {ex}')
-                str_captured_exception = traceback.format_exc()
-                lg.a(f'error captured exception {str_captured_exception}')
+            lg.a(f'error during _scan_loggers() -> {ex}')
             continue
 
 
