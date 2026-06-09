@@ -181,7 +181,9 @@ async def ble_download_tdo(d, full_query=False):
                     # normal HBW command
                     lg.a('sending command Has-Been-in-Water')
                     rv, v = await lc.cmd_hbw()
-                    _rae(rv, "hbw")
+                    if rv:
+                        lg.a('note, command Has-Been-in-Water failed, consider it has')
+                        v = 1
                     lg.a(f"HBW | {v}")
                     if v == 0:
                         lg.a('logger has NOT been in water, no need to download it')
