@@ -41,7 +41,7 @@ def slo_get_all():
     ls = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
     ls = [i.decode() for i in ls]
     # ls: ['ddh:slo:ls:<MAC1>', 'ddh:slo:ls:<MAC2>']
-    return [i.replace(RD_DDH_SLO_LS, '') for i in ls]
+    return [i.decode().replace(RD_DDH_SLO_LS, '') for i in ls]
 
 
 

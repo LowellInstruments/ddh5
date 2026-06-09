@@ -1571,9 +1571,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if os.path.exists(PATH_MIN_BUG):
                 lg.a('note, fixing touch shift bug')
                 os.unlink(PATH_MIN_BUG)
-                self.showMaximized()
-                time.sleep(.1)
-                self.showFullScreen()
+                if linux_is_rpi():
+                    self.showMaximized()
+                    time.sleep(.1)
+                    self.showFullScreen()
 
 
         # detect any of the DDH processes is not there
