@@ -1,3 +1,5 @@
+import traceback
+
 import datetime
 import os
 import sys
@@ -688,6 +690,8 @@ def _ddh_ble(ignore_gui):
             lg.a(f'\t{ls}')
         except (Exception, ) as ex:
             lg.a(f'error during _scan_loggers() -> {ex}')
+            str_captured_exception = traceback.format_exc()
+            lg.a(f'error captured exception {str_captured_exception}')
             continue
 
 
