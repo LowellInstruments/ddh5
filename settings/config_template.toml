@@ -50,3 +50,5 @@ use_skip_hbw = 0
 skip_slo = 0
 # override_ft set to 1 for Andrew's tests
 override_ft = 0
+# history 0 used old table, 1 uses new table
+new_table_history = 0
