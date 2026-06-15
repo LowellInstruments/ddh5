@@ -207,6 +207,11 @@
 
     not critical, clearer logs and keys() redis calls removed
 
-5.0.47      09/02/26
+5.0.47      06/12/26
 
     relaxed requirements for has-been-in-water
+
+5.0.48      06/15/26
+
+    smart lock-out deletes expired keys upon boot
+

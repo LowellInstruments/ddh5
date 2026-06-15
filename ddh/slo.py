@@ -62,7 +62,16 @@ def slo_delete_all():
 
 
 
+def slo_delete_expired_ones():
+    ls_slo_keys = list(r.scan_iter(f'{RD_DDH_SLO_LS}*'))
+    for k in ls_slo_keys:
+        v = r.ttl(k.decode())
+        if v and v == -2:
+            r.delete(k.decode())
+
+
+
 if __name__ == '__main__':
-    slo_delete_all()
+    slo_delete_expired_ones()
 
 
