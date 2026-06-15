@@ -38,7 +38,7 @@ from ddh.notifications_v2 import (
     notify_boot, notify_ddh_error_hw_ble, LoggerNotification,
     notify_logger_download, notify_logger_error_retries
 )
-from ddh.slo import slo_get_all, slo_add, slo_delete
+from ddh.slo import slo_get_all, slo_add, slo_delete, slo_delete_expired_ones
 from ddh.timecache import is_it_time_to
 from ddh.tracking import ddh_log_tracking_add, get_path_current_track_file
 from main_ddh import gui_add_to_history_database
@@ -360,7 +360,7 @@ def _ddh_ble_scan_loggers(antenna_idx):
     for m in ls_macs:
         # a detected mac 'm' already in smart lock-out is refreshed
         if m in ls_macs_slo:
-            k = f"_ddh_smart_lock_out_tell_{m}"
+            k = f"_ddh_smart_lock_out_tell_{m.replace(':', '-')}"
             if not r.exists(k):
                 lg.a(f'debug, smart-lock-out prevents downloading {m}')
                 r.setex(k, 300, 1)
@@ -602,6 +602,14 @@ def _ddh_ble(ignore_gui):
     macs_color_show_at_boot()
     if ddh_config_does_flag_file_download_test_mode_exist():
         lg.a('detected DDH download test mode')
+
+
+
+    # fix weird behavior with keys with negative expiration time
+    slo_delete_expired_ones()
+
+
+
 
 
     # -----------------------
