@@ -156,6 +156,7 @@ d_processes = {
     NAME_EXE_NET: None,
     NAME_EXE_SQS: None,
 }
+g_atcom_previous_is_bad = False
 
 
 
@@ -1488,6 +1489,39 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
+    @staticmethod
+    def _cb_timer_gui_atcom():
+        global g_atcom_previous_is_bad
+
+        # see current atcom value
+        c = "ps -C atcom -o %cpu | tail -n 1"
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        atcom_current_is_bad = False
+        try:
+            xc = float(rv.stdout.decode().strip())
+            lg.a(f'atcom is at {xc} %')
+            if xc >= 99:
+                atcom_current_is_bad = True
+        except (Exception, ):
+            g_atcom_previous_is_bad = False
+            return
+
+        # we were able to obtain percentage
+        if g_atcom_previous_is_bad and atcom_current_is_bad:
+            if linux_is_rpi():
+                lg.a('warning, doing poff and killall')
+                c = "sudo poff; sudo killall atcom"
+                rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                if rv.returncode:
+                    lg.a('error, when doing poff and killall')
+                g_atcom_previous_is_bad = False
+                return
+
+        g_atcom_previous_is_bad = atcom_current_is_bad
+
+
+
+
     def _cb_timer_gui_sixty_seconds(self):
 
         # detect redis server is running
@@ -1984,6 +2018,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # main timer of the GUI, refreshes fields
         self.timer_gui_one_second.timeout.connect(self._cb_timer_gui_one_second)
         self.timer_gui_one_second.start(1 * 1000)
+        # atcom timer
+        #self.timer_gui_atcom.timeoout.connect(self._cb_timer_gui_atcom)
+        #self.timer_gui_atcom.start(600 * 1000)
+
 
 
         # build context menu shortcuts

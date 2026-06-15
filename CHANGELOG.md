@@ -215,3 +215,6 @@
 
     smart lock-out deletes expired keys upon boot
 
+5.0.49      06/15/26
+
+    added atcom timer but disabled
