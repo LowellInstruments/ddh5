@@ -605,13 +605,6 @@ def _ddh_ble(ignore_gui):
 
 
 
-    # fix weird behavior with keys with negative expiration time
-    slo_delete_expired_ones()
-
-
-
-
-
     # -----------------------
     # know your BLE antenna
     # -----------------------
@@ -622,6 +615,10 @@ def _ddh_ble(ignore_gui):
 
     # clock sync at boot
     _ddh_ble_boot_gps_clock_sync()
+
+
+    # fix weird behavior with keys with negative expiration time
+    slo_delete_expired_ones()
 
 
 
