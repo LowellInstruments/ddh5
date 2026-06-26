@@ -84,12 +84,12 @@ async def deploy_logger_tdo(mac, sn, cfg_from_menu):
 
 
         print('doing command First Deployment Set')
-        rv, v = await lc.cmd_fdg()
-        _e(rv, 'fdg')
+        #rv, v = await lc.cmd_fdg()
+        #_e(rv, 'fdg')
         rv = await lc.cmd_fds()
         _e(rv, 'fds')
-        rv, v = await lc.cmd_fdg()
-        _e(rv, 'fdg')
+        #rv, v = await lc.cmd_fdg()
+        #_e(rv, 'fdg')
 
         dn = cfg_from_menu['DFN']
         print(f'setting deployment name to {dn}')
