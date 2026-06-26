@@ -15,7 +15,8 @@ from script_logger_dox_deploy_utils import (
     get_script_cfg_file,
     ble_scan_for_dox_loggers,
 )
-from utils.ddh_common import linux_is_rpi
+
+
 
 # don't move this from here
 FILE_ALL_MACS_TOML = f'../settings/all_macs.toml'
@@ -251,7 +252,5 @@ def main_logger_dox_deploy():
 
 
 if __name__ == "__main__":
-    if not linux_is_rpi():
-        # Pycharm, be sure starting directory is 'ddh/scripts'
-        assert str(os.getcwd()).endswith('scripts')
+    # Pycharm, be sure starting directory is 'ddh/scripts'
     main_logger_dox_deploy()

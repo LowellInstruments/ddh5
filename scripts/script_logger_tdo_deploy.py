@@ -13,7 +13,8 @@ from script_logger_tdo_deploy_utils import (
     deploy_logger_tdo,
     ble_scan_for_tdo_loggers,
 )
-from utils.ddh_common import linux_is_rpi
+
+
 
 # don't move this from here
 FILE_ALL_MACS_TOML = f'../settings/all_macs.toml'
@@ -205,7 +206,5 @@ def main_logger_tdo_deploy():
 
 
 if __name__ == "__main__":
-    if not linux_is_rpi():
-        # Pycharm, be sure starting directory is 'ddh/scripts'
-        assert str(os.getcwd()).endswith('scripts')
+    # Pycharm, be sure starting directory is 'ddh/scripts'
     main_logger_tdo_deploy()
