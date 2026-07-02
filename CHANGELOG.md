@@ -224,3 +224,7 @@
     enabled atcom timer
     better ICCID on run_ddh.sh
 
+5.0.51      07/02/26
+
+    diabled atcom timer because BUG
+
