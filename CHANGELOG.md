@@ -218,3 +218,9 @@
 5.0.49      06/15/26
 
     added atcom timer but disabled
+
+5.0.50      07/02/26
+
+    enabled atcom timer
+    better ICCID on run_ddh.sh
+

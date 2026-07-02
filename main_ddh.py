@@ -2019,8 +2019,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.timer_gui_one_second.timeout.connect(self._cb_timer_gui_one_second)
         self.timer_gui_one_second.start(1 * 1000)
         # atcom timer
-        #self.timer_gui_atcom.timeoout.connect(self._cb_timer_gui_atcom)
-        #self.timer_gui_atcom.start(600 * 1000)
+        self.timer_gui_atcom.timeoout.connect(self._cb_timer_gui_atcom)
+        self.timer_gui_atcom.start(600 * 1000)
 
 
 
