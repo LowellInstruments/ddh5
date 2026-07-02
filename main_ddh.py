@@ -2009,6 +2009,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.timer_gui_one_second = QTimer()
         self.timer_gui_sixty_seconds = QTimer()
         self.timer_six_hours = QTimer()
+        self.timer_gui_atcom = QTimer()
         # timer that checks redis and power shields (j4h, sailorhat)
         self.timer_gui_sixty_seconds.timeout.connect(self._cb_timer_gui_sixty_seconds)
         self.timer_gui_sixty_seconds.start(60 * 1000)
