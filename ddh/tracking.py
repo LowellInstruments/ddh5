@@ -6,6 +6,7 @@ from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
     ddh_get_path_to_folder_lef,
     TESTMODE_FILENAME_PREFIX, ddh_config_get_vessel_name, ddh_config_does_flag_file_download_test_mode_exist,
+    ddh_get_path_to_root_application_folder,
 )
 from ddh_log import lg_trk as lg
 
@@ -78,6 +79,10 @@ def ddh_log_tracking_add(lat, lon, tg):
             j = fl.read()
             with open(file_out, 'a') as fo:
                 fo.write(f"{str_iso_tg_tz_utc},{lat},{lon}***{j}\n")
+                # create a symlink to know we have to upload this track file
+                fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
+                link_file_out = f'{fol_upload}/{os.path.basename(file_out)}'
+                os.symlink(file_out, link_file_out)
 
         # delete the LEF file
         _bn = os.path.basename(f_lef)

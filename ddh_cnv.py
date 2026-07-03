@@ -124,7 +124,7 @@ def _convert_file(p):
                 graph_request(reason='ble')
 
                 # create the symlinks the AWS loop will upload
-                # todo: test this
+                # todo: maybe move LID / GPS to ddh_ble _ddh_ble_analyze_logger_download_result
                 fol = str(ddh_get_path_to_root_application_folder())
                 os.makedirs(f'{fol}/upload', exist_ok=True)
                 link_lid = f'{fol}/upload/{os.path.basename(p)}'
