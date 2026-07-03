@@ -1,6 +1,8 @@
 import signal
 import sys
 from pathlib import Path
+from threading import Thread
+
 import psutil
 import glob
 import pathlib
@@ -16,17 +18,22 @@ from PyQt6.QtWidgets import (
 )
 import ddh.gui.gui_ddh as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
+
+from clear import (
+    cb_when_ddh_receives_ctrl_c, cb_when_ddh_receives_kill_signal,
+    gui_kill_all_processes, \
+    gui_check_all_processes, linux_is_process_running_strict
+)
 from ddh.graph_draw import graph_request
 from ddh.preferences import preferences_set_models_index
 from ddh_gps import ddh_gps_get
 from ddh.buttons import ddh_create_thread_buttons
 from ddh.notifications_v2 import (
-    notify_via_sms,
     notify_ddh_alive,
     notify_error_sw_crash
 )
 from ddh.slo import slo_delete, slo_delete_all
-from mat.linux import linux_is_process_running_strict
+from ddh_net import main_ddh_net
 from utils.redis import (
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE,
     RD_DDH_BLE_NO_EXPIRES_ANTENNA, \
@@ -57,8 +64,8 @@ from utils.ddh_common import (
     ddh_clear_do_not_rerun_file_flag,
     NAME_EXE_API,
     ddh_get_template_of_path_of_hbw_flag_file,
-    NAME_EXE_LOG, NAME_EXE_CNV, NAME_EXE_GPS, NAME_EXE_AWS,
-    NAME_EXE_NET, ddh_config_get_vessel_name,
+    NAME_EXE_CNV, NAME_EXE_GPS, NAME_EXE_AWS,
+    ddh_config_get_vessel_name,
     ddh_config_get_box_sn,
     ddh_config_does_flag_file_download_test_mode_exist,
     ddh_config_is_skip_in_port_enabled,
@@ -68,7 +75,7 @@ from utils.ddh_common import (
     ddh_get_path_to_folder_scripts,
     ddh_config_get_logger_mac_from_sn,
     ddh_config_get_list_of_monitored_macs,
-    ddh_config_get_logger_sn_from_mac, NAME_EXE_SQS, NAME_EXE_BLE,
+    ddh_config_get_logger_sn_from_mac, NAME_EXE_BLE,
     LI_PATH_PLT_ONLY_INSIDE_WATER,
     LI_PATH_GROUPED_S3_FILE_FLAG, app_state_get,
     EV_BLE_SCAN, EV_GUI_BOOT, EV_BLE_DL_PROGRESS,
@@ -128,7 +135,8 @@ from utils.ddh_common import (
     ddh_does_do_not_rerun_file_flag_exist,
     ddh_get_local_software_version,
 )
-from ddh_log import lg_gui as lg
+from ddh_log import lg_gui as lg, main_ddh_log
+
 if not linux_is_rpi():
     from PyQt6.QtWebEngineWidgets import QWebEngineView
 
@@ -147,53 +155,8 @@ d_process_states = {
     QProcess.ProcessState.Starting: 'Starting',
     QProcess.ProcessState.Running: 'Running',
 }
-d_processes = {
-    NAME_EXE_LOG: None,
-    NAME_EXE_AWS: None,
-    NAME_EXE_BLE: None,
-    NAME_EXE_CNV: None,
-    NAME_EXE_GPS: None,
-    NAME_EXE_NET: None,
-    NAME_EXE_SQS: None,
-}
-g_atcom_previous_is_bad = False
 
-
-
-
-def gui_kill_all_processes():
-    lg.a(f'killing all processes')
-    # ensure process log finds this
-    time.sleep(1.1)
-    for p in d_processes.keys():
-        sp.run(f'killall {p}', shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        sp.run(f'kill -9 $(pidof {p})', shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    time.sleep(.1)
-
-
-
-def gui_check_all_processes():
-    for p in d_processes.keys():
-        if not linux_is_process_running_strict(p):
-            lg.a(f'warning, process {p} not present')
-
-
-
-def cb_when_ddh_receives_ctrl_c(signal_num, _):
-    lg.a(f'captured signal ctrl + c ({signal_num})')
-    gui_kill_all_processes()
-    # so DDH GUI is the last to be in OS
-    time.sleep(1)
-    sys.exit(0)
-
-
-
-def cb_when_ddh_receives_kill_signal(signal_num, _):
-    lg.a(f'captured kill signal ({signal_num})')
-    gui_kill_all_processes()
-    # so DDH GUI is the last to be in OS
-    time.sleep(1)
-    sys.exit(0)
+g_atcom_last_bad = False
 
 
 
@@ -924,18 +887,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self._ho(self.d_processes[NAME_EXE_GPS].readAllStandardOutput())
 
 
-    def handle_stdout_log(self):
-        self._ho(self.d_processes[NAME_EXE_LOG].readAllStandardOutput())
-
-
-    def handle_stdout_net(self):
-        self._ho(self.d_processes[NAME_EXE_NET].readAllStandardOutput())
-
-
-    def handle_stdout_sqs(self):
-        self._ho(self.d_processes[NAME_EXE_SQS].readAllStandardOutput())
-
-
     def handle_state_ble(self, state):
         self.process_state_ble = d_process_states[state]
 
@@ -1490,8 +1441,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     @staticmethod
-    def _cb_timer_gui_atcom():
-        global g_atcom_previous_is_bad
+    def _check_atcom():
+        global g_atcom_last_bad
 
         # see current atcom value
         c = "ps -C atcom -o %cpu | tail -n 1"
@@ -1503,26 +1454,27 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if xc >= 99:
                 atcom_current_is_bad = True
         except (Exception, ):
-            g_atcom_previous_is_bad = False
+            g_atcom_last_bad = False
             return
 
         # we were able to obtain percentage
-        if g_atcom_previous_is_bad and atcom_current_is_bad:
+        if g_atcom_last_bad and atcom_current_is_bad:
             if linux_is_rpi():
                 lg.a('warning, doing poff and killall')
                 c = "sudo poff; sudo killall atcom"
                 rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
                 if rv.returncode:
                     lg.a('error, when doing poff and killall')
-                g_atcom_previous_is_bad = False
+                g_atcom_last_bad = False
                 return
 
-        g_atcom_previous_is_bad = atcom_current_is_bad
+        g_atcom_last_bad = atcom_current_is_bad
 
 
 
 
-    def _cb_timer_gui_sixty_seconds(self):
+    @staticmethod
+    def _check_redis_cpu_temp_ram_power():
 
         # detect redis server is running
         c = "redis-cli ping"
@@ -1597,6 +1549,22 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def _cb_timer_gui_one_second(self):
+
+        # bigger times based on one second
+        self.g_count_1_second_60_times += 1
+        if self.g_count_1_second_60_times >= 60:
+            self.g_count_1_second_60_times = 0
+            lg.a('note, running 60 seconds')
+            self._check_redis_cpu_temp_ram_power()
+
+        self.g_count_1_second_600_times += 1
+        if self.g_count_1_second_600_times >= 600:
+            self.g_count_1_second_600_times = 0
+            lg.a('note, running 600 seconds')
+            self.th = Thread(target=self._check_atcom)
+            self.th.start()
+
+
 
         # solves the touch bug
         if self.isMinimized():
@@ -1922,35 +1890,34 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_init_redis()
         gui_check_config_file_is_ok()
         app_state_set(EV_GUI_BOOT, t_str(STR_EV_GUI_BOOT))
+        gui_kill_all_processes()
 
 
         # we want new processes
-        self.d_processes = {}
-        gui_kill_all_processes()
-        self.d_processes[NAME_EXE_LOG] = QProcess()
+        self.d_processes = dict()
         self.d_processes[NAME_EXE_AWS] = QProcess()
         self.d_processes[NAME_EXE_BLE] = QProcess()
         self.d_processes[NAME_EXE_CNV] = QProcess()
         self.d_processes[NAME_EXE_GPS] = QProcess()
-        self.d_processes[NAME_EXE_NET] = QProcess()
-        self.d_processes[NAME_EXE_SQS] = QProcess()
 
         # prints of subprocesses are handled by pyqt
-        self.d_processes[NAME_EXE_LOG].readyReadStandardOutput.connect(self.handle_stdout_log)
         self.d_processes[NAME_EXE_AWS].readyReadStandardOutput.connect(self.handle_stdout_aws)
         self.d_processes[NAME_EXE_BLE].readyReadStandardOutput.connect(self.handle_stdout_ble)
         self.d_processes[NAME_EXE_CNV].readyReadStandardOutput.connect(self.handle_stdout_cnv)
         self.d_processes[NAME_EXE_GPS].readyReadStandardOutput.connect(self.handle_stdout_gps)
-        self.d_processes[NAME_EXE_NET].readyReadStandardOutput.connect(self.handle_stdout_net)
-        self.d_processes[NAME_EXE_SQS].readyReadStandardOutput.connect(self.handle_stdout_sqs)
         self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
-        self.d_processes[NAME_EXE_LOG].start('python3', [f'{NAME_EXE_LOG}.py'])
         self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
         self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
         self.d_processes[NAME_EXE_CNV].start('python3', [f'{NAME_EXE_CNV}.py'])
         self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
-        self.d_processes[NAME_EXE_NET].start('python3', [f'{NAME_EXE_NET}.py'])
-        self.d_processes[NAME_EXE_SQS].start('python3', [f'{NAME_EXE_SQS}.py'])
+
+
+        # GUI threads
+        self.th_log = Thread(target=main_ddh_log)
+        self.th_log.start()
+        self.th_net = Thread(target=main_ddh_net)
+        self.th_net.start()
+
 
 
         # create variables
@@ -1970,7 +1937,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.n_good_models = 0
         self.filename_model = None
 
-        # solves touch shift bug
+
+
+        # solves touch-after-minimize bug
         if os.path.exists(PATH_MIN_BUG):
             os.unlink(PATH_MIN_BUG)
 
@@ -2007,21 +1976,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # GUI timers
         self.timer_gui_one_second = QTimer()
-        self.timer_gui_sixty_seconds = QTimer()
+        self.g_count_1_second_60_times = 0
+        self.g_count_1_second_600_times = 0
         self.timer_six_hours = QTimer()
-        # self.timer_gui_atcom = QTimer()
-        # timer that checks redis and power shields (j4h, sailorhat)
-        self.timer_gui_sixty_seconds.timeout.connect(self._cb_timer_gui_sixty_seconds)
-        self.timer_gui_sixty_seconds.start(60 * 1000)
         # timer to generate DDH-alive notifications, first trigger at 10 s, then 6 h
         self.timer_six_hours.timeout.connect(self._cb_timer_six_hours)
         self.timer_six_hours.start(10 * 1000)
         # main timer of the GUI, refreshes fields
         self.timer_gui_one_second.timeout.connect(self._cb_timer_gui_one_second)
         self.timer_gui_one_second.start(1 * 1000)
-        # atcom timer
-        # self.timer_gui_atcom.timeoout.connect(self._cb_timer_gui_atcom)
-        # self.timer_gui_atcom.start(600 * 1000)
 
 
 
@@ -2048,6 +2011,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # self.btn_expand.setVisible(False)
 
 
+
         # web engine viewer (install with apt python3-pyqt6.qtwebengine)
         if not linux_is_rpi():
             # from PyQt6.QtWebEngineWidgets import QWebEngineView
@@ -2059,22 +2023,23 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             self.lay_maps.addWidget(self.browser)
 
 
-        # web engine viewer is tricky to display ok in raspberry, patch it
+
+        # web engine viewer tricky to display ok in raspberry, patch it
         if linux_is_rpi():
             self.showMaximized()
             time.sleep(.1)
             self.showFullScreen()
 
 
-        # boot, for ATU
+        # boot, also useful for ATU
         if os.path.exists(PATH_FLAG_DDH_GPS_ERR):
             os.unlink(PATH_FLAG_DDH_GPS_ERR)
 
 
         gui_translate(self)
-        lg.a("OK, finished booting GUI")
 
-        # summary of experimental
+
+        # summary of experimental config.toml features
         if exp_get_skip_hbw() == 1:
             lg.a('note, DDH will NOT ❌ use command has-been-in-water')
         else:
@@ -2084,11 +2049,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         else:
             lg.a('note, DDH USES smart-lock-out')
 
+        lg.a("OK, finished booting GUI")
+
+
 
 
 
 
 def main_ddh_gui():
+
     if linux_is_process_running_strict(NAME_EXE_BRT):
         print('error, BRT running, DDH will not run')
         return
@@ -2105,24 +2074,25 @@ def main_ddh_gui():
     rv = app.exec()
 
 
-    # create a timestamped entry when GUI is not doing well
+    # create a timestamped entry when GUI is NOT doing well
     k = RD_DDH_GUI_RV
     if rv:
         r.setex(f'{k}_{int(time.time())}', 600, 1)
 
 
-    # when too many of these entries, generate an alarm
+    # when too many of these entries, generate alarm
     ls = list(r.scan_iter(f'{k}_*', count=6))
     if len(ls) >= 5:
         notify_error_sw_crash()
 
 
-    # remove entries when OK or already done alarm
+    # remove entries when OK or already generated alarm
     if rv == 0 or len(ls) >= 5:
         for i in ls:
             r.delete(i)
 
     sys.exit(rv)
+
 
 
 

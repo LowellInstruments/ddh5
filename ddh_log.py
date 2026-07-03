@@ -1,13 +1,11 @@
 import sys
-import setproctitle
 import time
 import redis
 from utils.redis import RD_DDH_LOG_QUEUE
 from datetime import datetime, timezone
 from utils.ddh_common import (
     ddh_get_path_to_folder_logs,
-    NAME_EXE_LOG,
-    ddh_config_get_vessel_name, ddh_this_process_needs_to_quit
+    ddh_config_get_vessel_name
 )
 from pathlib import Path
 from mat.utils import PrintColors as PC
@@ -24,7 +22,6 @@ from mat.utils import PrintColors as PC
 
 r = redis.Redis('localhost', port=6379)
 q = RD_DDH_LOG_QUEUE
-p_name = NAME_EXE_LOG
 ymd = datetime.now().strftime('%Y-%m-%d')
 vn = ddh_config_get_vessel_name().replace(" ", "_")
 d = str(ddh_get_path_to_folder_logs())
@@ -56,10 +53,8 @@ class LogDDHByModule:
 lg_ble = LogDDHByModule("ble")
 lg_aws = LogDDHByModule("aws")
 lg_cnv = LogDDHByModule("cnv")
-lg_sqs = LogDDHByModule("sqs")
 lg_gps = LogDDHByModule("gps")
 lg_gui = LogDDHByModule("gui")
-lg_net = LogDDHByModule("net")
 lg_emo = LogDDHByModule("emo")
 lg_gra = LogDDHByModule("gra")
 lg_trk = LogDDHByModule("trk")
@@ -122,37 +117,25 @@ def _dequeue_n_log():
 
 
 
-def _ddh_log(ignore_gui):
+
+
+def main_ddh_log():
 
     r.delete(q)
-    setproctitle.setproctitle(p_name)
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     _write_to_log_file(f'\n\n\n\n\n\n=== DDH log for vessel {vn} starts on local time {now} ===\n')
-    print(f"LOG: process '{p_name}' is running")
+    print(f"LOG: process LOG is running")
 
 
-    # forever loop collecting messages to log
-    while 1:
-
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
-            sys.exit(0)
-
-        time.sleep(1)
-        _dequeue_n_log()
-
-
-
-
-
-def main_ddh_log(ignore_gui=False):
     while 1:
         try:
-            _ddh_log(ignore_gui)
+            time.sleep(.5)
+            _dequeue_n_log()
         except (Exception, ) as ex:
-            print(f'LOG: error, process {p_name} restarting after crash -> {ex}')
+            print(f'LOG: error, process LOG restarting after crash -> {ex}')
 
 
 
 
 if __name__ == '__main__':
-    main_ddh_log(ignore_gui=False)
+    main_ddh_log()

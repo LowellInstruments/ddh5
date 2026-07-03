@@ -11,6 +11,7 @@ import subprocess as sp
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 from ddh.notifications_v2 import notify_error_sw_aws_s3
 from ddh_net import ddh_net_calculate_via
+from ddh_sqs import main_ddh_sqs
 from utils.redis import (
     RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
@@ -52,6 +53,7 @@ vessel = (ddh_config_get_vessel_name()
           .replace("'", "").replace(" ", "_").upper())
 dev = not linux_is_rpi()
 this_box_has_grouped_s3_uplink = ddh_this_box_has_grouped_s3_uplink()
+g_counter_sqs = 0
 
 
 
@@ -130,7 +132,7 @@ def _aws_sync(past_year):
 
     # cannot do anything without internet access
     if ddh_net_calculate_via() == 'none':
-        lg.a('warning, no AWS copy, no internet access')
+        lg.a('warning, no AWS sync, no internet access')
         return 1
 
 
@@ -295,6 +297,7 @@ def aws_sync(past_year=False):
 
 def _ddh_aws(ignore_gui):
 
+
     # prepare AWS process
     r.delete(RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT)
     setproctitle.setproctitle(p_name)
@@ -322,6 +325,7 @@ def _ddh_aws(ignore_gui):
         if ddh_this_process_needs_to_quit(ignore_gui, p_name):
             sys.exit(0)
 
+
         # prevent CPU hog
         time.sleep(1)
 
@@ -329,6 +333,14 @@ def _ddh_aws(ignore_gui):
             lg.a('waiting a bit for BLE to finish ...')
             while r.exists(RD_DDH_BLE_SEMAPHORE):
                 time.sleep(1)
+
+
+        # do SQS from time to time
+        global g_counter_sqs
+        g_counter_sqs += 1
+        if g_counter_sqs == 300:
+            g_counter_sqs = 0
+            main_ddh_sqs()
 
 
         # flags if we did something at AWS level
