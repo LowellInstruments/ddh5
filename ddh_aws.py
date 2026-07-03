@@ -304,7 +304,7 @@ def _ddh_aws(ignore_gui):
 
 
         # check if there is something to do in new AWS COPY strategy symlinks
-        fol = str(ddh_get_path_to_root_application_folder())
+        fol = str(ddh_get_path_to_root_application_folder()) + '/upload'
         ls_sym = glob.glob(fol + '/*')
         for link in ls_sym:
             lg.a(f'note, detected link to {os.readlink(link)}')
