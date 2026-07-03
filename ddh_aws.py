@@ -303,11 +303,17 @@ def _ddh_aws(ignore_gui):
                 time.sleep(1)
 
 
-        # check if there is something to do in new AWS COPY strategy symlinks
+        # step 1, new AWS upload folder w/ symlinks (files LID, GPS, CSV, current day track if ***)
         fol = str(ddh_get_path_to_root_application_folder()) + '/upload'
         ls_sym = glob.glob(fol + '/*')
         for link in ls_sym:
             lg.a(f'note, detected link to {os.readlink(link)}')
+
+
+        # step 2, upload and delete track folder files BUT current one
+        vn = ddh_config_get_vessel_name().replace(" ", "_")
+        fol_track = f"{str(ddh_get_path_to_folder_dl_files())}/ddh#{vn}/"
+        # todo--->calculate day it is now and do not delete that track file
 
 
 
