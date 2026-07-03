@@ -9,7 +9,7 @@ from ble.ble_linux import ble_linux_get_bluez_version
 from mat.ble.ble_mat_utils import (
     ble_mat_get_antenna_type_v2,
 )
-from ddh_log import lg_sqs as lg
+from ddh_log import lg_aws as lg
 from utils.ddh_common import (
     ddh_get_local_software_commit_id,
     ddh_get_local_software_version,
@@ -142,7 +142,7 @@ class _DDHNotification:
 
     def display_details(self, file_basename):
         if self.logger_mac:
-            s = "file {} details, {} for logger {} ({}) at {}"
+            s = "SQS file {} details, {} for logger {} ({}) at {}"
             lg.a(s.format(
                 file_basename,
                 self.reason,
@@ -151,7 +151,7 @@ class _DDHNotification:
                 self.ddh_gps_position)
             )
         else:
-            s = "file {} details, {} at {}"
+            s = "SQS file {} details, {} at {}"
             lg.a(s.format(
                 file_basename,
                 self.reason,

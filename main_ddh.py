@@ -1554,13 +1554,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.g_count_1_second_60_times += 1
         if self.g_count_1_second_60_times >= 60:
             self.g_count_1_second_60_times = 0
-            lg.a('note, running 60 seconds')
             self._check_redis_cpu_temp_ram_power()
 
         self.g_count_1_second_600_times += 1
         if self.g_count_1_second_600_times >= 600:
             self.g_count_1_second_600_times = 0
-            lg.a('note, running 600 seconds')
             self.th = Thread(target=self._check_atcom)
             self.th.start()
 

@@ -13,7 +13,6 @@ test:
 - SQS works
 - check_power_works
 - check_atcom_works
-- SQS works
 - closing DDH works
 - opening DDH works
 
