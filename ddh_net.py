@@ -8,7 +8,7 @@ from utils.ddh_common import (
     TMP_PATH_INET_VIA,
 )
 import subprocess as sp
-from ddh_log import lg_net as lg
+from ddh_log import lg_gui as lg
 
 
 
