@@ -8,10 +8,13 @@ import setproctitle
 import time
 import redis
 import subprocess as sp
+
+from clear import ddh_write_timestamp_aws_sqs
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 from ddh.notifications_v2 import notify_error_sw_aws_s3
 from ddh_net import ddh_net_calculate_via
 from ddh_sqs import main_ddh_sqs
+
 from utils.redis import (
     RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
@@ -45,7 +48,6 @@ from ddh_log import lg_aws as lg
 
 
 
-
 r = redis.Redis('localhost', port=6379)
 p_name = NAME_EXE_AWS
 q = RD_DDH_AWS_COPY_QUEUE
@@ -66,39 +68,6 @@ def _get_path_of_aws_binary():
 
 def _ddh_aws_set_state(s):
     r.set(RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT, s)
-
-
-
-def ddh_write_timestamp_aws_sqs(k, v):
-    assert k in ('aws', 'sqs')
-    # v: 'ok', 'error', 'unknown'
-    assert type(v) is str
-
-    # epoch utc
-    t = int(time.time())
-    p = ddh_get_path_to_db_aws_status_file()
-
-    # first time ever
-    j = {
-        'aws': ('unknown', t),
-        'sqs': ('unknown', t)
-    }
-
-    # load file or get default content
-    try:
-        with open(p, 'r') as f:
-            j = json.load(f)
-    except (Exception, ):
-        pass
-
-    # update file content
-    try:
-        j[k] = (v, t)
-        with open(p, 'w') as f:
-            json.dump(j, f)
-    except (Exception, ):
-        lg.a(f'error, cannot ddh_write_timestamp_aws_sqs to {p}')
-
 
 
 
@@ -309,7 +278,6 @@ def _ddh_aws(ignore_gui):
         lg.a('--------------------------------------------------------------')
 
 
-
     # first, do the past year one
     aws_sync(past_year=True)
 
@@ -338,7 +306,7 @@ def _ddh_aws(ignore_gui):
         # do SQS from time to time
         global g_counter_sqs
         g_counter_sqs += 1
-        if g_counter_sqs == 300:
+        if g_counter_sqs == 30:
             g_counter_sqs = 0
             main_ddh_sqs()
 
@@ -393,6 +361,8 @@ def _ddh_aws(ignore_gui):
 
 
 def main_ddh_aws(ignore_gui=False):
+
+
     while 1:
         try:
             _ddh_aws(ignore_gui)
@@ -404,8 +374,9 @@ def main_ddh_aws(ignore_gui=False):
 
 
 if __name__ == '__main__':
+
     # normal run
     main_ddh_aws(ignore_gui=False)
 
     # for debug on pycharm
-    # main_ddh_aws(ignore_gui=True)
+    #main_ddh_aws(ignore_gui=True)
