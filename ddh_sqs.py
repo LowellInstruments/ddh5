@@ -1,11 +1,8 @@
-import sys
-import setproctitle
-import time
 import redis
 from utils.ddh_common import (
     ddh_config_get_vessel_name,
-    NAME_EXE_SQS, ddh_config_is_sqs_enabled,
-    ddh_this_process_needs_to_quit, linux_is_rpi
+    ddh_config_is_sqs_enabled,
+    linux_is_rpi
 )
 from ddh_log import lg_aws as lg
 import glob
@@ -15,7 +12,6 @@ import boto3
 import json
 from ddh_aws import ddh_write_timestamp_aws_sqs
 from ddh_net import ddh_net_calculate_via
-from ddh_log import lg_sqs as lg
 from utils.ddh_common import (
     ddh_get_path_to_folder_sqs,
     ddh_config_get_one_aws_credential_value,
@@ -66,11 +62,11 @@ sqs = boto3.client(
     aws_secret_access_key=sqs_access_key,
 )
 r = redis.Redis('localhost', port=6379)
-p_name = NAME_EXE_SQS
 vessel = (ddh_config_get_vessel_name()
           .replace("'", "").replace(" ", "_").upper())
 dev = not linux_is_rpi()
 g_sqs_error_credentials = 0
+
 
 
 
@@ -81,21 +77,21 @@ def _sqs_serve():
         return
 
 
-    if ddh_net_calculate_via() == "none":
-        return
-
-
     # grab / collect SQS files to send
     fol = ddh_get_path_to_folder_sqs()
     files = glob.glob(f"{fol}/*.sqs")
-    if files:
-        lg.a(f"serving {len(files)} SQS files")
+    if not files:
+        return
+
+    if ddh_net_calculate_via() == "none":
+        return
 
 
 
     # -----------------------------
     # loop through SQS local files
     # -----------------------------
+    lg.a(f"serving {len(files)} SQS files")
 
     for i_f in files:
 
@@ -158,40 +154,16 @@ def _sqs_serve():
 
 
 
-def _ddh_sqs(ignore_gui):
-
-    # prepare SQS process
-    setproctitle.setproctitle(p_name)
-
-
-    # forever loop serving local SQS files, do not hog CPU
-    while 1:
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
-            sys.exit(0)
-
-        time.sleep(1)
+# no loop, called by AWS
+def main_ddh_sqs():
+    try:
         if g_sqs_error_credentials == 0:
             _sqs_serve()
-
-
-
-
-
-
-def main_ddh_sqs(ignore_gui=False):
-    while 1:
-        try:
-            _ddh_sqs(ignore_gui)
-        except (Exception,) as ex:
-            lg.a(f"error, process '{p_name}' restarting after crash -> {ex}")
+    except (Exception,) as ex:
+        lg.a(f"error, process SQS -> {ex}")
 
 
 
 
 if __name__ == '__main__':
-
-    # normal run
-    main_ddh_sqs(ignore_gui=False)
-
-    # for debug on pycharm
-    # main_ddh_sqs(ignore_gui=True)
+    main_ddh_sqs()

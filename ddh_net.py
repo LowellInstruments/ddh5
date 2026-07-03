@@ -1,18 +1,15 @@
 import json
-import sys
-import setproctitle
 import redis
 import time
 from utils.redis import (
     RD_DDH_NET_PROCESS_OUTPUT
 )
 from utils.ddh_common import (
-    NAME_EXE_NET,
     TMP_PATH_INET_VIA,
-    ddh_this_process_needs_to_quit
 )
 import subprocess as sp
 from ddh_log import lg_net as lg
+
 
 
 
@@ -25,7 +22,7 @@ from ddh_log import lg_net as lg
 
 IP = "8.8.8.8"
 r = redis.Redis('localhost', port=6379)
-p_name = NAME_EXE_NET
+
 
 
 
@@ -53,56 +50,20 @@ def ddh_net_calculate_via():
 
 
 
-def _net():
-
-    via = ddh_net_calculate_via()
-
-    # save to file for API purposes
-    try:
-        with open(TMP_PATH_INET_VIA, "w") as f:
-            json.dump({"internet_via": via}, f)
-    except (Exception, ) as ex:
-        lg.a(f'error, saving {TMP_PATH_INET_VIA} -> {ex}')
-    return via
-
-
-
-
-def _ddh_net(ignore_gui):
-
-    setproctitle.setproctitle(p_name)
-
-    # forever loop set internet via to redis, do not hog CPU
+def main_ddh_net():
     while 1:
-
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
-            sys.exit(0)
-
-
         time.sleep(1)
-        if not r.exists(RD_DDH_NET_PROCESS_OUTPUT):
-            via = _net()
-            r.setex(RD_DDH_NET_PROCESS_OUTPUT, 10, via)
-
-
-
-
-def main_ddh_net(ignore_gui=False):
-    try:
-        _ddh_net(ignore_gui)
-    except (Exception,) as ex:
-        lg.a(f"error, process '{p_name}' restarting after crash -> {ex}")
+        try:
+            if not r.exists(RD_DDH_NET_PROCESS_OUTPUT):
+                via = ddh_net_calculate_via()
+                r.setex(RD_DDH_NET_PROCESS_OUTPUT, 30, via)
+                with open(TMP_PATH_INET_VIA, "w") as f:
+                    json.dump({"internet_via": via}, f)
+        except (Exception,) as ex:
+            lg.a(f"error, process NET restarting after crash -> {ex}")
 
 
 
 
 if __name__ == '__main__':
-
-    # normal run
-    main_ddh_net(ignore_gui=False)
-
-    # for debug on pycharm
-    # main_ddh_net(ignore_gui=True)
-
-
-
+    main_ddh_net()
