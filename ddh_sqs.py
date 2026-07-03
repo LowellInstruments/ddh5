@@ -1,4 +1,6 @@
 import redis
+
+from clear import ddh_write_timestamp_aws_sqs
 from utils.ddh_common import (
     ddh_config_get_vessel_name,
     ddh_config_is_sqs_enabled,
@@ -10,7 +12,6 @@ import os
 import uuid
 import boto3
 import json
-from ddh_aws import ddh_write_timestamp_aws_sqs
 from ddh_net import ddh_net_calculate_via
 from utils.ddh_common import (
     ddh_get_path_to_folder_sqs,
