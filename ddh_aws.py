@@ -32,7 +32,7 @@ from utils.ddh_common import (
     ddh_config_get_vessel_name,
     ddh_config_get_one_aws_credential_value,
     LI_PATH_LAST_YEAR_AWS_TEMPLATE,
-    ddh_this_process_needs_to_quit, linux_is_rpi)
+    ddh_this_process_needs_to_quit, linux_is_rpi, ddh_get_path_to_root_application_folder)
 from ddh_log import lg_aws as lg
 
 
@@ -301,6 +301,14 @@ def _ddh_aws(ignore_gui):
             lg.a('waiting a bit for BLE to finish ...')
             while r.exists(RD_DDH_BLE_SEMAPHORE):
                 time.sleep(1)
+
+
+        # check if there is something to do in new AWS COPY strategy symlinks
+        fol = str(ddh_get_path_to_root_application_folder())
+        ls_sym = glob.glob(fol + '/*')
+        for link in ls_sym:
+            lg.a(f'note, detected link to {os.readlink(link)}')
+
 
 
         # do SQS from time to time

@@ -24,7 +24,7 @@ from utils.redis import (
 from utils.ddh_common import (
     NAME_EXE_CNV,
     TESTMODE_FILENAME_PREFIX, ddh_get_path_to_folder_dl_files,
-    ddh_this_process_needs_to_quit
+    ddh_this_process_needs_to_quit, ddh_get_path_to_root_application_folder
 )
 from ddh_log import lg_cnv as lg
 
@@ -122,6 +122,20 @@ def _convert_file(p):
             rv_v2 = _convert_lid_file_v2(p, suf)
             if rv_v1 == 0 or rv_v2 == 0:
                 graph_request(reason='ble')
+
+                # create the symlinks the AWS loop will upload
+                # todo: test this
+                fol = str(ddh_get_path_to_root_application_folder())
+                os.makedirs(f'{fol}/upload', exist_ok=True)
+                link_lid = f'{fol}/upload/{os.path.basename(p)}'
+                f_csv = f.replace('.lid', f'_{suf}.csv')
+                link_csv = f'{fol}/upload/{os.path.basename(f_csv)}'
+                f_gps = f.replace('.lid', f'_{suf}.gps')
+                link_gps = f'{fol}/upload/{os.path.basename(f_gps)}'
+                os.symlink(p, link_lid)
+                os.symlink(f_csv, link_csv)
+                os.symlink(f_gps, link_gps)
+
                 return 0
 
         except (ValueError, Exception) as ex:
