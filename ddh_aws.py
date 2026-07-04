@@ -335,12 +335,15 @@ def _ddh_aws(ignore_gui):
                     fol_track = os.path.dirname(p)
                     ls_track = glob.glob(fol_track + '/*_track.txt')
                     current_track_file = os.path.basename(ls_track[-1])
+                    lg.a(f'error, bn {bn} ctf {current_track_file}')
                     if bn != current_track_file:
+                        lg.a(f'deleting old track link {link}')
                         os.unlink(p)
                     else:
-                        lg.a(f'note, not deleting current track file {current_track_file}')
+                        lg.a(f'note, not deleting current track ling {current_track_file}')
                 else:
                     # delete the rest
+                    lg.a(f'deleting link {link}')
                     os.unlink(link)
             except (Exception,) as ex:
                 lg.a(f'error, aws_cp -> {ex}')
