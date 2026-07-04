@@ -84,7 +84,10 @@ def ddh_log_tracking_add(lat, lon, tg):
                 fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
                 link_file_out = f'{fol_upload}/{os.path.basename(file_out)}'
                 lg.a(f'error, tracking file_out {file_out} link_file_out {link_file_out}')
-                os.symlink(file_out, link_file_out)
+                if os.path.isfile(link_file_out):
+                    os.unlink(link_file_out)
+                if not os.path.exists(link_file_out):
+                    os.symlink(file_out, link_file_out)
 
         # delete the LEF file
         _bn = os.path.basename(f_lef)

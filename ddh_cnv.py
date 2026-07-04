@@ -128,7 +128,8 @@ def _convert_file(p):
                 os.makedirs(f'{fol}/upload', exist_ok=True)
                 f_csv = p.replace('.lid', f'{suf}.csv')
                 link_csv = f'{fol}/upload/{os.path.basename(f_csv)}'
-                os.symlink(f_csv, link_csv)
+                if not os.path.exists(link_csv):
+                    os.symlink(f_csv, link_csv)
                 return 0
 
         except (ValueError, Exception) as ex:
