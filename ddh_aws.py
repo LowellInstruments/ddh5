@@ -334,10 +334,11 @@ def _ddh_aws(ignore_gui):
                     yyyymmdd = datetime.datetime.now(datetime.UTC)
                     s_yyyymmdd = yyyymmdd.strftime('%Y-%m-%d')
                     if s_yyyymmdd not in os.path.basename(p):
-                        lg.a(f'deleting old track link {link}')
+                        lg.a(f'deleting old track file {bn} AND its link')
                         os.unlink(p)
                     else:
-                        lg.a(f'note, not deleting current track link {s_yyyymmdd}')
+                        lg.a(f'deleting link but NOT today\'s track file {s_yyyymmdd}')
+                    os.unlink(link)
                 else:
                     # delete the rest
                     lg.a(f'deleting link {link}')
