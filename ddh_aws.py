@@ -335,15 +335,14 @@ def _ddh_aws(ignore_gui):
                     fol_track = os.path.dirname(p)
                     ls_track = glob.glob(fol_track + '/*_track.txt')
                     ls_track = list(sorted(ls_track))
-                    ls_track = ls_track[::-1]
-                    lg.a(f'error, ls_track {ls_track}')
-                    current_track_file = os.path.basename(ls_track[-1])
+                    # ls_track: is newest 0 to oldest -1
+                    current_track_file = os.path.basename(ls_track[0])
                     lg.a(f'error, bn {bn} ctf {current_track_file}')
                     if bn != current_track_file:
                         lg.a(f'deleting old track link {link}')
                         os.unlink(p)
                     else:
-                        lg.a(f'note, not deleting current track ling {current_track_file}')
+                        lg.a(f'note, not deleting current track link {current_track_file}')
                 else:
                     # delete the rest
                     lg.a(f'deleting link {link}')
