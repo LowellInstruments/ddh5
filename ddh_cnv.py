@@ -19,7 +19,7 @@ from mat.lix import (
 )
 from utils.redis import (
     RD_DDH_CNV_QUEUE,
-    RD_DDH_AWS_COPY_QUEUE, RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER
+    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER
 )
 from utils.ddh_common import (
     NAME_EXE_CNV,
@@ -123,19 +123,12 @@ def _convert_file(p):
             if rv_v1 == 0 or rv_v2 == 0:
                 graph_request(reason='ble')
 
-                # create the symlinks the AWS loop will upload
-                # todo: maybe move LID / GPS to ddh_ble _ddh_ble_analyze_logger_download_result
+                # SYM: create a symlink to know we have to upload CSV file
                 fol = str(ddh_get_path_to_root_application_folder())
                 os.makedirs(f'{fol}/upload', exist_ok=True)
-                link_lid = f'{fol}/upload/{os.path.basename(p)}'
-                f_csv = f.replace('.lid', f'_{suf}.csv')
+                f_csv = p.replace('.lid', f'_{suf}.csv')
                 link_csv = f'{fol}/upload/{os.path.basename(f_csv)}'
-                f_gps = f.replace('.lid', f'_{suf}.gps')
-                link_gps = f'{fol}/upload/{os.path.basename(f_gps)}'
-                os.symlink(p, link_lid)
                 os.symlink(f_csv, link_csv)
-                os.symlink(f_gps, link_gps)
-
                 return 0
 
         except (ValueError, Exception) as ex:
@@ -218,8 +211,6 @@ def _ddh_cnv(ignore_gui):
             for pc in ls_csv:
                 bn = os.path.basename(pc)
                 dn = os.path.dirname(pc)
-                lg.a(f'post conversion push to AWS COPY queue = {bn}')
-                r.rpush(RD_DDH_AWS_COPY_QUEUE, pc)
                 lg.a(f'post conversion analysis of water mode = {bn}')
                 utils_graph_classify_file_wc_mode(pc)
                 lg.a(f'post conversion plot = {bn}')

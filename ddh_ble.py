@@ -57,7 +57,7 @@ from utils.ddh_common import (
     EV_BLE_DL_PROGRESS, STR_EV_BLE_DL_PROGRESS,
     STR_EV_BLE_DL_RETRY, EV_GPS_HW_ERROR, STR_EV_GPS_HW_ERROR,
     EV_NO_ASSIGNED_LOGGERS,
-    STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit, linux_is_rpi
+    STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit, linux_is_rpi, ddh_get_path_to_root_application_folder
 )
 from ddh_log import lg_ble as lg
 
@@ -565,9 +565,9 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
 
 
 
-    # ------------------------------------------------
-    # enqueue binary data files by converted by CNV
-    # ------------------------------------------------
+    # --------------------------------------------------
+    # enqueue binary data files to be converted by CNV
+    # --------------------------------------------------
     for p_dl in d_interaction['dl_files']:
         if p_dl.endswith('.lid'):
             bn = os.path.basename(p_dl)
@@ -576,17 +576,16 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
 
 
 
-    # ------------------------------------------------
-    # enqueue files to AWS to it can upload-copy them
-    # ------------------------------------------------
-    ptf = get_path_current_track_file()
-    bn = os.path.basename(ptf)
-    lg.a(f'post download push to AWS COPY queue = track file {bn}')
-    r.rpush(RD_DDH_AWS_COPY_QUEUE, ptf)
+    # ---------------------------------------------------
+    # symlink files so AWS can upload-coppy-delete them
+    # ---------------------------------------------------
+    fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
+    os.makedirs(fol_upload, exist_ok=True)
     for p_dl in d_interaction['dl_files']:
-        bn = os.path.basename(p_dl)
-        lg.a(f'post download push to AWS COPY queue = file {bn}')
-        r.rpush(RD_DDH_AWS_COPY_QUEUE, p_dl)
+        bn_dl = os.path.basename(p_dl)
+        # SYM: create a symlink to know we have to upload LID, GPS file
+        link_dl = f'{ddh_get_path_to_root_application_folder()}/upload/{bn_dl}'
+        os.symlink(p_dl, link_dl)
 
     return rv
 
