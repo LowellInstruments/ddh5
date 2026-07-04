@@ -334,7 +334,9 @@ def _ddh_aws(ignore_gui):
                 if p.endswith('_track.txt'):
                     fol_track = os.path.dirname(p)
                     ls_track = glob.glob(fol_track + '/*_track.txt')
-                    ls_track = list(reversed(ls_track))
+                    ls_track = list(sorted(ls_track))
+                    ls_track = ls_track[::-1]
+                    lg.a(f'error, ls_track {ls_track}')
                     current_track_file = os.path.basename(ls_track[-1])
                     lg.a(f'error, bn {bn} ctf {current_track_file}')
                     if bn != current_track_file:
