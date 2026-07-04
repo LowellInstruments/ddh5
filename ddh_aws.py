@@ -332,17 +332,13 @@ def _ddh_aws(ignore_gui):
                 _aws_cp(p)
                 # SYM: delete the link once file uploaded
                 if p.endswith('_track.txt'):
-                    fol_track = os.path.dirname(p)
-                    ls_track = glob.glob(fol_track + '/*_track.txt')
-                    ls_track = list(sorted(ls_track))
-                    # ls_track: is newest 0 to oldest -1
-                    current_track_file = os.path.basename(ls_track[0])
-                    lg.a(f'error, bn {bn} ctf {current_track_file}')
-                    if bn != current_track_file:
+                    yyyymmdd = datetime.datetime.now(datetime.UTC)
+                    s_yyyymmdd = yyyymmdd.strftime('%Y-%m%-d')
+                    if s_yyyymmdd not in os.path.basename(p):
                         lg.a(f'deleting old track link {link}')
                         os.unlink(p)
                     else:
-                        lg.a(f'note, not deleting current track link {current_track_file}')
+                        lg.a(f'note, not deleting current track link {s_yyyymmdd}')
                 else:
                     # delete the rest
                     lg.a(f'deleting link {link}')
