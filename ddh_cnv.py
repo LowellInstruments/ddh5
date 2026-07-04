@@ -126,7 +126,7 @@ def _convert_file(p):
                 # SYM: create a symlink to know we have to upload CSV file
                 fol = str(ddh_get_path_to_root_application_folder())
                 os.makedirs(f'{fol}/upload', exist_ok=True)
-                f_csv = p.replace('.lid', f'_{suf}.csv')
+                f_csv = p.replace('.lid', f'{suf}.csv')
                 link_csv = f'{fol}/upload/{os.path.basename(f_csv)}'
                 os.symlink(f_csv, link_csv)
                 return 0
