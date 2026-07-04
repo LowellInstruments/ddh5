@@ -332,10 +332,15 @@ def _ddh_aws(ignore_gui):
                 _aws_cp(p)
                 # SYM: delete the link once file uploaded
                 if p.endswith('_track.txt'):
-                    lg.a(f'error \np {p}\nc {get_path_current_track_file()}')
-                    if p != get_path_current_track_file():
+                    fol_track = os.path.dirname(p)
+                    ls_track = glob.glob(fol_track + '/*_track.txt')
+                    current_track_file = os.path.basename(ls_track[-1])
+                    if bn != current_track_file:
                         os.unlink(p)
+                    else:
+                        lg.a(f'note, not deleting current track file {current_track_file}')
                 else:
+                    # delete the rest
                     os.unlink(link)
             except (Exception,) as ex:
                 lg.a(f'error, aws_cp -> {ex}')
