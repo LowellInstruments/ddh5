@@ -1942,9 +1942,18 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             os.unlink(PATH_MIN_BUG)
 
 
-        # SYM: create new needed folder
-        fol = str(ddh_get_path_to_root_application_folder())
-        os.makedirs(f'{fol}/upload', exist_ok=True)
+
+        # SYM: create new needed folder, add all tracking files
+        fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
+        os.makedirs(fol_upload, exist_ok=True)
+        mask_track = f'{fol_upload}/*_track.txt'
+        for f in glob.glob(mask_track):
+            link = f'{fol_upload}/{os.path.basename(f)}'
+            if not os.path.exists(f):
+                lg.a(f'boot, adding link track file {link}')
+                os.symlink(f, link)
+
+
 
 
         gui_setup_view(self)
