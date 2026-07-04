@@ -585,7 +585,8 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
         bn_dl = os.path.basename(p_dl)
         # SYM: create a symlink to know we have to upload LID, GPS file
         link_dl = f'{ddh_get_path_to_root_application_folder()}/upload/{bn_dl}'
-        os.symlink(p_dl, link_dl)
+        if not os.path.exists(link_dl):
+            os.symlink(p_dl, link_dl)
 
     return rv
 
