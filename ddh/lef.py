@@ -8,7 +8,7 @@ import os
 # LEF: lowell event file
 # upon a BLE download, a .LEF file is created
 # the UTILS/LOGS module finds it, reads it and cats its
-# content in current 'track_*.gps' file w/ a '***' marker
+# content in current 'track_*.txt' file w/ a '***' marker
 # ----------------------------------------------------------
 
 

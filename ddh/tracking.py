@@ -75,7 +75,6 @@ def ddh_log_tracking_add(lat, lon, tg):
     # add info from LEF files to the TRACK file, if so
     mask_lef = f"{ddh_get_path_to_folder_lef()}/*.lef"
     ff_lef = glob.glob(mask_lef)
-    lg.a(f'error, ff_lef {ff_lef}, mask_left {mask_lef}')
     for f_lef in ff_lef:
         with open(f_lef, 'r') as fl:
             j = fl.read()
