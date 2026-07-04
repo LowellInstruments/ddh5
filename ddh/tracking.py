@@ -73,7 +73,9 @@ def ddh_log_tracking_add(lat, lon, tg):
 
 
     # add info from LEF files to the TRACK file, if so
-    ff_lef = glob.glob(f"{ddh_get_path_to_folder_lef()}/*.lef")
+    mask_lef = f"{ddh_get_path_to_folder_lef()}/*.lef"
+    ff_lef = glob.glob(mask_lef)
+    lg.a(f'error, ff_lef {ff_lef}, mask_left {mask_lef}')
     for f_lef in ff_lef:
         with open(f_lef, 'r') as fl:
             j = fl.read()
@@ -83,7 +85,6 @@ def ddh_log_tracking_add(lat, lon, tg):
                 # SYM: create a symlink to know we have to upload TRACK file
                 fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
                 link_file_out = f'{fol_upload}/{os.path.basename(file_out)}'
-                lg.a(f'error, tracking file_out {file_out} link_file_out {link_file_out} f_lef {f_lef}')
                 if not os.path.exists(link_file_out):
                     os.symlink(file_out, link_file_out)
 
