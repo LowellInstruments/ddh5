@@ -332,6 +332,7 @@ def _ddh_aws(ignore_gui):
                 _aws_cp(p)
                 # SYM: delete the link once file uploaded
                 if p.endswith('_track.txt'):
+                    lg.a(f'error \np {p}\nc {get_path_current_track_file()}')
                     if p != get_path_current_track_file():
                         os.unlink(p)
                 else:
