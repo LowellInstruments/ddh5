@@ -230,7 +230,8 @@ async def ble_download_dox(d):
 
         # create LEF file with download info
         lg.a(f"creating file LEF for {name}")
-        lef_create_file(g, name)
+        if name.endswith('.lid'):
+            lef_create_file(g, name)
 
 
 
