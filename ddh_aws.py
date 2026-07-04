@@ -311,12 +311,11 @@ def _ddh_aws(ignore_gui):
 
 
 
-        # --------------------------
-        # AWS COPY individual files
-        # --------------------------
+        # -------------------------------------------------
+        # AWS COPY individual files inside 'upload' folder
+        # -------------------------------------------------
         did_aws = False
-        fol_upload = f'{ddh_get_path_to_root_application_folder()}/upload'
-        ls_aws_copy = glob.glob(fol_upload + '/*')
+        ls_aws_copy = glob.glob(f'{ddh_get_path_to_root_application_folder()}/upload/*')
         for link in ls_aws_copy:
             if not os.path.islink(link):
                 lg.a(f'error, {link} is not link')
@@ -333,7 +332,7 @@ def _ddh_aws(ignore_gui):
                 # SYM: delete the link once file uploaded
                 if p.endswith('_track.txt'):
                     yyyymmdd = datetime.datetime.now(datetime.UTC)
-                    s_yyyymmdd = yyyymmdd.strftime('%Y-%m%-d')
+                    s_yyyymmdd = yyyymmdd.strftime('%Y-%m-%d')
                     if s_yyyymmdd not in os.path.basename(p):
                         lg.a(f'deleting old track link {link}')
                         os.unlink(p)
