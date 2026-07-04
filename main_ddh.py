@@ -110,7 +110,7 @@ from utils.ddh_common import (
     STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
     STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
-    PATH_FLAG_DDH_GPS_ERR, exp_get_new_table_history,
+    PATH_FLAG_DDH_GPS_ERR, exp_get_new_table_history, ddh_get_path_to_root_application_folder,
 )
 import datetime
 import os
@@ -1940,6 +1940,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # solves touch-after-minimize bug
         if os.path.exists(PATH_MIN_BUG):
             os.unlink(PATH_MIN_BUG)
+
+
+        # SYM: create new needed folder
+        fol = str(ddh_get_path_to_root_application_folder())
+        os.makedirs(f'{fol}/upload', exist_ok=True)
 
 
         gui_setup_view(self)

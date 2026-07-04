@@ -51,7 +51,7 @@ def ddh_write_timestamp_aws_sqs(k, v):
         with open(p, 'w') as f:
             json.dump(j, f)
     except (Exception, ):
-        lg.a(f'error, cannot ddh_write_timestamp_aws_sqs to {p}')
+        lg_gui.a(f'error, cannot ddh_write_timestamp_aws_sqs to {p}')
 
 
 

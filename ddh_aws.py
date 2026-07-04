@@ -12,11 +12,11 @@ import subprocess as sp
 from clear import ddh_write_timestamp_aws_sqs
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 from ddh.notifications_v2 import notify_error_sw_aws_s3
+from ddh.tracking import get_path_current_track_file
 from ddh_net import ddh_net_calculate_via
 from ddh_sqs import main_ddh_sqs
 
 from utils.redis import (
-    RD_DDH_AWS_COPY_QUEUE,
     RD_DDH_BLE_SEMAPHORE,
     RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT,
     RD_DDH_AWS_NO_EXPIRES_RV,
@@ -50,7 +50,6 @@ from ddh_log import lg_aws as lg
 
 r = redis.Redis('localhost', port=6379)
 p_name = NAME_EXE_AWS
-q = RD_DDH_AWS_COPY_QUEUE
 vessel = (ddh_config_get_vessel_name()
           .replace("'", "").replace(" ", "_").upper())
 dev = not linux_is_rpi()
@@ -303,20 +302,6 @@ def _ddh_aws(ignore_gui):
                 time.sleep(1)
 
 
-        # step 1, new AWS upload folder w/ symlinks (files LID, GPS, CSV, current day track if ***)
-        fol = str(ddh_get_path_to_root_application_folder()) + '/upload'
-        ls_sym = glob.glob(fol + '/*')
-        for link in ls_sym:
-            lg.a(f'note, detected link to {os.readlink(link)}')
-
-
-        # step 2, upload and delete track folder files BUT current one
-        vn = ddh_config_get_vessel_name().replace(" ", "_")
-        fol_track = f"{str(ddh_get_path_to_folder_dl_files())}/ddh#{vn}/"
-        # todo--->calculate day it is now and do not delete that track file
-
-
-
         # do SQS from time to time
         global g_counter_sqs
         g_counter_sqs += 1
@@ -325,25 +310,32 @@ def _ddh_aws(ignore_gui):
             main_ddh_sqs()
 
 
-        # flags if we did something at AWS level
-        did_aws = False
-
 
         # --------------------------
         # AWS COPY individual files
         # --------------------------
-        for i in range(r.llen(q)):
-            did_aws = True
-            _, path_to_file_to_cp = r.blpop([q])
-            p = path_to_file_to_cp.decode()
+        did_aws = False
+        fol_upload = f'{ddh_get_path_to_root_application_folder()}/upload'
+        ls_aws_copy = glob.glob(fol_upload + '/*')
+        for link in ls_aws_copy:
+            if not os.path.islink(link):
+                lg.a(f'error, {link} is not link')
+                continue
+            p = os.readlink(link)
             bn = os.path.basename(p)
             if 'MAT.cfg' in bn:
                 continue
             dn = os.path.dirname(p).split('/')[-1]
             lg.a(f'copying to bucket file {dn}/{bn}')
+            did_aws = True
             try:
-                did_aws = True
                 _aws_cp(p)
+                # SYM: delete the link once file uploaded
+                if p.endswith('_track.txt'):
+                    if p != get_path_current_track_file():
+                        os.unlink(p)
+                else:
+                    os.unlink(link)
             except (Exception,) as ex:
                 lg.a(f'error, aws_cp -> {ex}')
                 _ddh_aws_set_state('error')
@@ -355,15 +347,6 @@ def _ddh_aws(ignore_gui):
             r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
             r.setex(RD_DDH_AWS_SYNC_PERIODIC_FLAG, 12 * 3600, 1)
             aws_sync()
-
-
-        # AWS SYNC upload every 12 hours or when user deletes the flag
-        if not r.exists(RD_DDH_AWS_SYNC_PERIODIC_FLAG):
-            did_aws = True
-            r.setex(RD_DDH_AWS_SYNC_PERIODIC_FLAG, 12 * 3600, 1)
-            r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
-            aws_sync()
-
 
 
         # helps updating GUI

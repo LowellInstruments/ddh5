@@ -80,7 +80,6 @@ RD_DDH_CNV_QUEUE = p + 'queue'
 
 
 p = 'ddh:aws:'
-RD_DDH_AWS_COPY_QUEUE = p + 'queue'
 RD_DDH_AWS_SYNC_PERIODIC_FLAG = p + 'sync'
 RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST = p + 'user'
 # 'OK' or 'error' or 'checking'

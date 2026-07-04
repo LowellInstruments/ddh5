@@ -148,7 +148,8 @@ async def deploy_logger_dox(mac, sn, flag_run, flag_sensor, dn):
 
     finally:
         await lc.ble_disconnect()
-        return rv
+
+    return rv
 
 
 

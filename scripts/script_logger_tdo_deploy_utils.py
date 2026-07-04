@@ -185,7 +185,8 @@ async def deploy_logger_tdo(mac, sn, cfg_from_menu):
 
     finally:
         await lc.ble_disconnect()
-        return rv
+
+    return rv
 
 
 
