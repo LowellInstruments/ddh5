@@ -221,12 +221,15 @@ def _aws_cp(path):
 
 
     # run AWS cp command
+    _ddh_aws_set_state('busy')
     rv = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     if rv.returncode:
         lg.a(f"error, S3 copy {os.path.basename(path)}, year {y}, {rv.stderr}")
-
+        _ddh_aws_set_state('error')
         return 1
+
     lg.a(f"OK, S3 copy {os.path.basename(path)}, year {y}")
+    _ddh_aws_set_state('OK')
     return 0
 
 
