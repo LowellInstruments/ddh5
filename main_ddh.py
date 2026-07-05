@@ -1945,7 +1945,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # SYM: create new needed folder, add all tracking files
         fol_track = str(ddh_get_path_to_folder_dl_files())
-        fol_track = f"{fol_track}/ddh#{ddh_config_get_vessel_name().replace(" ", "_")}"
+        fol_track = f'{fol_track}/ddh#{ddh_config_get_vessel_name().replace(" ", "_")}'
         fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
         os.makedirs(fol_upload, exist_ok=True)
         mask_track = f'{fol_track}/*_track.txt'
