@@ -1949,7 +1949,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
         os.makedirs(fol_upload, exist_ok=True)
         mask_track = f'{fol_track}/*_track.txt'
-        lg.a(f'errork mask_track {mask_track}')
         for f in glob.glob(mask_track):
             link = f'{fol_upload}/{os.path.basename(f)}'
             if not os.path.exists(link):
