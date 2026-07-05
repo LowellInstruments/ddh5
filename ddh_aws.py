@@ -98,12 +98,6 @@ def _aws_sync(past_year):
         yyyy = y_p
 
 
-    # cannot do anything without internet access
-    if ddh_net_calculate_via() == 'none':
-        lg.a('warning, no AWS sync, no internet access')
-        return 1
-
-
     # check AWS credentials
     _k = ddh_config_get_one_aws_credential_value("cred_aws_key_id")
     _s = ddh_config_get_one_aws_credential_value("cred_aws_secret")
@@ -113,6 +107,14 @@ def _aws_sync(past_year):
         return 1
     if not _n.startswith("bkt-"):
         lg.a('warning, bucket name does not start with bkt-')
+
+
+
+    # cannot do anything without internet access
+    if ddh_net_calculate_via() == 'none':
+        lg.a('warning, no AWS sync, no internet access')
+        return 1
+
 
 
     # run AWS sync in each sub-folder within folder dl_files
@@ -185,11 +187,6 @@ def _aws_sync(past_year):
 
 def _aws_cp(path):
 
-    # cannot do anything without internet access
-    if ddh_net_calculate_via() == 'none':
-        lg.a('error, no AWS copy, no internet access')
-        return 1
-
     # check AWS credentials
     _k = ddh_config_get_one_aws_credential_value("cred_aws_key_id")
     _s = ddh_config_get_one_aws_credential_value("cred_aws_secret")
@@ -199,6 +196,12 @@ def _aws_cp(path):
         return 1
     if not _n.startswith("bkt-"):
         lg.a('warning, bucket name does not start with bkt-')
+
+
+    # cannot do anything without internet access
+    if ddh_net_calculate_via() == 'none':
+        lg.a('error, no AWS copy, no internet access')
+        return 1
 
 
     # build the AWS COPY command
