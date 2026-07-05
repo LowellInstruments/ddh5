@@ -27,15 +27,15 @@ if [ -f "$LI_DDH_NEEDS_REBOOT_POST_INSTALL" ]; then
 fi
 
 
-
 _pb "    RFKILL - unblock and wlan"
 sudo rfkill unblock bluetooth
 sudo rfkill unblock wlan
 
 
 
-_pb "    SYSTEMCTL - restarting bluetooth service"
+_pb "    SYSTEMCTL - restarting bluetooth service and wireplumber"
 sudo systemctl restart bluetooth
+systemctl --user stop wireplumber
 sleep 2
 
 
