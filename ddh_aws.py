@@ -308,7 +308,7 @@ def _ddh_aws(ignore_gui):
         # do SQS from time to time
         global g_counter_sqs
         g_counter_sqs += 1
-        if g_counter_sqs == 30:
+        if g_counter_sqs == 300:
             g_counter_sqs = 0
             main_ddh_sqs()
 
