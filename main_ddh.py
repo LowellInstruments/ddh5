@@ -1952,7 +1952,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         lg.a(f'errork mask_track {mask_track}')
         for f in glob.glob(mask_track):
             link = f'{fol_upload}/{os.path.basename(f)}'
-            if not os.path.exists(f):
+            if not os.path.exists(link):
                 lg.a(f'boot, adding link track file {link}')
                 os.symlink(f, link)
 
