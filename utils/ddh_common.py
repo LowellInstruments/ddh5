@@ -24,7 +24,6 @@ TESTMODE_FILENAME_PREFIX = 'testfile_'
 
 
 NAME_EXE_DDH = "ddh_main"
-NAME_EXE_CNV = 'ddh_cnv'
 NAME_EXE_AWS = 'ddh_aws'
 NAME_EXE_GPS = 'ddh_gps'
 NAME_EXE_BLE = 'ddh_ble'

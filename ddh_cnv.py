@@ -22,9 +22,10 @@ from utils.redis import (
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER
 )
 from utils.ddh_common import (
-    NAME_EXE_CNV,
-    TESTMODE_FILENAME_PREFIX, ddh_get_path_to_folder_dl_files,
-    ddh_this_process_needs_to_quit, ddh_get_path_to_root_application_folder
+    TESTMODE_FILENAME_PREFIX,
+    ddh_get_path_to_folder_dl_files,
+    ddh_this_process_needs_to_quit,
+    ddh_get_path_to_root_application_folder
 )
 from ddh_log import lg_cnv as lg
 
@@ -41,7 +42,6 @@ from ddh_log import lg_cnv as lg
 
 
 r = redis.Redis('localhost', port=6379)
-p_name = NAME_EXE_CNV
 PERIOD_CNV_SECS = 3600 * 12
 BAROMETRIC_PRESSURE_SEA_LEVEL_IN_DECIBAR = 10.1
 DDH_BPSL = BAROMETRIC_PRESSURE_SEA_LEVEL_IN_DECIBAR
@@ -166,20 +166,15 @@ def _boot_cnv():
 
 
 
-def _ddh_cnv(ignore_gui):
+def _ddh_cnv():
 
     # prepare CNV process
     r.delete(RD_DDH_CNV_QUEUE)
-    setproctitle.setproctitle(p_name)
     _boot_cnv()
 
 
     # forever loop collecting CNV requests
     while 1:
-
-
-        if ddh_this_process_needs_to_quit(ignore_gui, p_name):
-            sys.exit(0)
 
 
         # prevent CPU hog
@@ -221,19 +216,15 @@ def _ddh_cnv(ignore_gui):
 
 
 
-def main_ddh_cnv(ignore_gui=False):
+def main_ddh_cnv():
     while 1:
         try:
-            _ddh_cnv(ignore_gui)
+            _ddh_cnv()
         except (Exception, ) as ex:
-            lg.a(f"error, process '{p_name}' restarting after crash -> {ex}")
+            lg.a(f"error, thread CNV restarting after crash -> {ex}")
 
 
 
 
 if __name__ == '__main__':
-    # normal run
-    # main_ddh_cnv(ignore_gui=False)
-
-    # for debug on pycharm
-    main_ddh_cnv(ignore_gui=True)
+    main_ddh_cnv()

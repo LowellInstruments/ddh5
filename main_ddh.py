@@ -26,6 +26,7 @@ from clear import (
 )
 from ddh.graph_draw import graph_request
 from ddh.preferences import preferences_set_models_index
+from ddh_cnv import main_ddh_cnv
 from ddh_gps import ddh_gps_get
 from ddh.buttons import ddh_create_thread_buttons
 from ddh.notifications_v2 import (
@@ -64,7 +65,7 @@ from utils.ddh_common import (
     ddh_clear_do_not_rerun_file_flag,
     NAME_EXE_API,
     ddh_get_template_of_path_of_hbw_flag_file,
-    NAME_EXE_CNV, NAME_EXE_GPS, NAME_EXE_AWS,
+    NAME_EXE_GPS, NAME_EXE_AWS,
     ddh_config_get_vessel_name,
     ddh_config_get_box_sn,
     ddh_config_does_flag_file_download_test_mode_exist,
@@ -195,11 +196,6 @@ def gui_check_config_file_is_ok():
         app_state_set(EV_CONF_BAD, t_str(STR_EV_CONF_BAD))
         while 1:
             time.sleep(1)
-
-
-
-def gui_setup_side_buttons_box():
-    ddh_create_thread_buttons()
 
 
 
@@ -877,10 +873,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def handle_stdout_ble(self):
         self._ho(self.d_processes[NAME_EXE_BLE].readAllStandardOutput())
-
-
-    def handle_stdout_cnv(self):
-        self._ho(self.d_processes[NAME_EXE_CNV].readAllStandardOutput())
 
 
     def handle_stdout_gps(self):
@@ -1895,18 +1887,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.d_processes = dict()
         self.d_processes[NAME_EXE_AWS] = QProcess()
         self.d_processes[NAME_EXE_BLE] = QProcess()
-        self.d_processes[NAME_EXE_CNV] = QProcess()
         self.d_processes[NAME_EXE_GPS] = QProcess()
 
         # prints of subprocesses are handled by pyqt
         self.d_processes[NAME_EXE_AWS].readyReadStandardOutput.connect(self.handle_stdout_aws)
         self.d_processes[NAME_EXE_BLE].readyReadStandardOutput.connect(self.handle_stdout_ble)
-        self.d_processes[NAME_EXE_CNV].readyReadStandardOutput.connect(self.handle_stdout_cnv)
         self.d_processes[NAME_EXE_GPS].readyReadStandardOutput.connect(self.handle_stdout_gps)
         self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
         self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
         self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
-        self.d_processes[NAME_EXE_CNV].start('python3', [f'{NAME_EXE_CNV}.py'])
         self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
 
 
@@ -1915,6 +1904,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.th_log.start()
         self.th_net = Thread(target=main_ddh_net)
         self.th_net.start()
+        self.th_cnv = Thread(target=main_ddh_cnv)
+        self.th_cnv.start()
 
 
 
@@ -1962,7 +1953,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_setup_center_window(self)
         gui_setup_buttons(self)
         gui_setup_brightness(self)
-        gui_setup_side_buttons_box()
+        ddh_create_thread_buttons()
 
 
         # tabs
