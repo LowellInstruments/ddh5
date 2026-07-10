@@ -8,7 +8,7 @@ from utils.ddh_common import (
     NAME_EXE_AWS,
     NAME_EXE_BLE,
     NAME_EXE_GPS,
-    NAME_EXE_CNV, ddh_get_path_to_db_aws_status_file,
+    ddh_get_path_to_db_aws_status_file,
 )
 
 
@@ -17,7 +17,6 @@ lg_gui = LogDDHByModule("gui")
 d_processes = {
     NAME_EXE_AWS: None,
     NAME_EXE_BLE: None,
-    NAME_EXE_CNV: None,
     NAME_EXE_GPS: None,
 }
 

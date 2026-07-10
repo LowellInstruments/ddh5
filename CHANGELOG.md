@@ -228,3 +228,7 @@
 
     diabled atcom timer because BUG
 
+6.0.0x      07/10/26
+
+    simplifying DDH structure threads / processes
+
