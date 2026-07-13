@@ -26,9 +26,9 @@ fi
 
 
 
-_pb "==============="
-_pb " Deck Data Hub"
-_pb "==============="
+_pb " ==============="
+_pb "  Deck Data Hub"
+_pb " ==============="
 echo
 
 
@@ -66,8 +66,8 @@ fi
 
 # _pb "    KERNEL - set BLE connection supervision timeout"
 # this is in units of 10 ms
-echo '300' | sudo tee /sys/kernel/debug/bluetooth/hci0/supervision_timeout 2> /dev/null
-echo '300' | sudo tee /sys/kernel/debug/bluetooth/hci1/supervision_timeout 2> /dev/null
+echo '300' | sudo tee /sys/kernel/debug/bluetooth/hci0/supervision_timeout 2> /dev/null > /dev/null
+echo '300' | sudo tee /sys/kernel/debug/bluetooth/hci1/supervision_timeout 2> /dev/null > /dev/null
 
 
 
@@ -78,7 +78,7 @@ cd "$FOL_DDH" && "$FOL_VEN"/bin/python main_qus.py
 
 
 
-_pb " DDH - sim card file"
+#_pb " DDH - sim card file"
 QUC=$(cat /tmp/usb_quectel_ctl)
 if [ "${QUC}" ]; then
     # the file size is zero
