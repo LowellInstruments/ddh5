@@ -52,3 +52,5 @@ skip_slo = 0
 override_ft = 0
 # history 0 used old table, 1 uses new table
 new_table_history = 0
+# show fish website
+use_show_fish_website = 0

@@ -197,7 +197,7 @@ def _ddh_ble_hardware_health_check(antenna_idx):
 
 
 def _ble_logger_is_do1_or_do2(info: str):
-    return info.startswith("DO1") or info.startswith("DO2")
+    return info.startswith("DO1") or info.startswith("DO2") or info.startswith("DO-")
 
 
 

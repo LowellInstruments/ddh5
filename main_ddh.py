@@ -112,6 +112,7 @@ from utils.ddh_common import (
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
     STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
     PATH_FLAG_DDH_GPS_ERR, exp_get_new_table_history, ddh_get_path_to_root_application_folder,
+    exp_use_show_fish_website,
 )
 import datetime
 import os
@@ -2018,7 +2019,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # web engine viewer (install with apt python3-pyqt6.qtwebengine)
-        if not linux_is_rpi():
+        if exp_use_show_fish_website() == 1:
             # from PyQt6.QtWebEngineWidgets import QWebEngineView
             os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
             os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
