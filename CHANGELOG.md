@@ -228,3 +228,7 @@
 
     diabled atcom timer because BUG
 
+5.0.52      07/13/25
+
+    added ddh_ble.py ) or info.startswith("DO-")
+
