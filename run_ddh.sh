@@ -78,12 +78,12 @@ cd "$FOL_DDH" && "$FOL_VEN"/bin/python main_qus.py
 
 
 
-#_pb " DDH - sim card file"
+#_pb "   DDH - sim card file"
 QUC=$(cat /tmp/usb_quectel_ctl)
 if [ "${QUC}" ]; then
     # the file size is zero
     if [ ! -s "$LI_FILE_ICCID" ]; then
-          _py " DDH - sim card file removed because size = 0"
+          _py "   DDH - sim card file removed because size = 0"
           rm "$LI_FILE_ICCID" > /dev/null 2>&1
     fi
     WC_ID=$(wc -c < "$LI_FILE_ICCID")
@@ -92,7 +92,7 @@ if [ "${QUC}" ]; then
         # the file size is NOT Ok
         for idx_iccid in {1..10}
         do
-            _py " DDH - sim card query #$idx_iccid on $QUC"
+            _py "   DDH - sim card query #$idx_iccid on $QUC"
             echo -ne "AT+QCCID\r" > "$QUC"
             sleep 0.1
             timeout 1 cat -v < "$QUC" | grep QCCID > "$LI_FILE_ICCID"
@@ -103,19 +103,19 @@ if [ "${QUC}" ]; then
             fi
         done
     else
-        _pb " DDH - sim card file seems OK from the start"
+        _pb "   DDH - sim card file seems OK from the start"
     fi
 fi
 WC_ID=$(wc -c < "$LI_FILE_ICCID")
 RV=$?
 if [[ $RV -ne 0 || $WC_ID -ne 31 ]]; then
-    _py " DDH - sim card file NOT OK"
+    _py "   DDH - sim card file NOT OK"
 fi
 
 
 
 #_pb "    DDH - set XAUTHORITY, DISPLAY linux environment variables"
-_pb " DDH - running GUI"
+_pb "   DDH - running GUI"
 export XAUTHORITY=/home/pi/.Xauthority
 export DISPLAY=:0
 
