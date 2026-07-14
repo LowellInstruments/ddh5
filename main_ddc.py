@@ -499,7 +499,7 @@ def _menu_cb_toggle_display():
         print('error rv2')
     if rv1.returncode == 0 and rv2.returncode == 0:
         print(f'setting display as {choice_display} seems OK')
-        print('you need to reboot now')
+        print('you need to power-cycle DDH now')
     input()
 
 
@@ -527,7 +527,7 @@ def _menu_cb_copy_wifis():
     # make chroot copy this
     for i in ls:
         bn = os.path.basename(i)
-        c = f'sudo overlayroot-chroot bash -c "cp /run/{bn} {fol_wifis}"'
+        c = f'sudo overlayroot-chroot bash -c "chmod 0600 /run/{bn} && cp /run/{bn} {fol_wifis}"'
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode:
             print(f'error copying wifi {bn} to {fol_wifis}')
@@ -535,7 +535,7 @@ def _menu_cb_copy_wifis():
             return
 
     print(f'seems copying wifis worked')
-    print('you need to reboot now')
+    print('you need to power-cycle DDH now')
     input()
 
 
