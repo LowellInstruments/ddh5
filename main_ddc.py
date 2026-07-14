@@ -489,9 +489,17 @@ def _menu_cb_toggle_display():
 
     # make chroot copy this
     c = f'sudo overlayroot-chroot bash -c "cp /run/autostart {path_os_autostart}"'
-    sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    rv1 = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     c = f'sudo overlayroot-chroot bash -c "cp /run/libinput {path_os_libinput}"'
-    sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    rv2 = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+    if rv1.returncode:
+        print('error rv1')
+    if rv2.returncode:
+        print('error rv2')
+    if rv1.returncode == 0 and rv2.returncode == 0:
+        print(f'setting display as {choice_display} seems OK')
+    input()
 
 
 
@@ -509,18 +517,25 @@ def _menu_cb_copy_wifis():
     for i in ls:
         bn = os.path.basename(i)
         c = f'sudo cp {i} /run/{bn}'
-        print('c', c)
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode:
-            print(f'error copying wifi to /run')
+            print(f'error copying wifi {bn} to /run')
             input()
             return
 
     # make chroot copy this
-    # for i in ls:
-    #     bn = os.path.basename(i)
-    #     c = f'sudo overlayroot-chroot bash -c "cp /run/{bn} {fol_wifis}"'
-    #     sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    for i in ls:
+        bn = os.path.basename(i)
+        c = f'sudo overlayroot-chroot bash -c "cp /run/{bn} {fol_wifis}"'
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        if rv.returncode:
+            print(f'error copying wifi {bn} to {fol_wifis}')
+            input()
+            return
+
+    print(f'seems copying wifis worked')
+    input()
+
 
 
 def _menu_cb_run_brt():
