@@ -415,6 +415,52 @@ def _menu_cb_test_buttons():
 
 
 
+def _menu_cb_toggle_display():
+    print("\nQUESTION: Do you want set display standard (s) or downward (d) -> ", end='')
+    c = input().lower()
+    if c not in ('s', 'd'):
+        print(f'error, \'{c}\' is not a valid choice')
+        input()
+        return
+
+    # paths
+    path_dt_autostart_standard = '/home/pi/li/ddt/_dt_files/autostart_standard'
+    path_dt_autostart_inverted = '/home/pi/li/ddt/_dt_files/autostart_inverted'
+    path_dt_libinput_standard = '/home/pi/li/ddt/_dt_files/libinput_standard'
+    path_dt_libinput_inverted = '/home/pi/li/ddt/_dt_files/libinput_inverted'
+    path_os_autostart = '/etc/xdg/lxsession/LXDE-pi/autostart'
+    path_os_libinput = '/usr/share/X11/xorg.conf.d/40-libinput.conf'
+
+    # checks we can run this
+    if not os.path.exists(path_dt_autostart_standard):
+        print(f'error, missing file autostart_standard')
+        input()
+        return
+    if not os.path.exists(path_dt_autostart_inverted):
+        print(f'error, missing file autostart_inverted')
+        input()
+        return
+    if not os.path.exists(path_dt_libinput_standard):
+        print(f'error, missing file libinput_standard')
+        input()
+        return
+    if not os.path.exists(path_dt_libinput_inverted):
+        print(f'error, missing file libinput_inverted')
+        input()
+        return
+
+    # banners
+    print('setting display standard')
+    c = f'cp {path_dt_autostart_standard} /run'
+    rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    if rv.returncode:
+        print(f'error copying display standard to /run')
+        input()
+        return
+
+
+
+
 
 def _menu_cb_run_brt():
 
@@ -934,6 +980,7 @@ def main_ddc():
             '3': (f"3) check all keys    [{fdk}]", _menu_cb_print_check_all_keys),
             '4': (f"4) test GPS", _menu_cb_gps_signal_quality),
             '5': (f"5) test side buttons", _menu_cb_test_buttons),
+            '6': (f"6) toggle display orientation", _menu_cb_toggle_display),
             'r': (f"r) BLE range tool", _menu_cb_run_brt),
             'o': (f"o) deploy logger DOX", _menu_cb_run_deploy_dox),
             't': (f"t) deploy logger TDO", _menu_cb_run_deploy_tdo),
