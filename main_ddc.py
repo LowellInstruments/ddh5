@@ -503,10 +503,11 @@ def _menu_cb_copy_wifis():
         input()
         return
     ls = rv.stdout.decode().split('\n')
-    ls = [i for i in ls if i and 'preconfigured' not in i]
+    ls = [i for i in ls if i.endswith('nmconnection') and 'preconfigured' not in i]
     for i in ls:
         bn = os.path.basename(i)
         c = f'sudo cp {i} /run/{bn}'
+        print('c', c)
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode:
             print(f'error copying wifi to /run')
