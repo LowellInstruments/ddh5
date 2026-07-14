@@ -417,6 +417,21 @@ def _menu_cb_test_buttons():
 
 def _menu_cb_toggle_display():
 
+    # -----------------------------------------------------------------------
+    # to invert display:
+    #   sudo nano /etc/xdg/lxsession/LXDE-pi/autostart
+    #       Add:
+    #           @xrandr --output DSI-1 --rotate inverted
+    #       at the bottom of the file.
+    # to also invert touch:
+    #   cd /usr/share/X11/xorg.conf.d/
+    #   sudo joe 40-libinput.conf
+    #       Add:
+    #           Option "TransformationMatrix" "-1 0 1 0 -1 1 0 0 1"
+    #       at the section identifying your "touchscreen catchall" section
+    # -----------------------------------------------------------------------
+
+
     # paths
     path_dt_autostart_standard = '/home/pi/li/ddt/_dt_files/autostart_standard'
     path_dt_autostart_inverted = '/home/pi/li/ddt/_dt_files/autostart_inverted'
