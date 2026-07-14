@@ -570,6 +570,7 @@ def _get_exp_key_from_cfg(k):
 
 
 
+# used to reconfigure DOX loggers on-the-fly
 def exp_get_conf_dox():
     rv = _get_exp_key_from_cfg('conf_dox')
     if rv == -1:
@@ -582,20 +583,21 @@ def exp_get_conf_dox():
 
 
 
+# used to modify box side buttons time
 def exp_get_custom_side_buttons_debounce_time():
     return _get_exp_key_from_cfg('custom_side_buttons_debounce_time')
 
 
 
+# feature has-been-in-water
 def exp_get_skip_hbw():
     return _get_exp_key_from_cfg('use_skip_hbw')
 
 
 
+# Linus fish website
 def exp_use_show_fish_website():
     return _get_exp_key_from_cfg('use_show_fish_website')
-
-
 
 
 
@@ -604,16 +606,19 @@ def exp_get_use_local_geo_port():
 
 
 
+# allows disabling Smart-Lock-Out
 def exp_get_skip_slo():
     return _get_exp_key_from_cfg('skip_slo')
 
 
 
+# allows nice table history
 def exp_get_new_table_history():
     return _get_exp_key_from_cfg('new_table_history')
 
 
 
+# allows Andrew's experiments
 def exp_get_override_ft():
     return _get_exp_key_from_cfg('override_ft')
 
