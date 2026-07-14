@@ -499,6 +499,7 @@ def _menu_cb_toggle_display():
         print('error rv2')
     if rv1.returncode == 0 and rv2.returncode == 0:
         print(f'setting display as {choice_display} seems OK')
+        print('you need to reboot now')
     input()
 
 
@@ -534,6 +535,7 @@ def _menu_cb_copy_wifis():
             return
 
     print(f'seems copying wifis worked')
+    print('you need to reboot now')
     input()
 
 
@@ -1057,7 +1059,7 @@ def main_ddc():
             '4': (f"4) test GPS", _menu_cb_gps_signal_quality),
             '5': (f"5) test side buttons", _menu_cb_test_buttons),
             '6': (f"6) toggle display orientation", _menu_cb_toggle_display),
-            '7': (f"6) make wifis permanent", _menu_cb_copy_wifis),
+            '7': (f"7) make wifis permanent", _menu_cb_copy_wifis),
             'r': (f"r) BLE range tool", _menu_cb_run_brt),
             'o': (f"o) deploy logger DOX", _menu_cb_run_deploy_dox),
             't': (f"t) deploy logger TDO", _menu_cb_run_deploy_tdo),
