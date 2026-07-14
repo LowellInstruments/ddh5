@@ -495,6 +495,30 @@ def _menu_cb_toggle_display():
 
 
 
+def _menu_cb_copy_wifis():
+    c = 'ls /etc/NetworkManager/system-connections'
+    rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    if rv.returncode:
+        print('error listing wifi-connections')
+        input()
+        return
+    ls = rv.stdout.decode().split('\n')
+    ls = [i for i in ls if i and 'preconfigured' not in i]
+    for i in ls:
+        bn = os.path.basename(i)
+        c = f'sudo cp {i} /run/{bn}'
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        if rv.returncode:
+            print(f'error copying wifi to /run')
+            input()
+            return
+
+    # make chroot copy this
+    fol_wifis = '/etc/NetworkManager/system-connections'
+    # for i in ls:
+    #     bn = os.path.basename(i)
+    #     c = f'sudo overlayroot-chroot bash -c "cp /run/{bn} {fol_wifis}"'
+    #     sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
 
 def _menu_cb_run_brt():
@@ -1016,6 +1040,7 @@ def main_ddc():
             '4': (f"4) test GPS", _menu_cb_gps_signal_quality),
             '5': (f"5) test side buttons", _menu_cb_test_buttons),
             '6': (f"6) toggle display orientation", _menu_cb_toggle_display),
+            '7': (f"6) make wifis permanent", _menu_cb_copy_wifis),
             'r': (f"r) BLE range tool", _menu_cb_run_brt),
             'o': (f"o) deploy logger DOX", _menu_cb_run_deploy_dox),
             't': (f"t) deploy logger TDO", _menu_cb_run_deploy_tdo),
