@@ -496,7 +496,8 @@ def _menu_cb_toggle_display():
 
 
 def _menu_cb_copy_wifis():
-    c = 'ls /etc/NetworkManager/system-connections'
+    fol_wifis = '/etc/NetworkManager/system-connections'
+    c = f'ls {fol_wifis}'
     rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     if rv.returncode:
         print('error listing wifi-connections')
@@ -504,6 +505,7 @@ def _menu_cb_copy_wifis():
         return
     ls = rv.stdout.decode().split('\n')
     ls = [i for i in ls if i.endswith('nmconnection') and 'preconfigured' not in i]
+    ls = [f'{fol_wifis}/{i}' for i in ls]
     for i in ls:
         bn = os.path.basename(i)
         c = f'sudo cp {i} /run/{bn}'
@@ -515,7 +517,6 @@ def _menu_cb_copy_wifis():
             return
 
     # make chroot copy this
-    fol_wifis = '/etc/NetworkManager/system-connections'
     # for i in ls:
     #     bn = os.path.basename(i)
     #     c = f'sudo overlayroot-chroot bash -c "cp /run/{bn} {fol_wifis}"'
