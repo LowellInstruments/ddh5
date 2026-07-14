@@ -426,22 +426,12 @@ def _menu_cb_toggle_display():
     path_os_libinput = '/usr/share/X11/xorg.conf.d/40-libinput.conf'
 
     # checks we can run this
-    if not os.path.exists(path_dt_autostart_standard):
-        print(f'error, missing file autostart_standard')
-        input()
-        return
-    if not os.path.exists(path_dt_autostart_inverted):
-        print(f'error, missing file autostart_inverted')
-        input()
-        return
-    if not os.path.exists(path_dt_libinput_standard):
-        print(f'error, missing file libinput_standard')
-        input()
-        return
-    if not os.path.exists(path_dt_libinput_inverted):
-        print(f'error, missing file libinput_inverted')
-        input()
-        return
+    for p in (path_dt_autostart_standard, path_dt_autostart_inverted,
+              path_dt_libinput_standard, path_dt_libinput_inverted):
+        if not os.path.exists(p):
+            print(f'error, missing file {p}')
+            input()
+            return
 
     print("\nQUESTION: Do you want set display standard (s) or downward (d) -> ", end='')
     choice_display = input().lower()
@@ -453,37 +443,40 @@ def _menu_cb_toggle_display():
     # banners
     if choice_display == 's':
         print('setting display STANDARD')
-        c = f'sudo cp {path_dt_autostart_standard} /run'
+        c = f'sudo cp {path_dt_autostart_standard} /run/autostart'
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode:
             print(f'error copying display STANDARD to /run')
             input()
             return
-        c = f'sudo cp {path_dt_libinput_standard} /run'
+        c = f'sudo cp {path_dt_libinput_standard} /run/libinput'
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode:
             print(f'error copying libinput STANDARD to /run')
             input()
             return
 
-        # make chroot copy this
-        return
-
     # this is inverted for sure
-    print('setting display INVERTED')
-    c = f'sudo cp {path_dt_autostart_inverted} /run'
-    rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    if rv.returncode:
-        print(f'error copying display INVERTED to /run')
-        input()
-        return
-    c = f'sudo cp {path_dt_libinput_inverted} /run'
-    rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    if rv.returncode:
-        print(f'error copying libinput INVERTED to /run')
-        input()
-        return
+    else:
+        print('setting display INVERTED')
+        c = f'sudo cp {path_dt_autostart_inverted} /run/autostart'
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        if rv.returncode:
+            print(f'error copying display INVERTED to /run')
+            input()
+            return
+        c = f'sudo cp {path_dt_libinput_inverted} /run/libinput'
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        if rv.returncode:
+            print(f'error copying libinput INVERTED to /run')
+            input()
+            return
 
+    # make chroot copy this
+    c = f'sudo overlayroot-chroot bash -c "cp /run/autostart {path_os_autostart}"'
+    sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    c = f'sudo overlayroot-chroot bash -c "cp /run/libinput {path_os_libinput}"'
+    sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
 
 
