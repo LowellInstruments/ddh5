@@ -416,12 +416,6 @@ def _menu_cb_test_buttons():
 
 
 def _menu_cb_toggle_display():
-    print("\nQUESTION: Do you want set display standard (s) or downward (d) -> ", end='')
-    c = input().lower()
-    if c not in ('s', 'd'):
-        print(f'error, \'{c}\' is not a valid choice')
-        input()
-        return
 
     # paths
     path_dt_autostart_standard = '/home/pi/li/ddt/_dt_files/autostart_standard'
@@ -449,14 +443,47 @@ def _menu_cb_toggle_display():
         input()
         return
 
-    # banners
-    print('setting display standard')
-    c = f'cp {path_dt_autostart_standard} /run'
-    rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    if rv.returncode:
-        print(f'error copying display standard to /run')
+    print("\nQUESTION: Do you want set display standard (s) or downward (d) -> ", end='')
+    choice_display = input().lower()
+    if choice_display not in ('s', 'd'):
+        print(f'error, \'{choice_display}\' is not a valid choice')
         input()
         return
+
+    # banners
+    if choice_display == 's':
+        print('setting display STANDARD')
+        c = f'sudo cp {path_dt_autostart_standard} /run'
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        if rv.returncode:
+            print(f'error copying display STANDARD to /run')
+            input()
+            return
+        c = f'sudo cp {path_dt_libinput_standard} /run'
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        if rv.returncode:
+            print(f'error copying libinput STANDARD to /run')
+            input()
+            return
+
+        # make chroot copy this
+        return
+
+    # this is inverted for sure
+    print('setting display INVERTED')
+    c = f'sudo cp {path_dt_autostart_inverted} /run'
+    rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    if rv.returncode:
+        print(f'error copying display INVERTED to /run')
+        input()
+        return
+    c = f'sudo cp {path_dt_libinput_inverted} /run'
+    rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    if rv.returncode:
+        print(f'error copying libinput INVERTED to /run')
+        input()
+        return
+
 
 
 
