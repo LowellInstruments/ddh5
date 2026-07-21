@@ -29,7 +29,7 @@ r = redis.Redis('localhost', port=6379)
 def ddh_net_calculate_via():
 
     # check ANY NET via
-    c = f"timeout .5 ping -c 1 www.google.com -4"
+    c = f"timeout 1 ping -c 1 www.google.com -4"
     for i in range(3):
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode == 0:
