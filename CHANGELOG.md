@@ -232,3 +232,8 @@
 
     added ddh_ble.py ) or info.startswith("DO-")
 
+5.0.53      07/21/25
+
+    less demanding ddh_net constants
+
+

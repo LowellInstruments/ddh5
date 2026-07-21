@@ -32,7 +32,7 @@ p_name = NAME_EXE_NET
 def ddh_net_calculate_via():
 
     # check ANY NET via
-    c = f"timeout .5 ping -c 1 www.google.com -4"
+    c = f"timeout 1 ping -c 1 www.google.com -4"
     for i in range(3):
         rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
         if rv.returncode == 0:
@@ -82,7 +82,7 @@ def _ddh_net(ignore_gui):
         time.sleep(1)
         if not r.exists(RD_DDH_NET_PROCESS_OUTPUT):
             via = _net()
-            r.setex(RD_DDH_NET_PROCESS_OUTPUT, 10, via)
+            r.setex(RD_DDH_NET_PROCESS_OUTPUT, 30, via)
 
 
 
