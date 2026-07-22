@@ -1,5 +1,6 @@
 # sometimes these get created while developing
 dl_files/*
+upload/*
 logs/*
 .idea/
 
