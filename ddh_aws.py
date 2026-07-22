@@ -327,6 +327,9 @@ def _ddh_aws(ignore_gui):
                 lg.a(f'error, {link} is not link')
                 continue
             p = os.readlink(link)
+            if not os.path.exists(p):
+                lg.a(f'deleting link to non-existing file {p}')
+                continue
             bn = os.path.basename(p)
             if 'MAT.cfg' in bn:
                 continue
