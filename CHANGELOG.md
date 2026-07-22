@@ -230,10 +230,10 @@
 
 5.0.52      07/13/25
 
-    added ddh_ble.py ) or info.startswith("DO-")
+    added ddh_ble.py or info.startswith("DO-")
 
 5.0.53      07/21/25
 
     less demanding ddh_net constants
-
+    crontab files redacted to not run if DDU is running
 
