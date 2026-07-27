@@ -19,7 +19,7 @@ def annotate_time_this_occurred(k, t):
     if t <= 0:
         return
     k = _add_prefix(k)
-    r.setex(k, t, 1)
+    r.set(k, value=1, ex=t)
 
 
 

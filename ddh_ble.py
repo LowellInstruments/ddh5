@@ -276,7 +276,7 @@ async def _ble_logger_id_and_download(d):
 
     # speed up things
     if rv == 0 and fq:
-        r.setex(RD_DDH_BLE_PREVENT_FULL_QUERY, 86400, 1)
+        r.set(RD_DDH_BLE_PREVENT_FULL_QUERY, value=1, ex=86400)
 
 
     if rv == 0:
@@ -363,7 +363,7 @@ def _ddh_ble_scan_loggers(antenna_idx):
             k = f"_ddh_smart_lock_out_tell_{m.replace(':', '-')}"
             if not r.exists(k):
                 lg.a(f'debug, smart-lock-out prevents downloading {m}')
-                r.setex(k, 300, 1)
+                r.set(k, value=1, ex=300)
             slo_add(m)
 
 
@@ -405,7 +405,7 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
     # case no need to download because HBW command
     if rv == 2:
         app_state_set(EV_BLE_DL_NO_NEED, t_str(STR_EV_BLE_DL_NO_NEED))
-        r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 5, 1)
+        r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=5)
         lg.a(f'OK, adding mac {mac} to black list')
         rm_mac_black(mac)
         rm_mac_orange(mac)
@@ -443,7 +443,7 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
             app_state_set(EV_BLE_DL_OK_NO_RERUN, t_str(STR_EV_BLE_DL_OK_NO_RERUN) + f' {sn}')
         else:
             app_state_set(EV_BLE_DL_OK, t_str(STR_EV_BLE_DL_OK) + f' {sn}')
-        r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 60, 1)
+        r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=60)
 
 
     # failure
@@ -465,7 +465,7 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
             slo_add(mac)
             lg.a(f"error, logger {mac}/{sn} totally failed, critical")
             app_state_set(EV_BLE_DL_ERROR, d['error'])
-            r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 60, 1)
+            r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=60)
             notify_logger_error_retries(gps_pos, ln)
             _g_logger_errors[mac] = 0
 
@@ -475,8 +475,7 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
             add_mac_orange(mac)
             slo_delete(mac)
             app_state_set(EV_BLE_DL_RETRY, t_str(STR_EV_BLE_DL_RETRY))
-            r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 10, 1)
-
+            r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=10)
 
 
     # -------------------------------
@@ -539,9 +538,9 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
     # discover the type of logger and download it
     # --------------------------------------------
     try:
-        r.setex(RD_DDH_BLE_SEMAPHORE, 120, 1)
+        r.set(RD_DDH_BLE_SEMAPHORE, value=1, ex=120)
         app_state_set(EV_BLE_DL_PROGRESS, t_str(STR_EV_BLE_DL_PROGRESS) + f' {sn}')
-        r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 1, 1)
+        r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=1)
         rv = ael.run_until_complete(_ble_logger_id_and_download(d_interaction))
     except (Exception, ) as ex:
         lg.a(f"error, _ddh_ble_download_logger {mac} -> {ex}")
@@ -645,7 +644,7 @@ def _ddh_ble(ignore_gui):
         # lg.a(f'debug: g = {g}')
         if not g:
             app_state_set(EV_GPS_HW_ERROR, t_str(STR_EV_GPS_HW_ERROR))
-            r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 3, 1)
+            r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=3)
             continue
 
 

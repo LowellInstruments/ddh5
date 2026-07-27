@@ -56,7 +56,7 @@ def main_ddh_net():
         try:
             if not r.exists(RD_DDH_NET_PROCESS_OUTPUT):
                 via = ddh_net_calculate_via()
-                r.setex(RD_DDH_NET_PROCESS_OUTPUT, 30, via)
+                r.set(RD_DDH_NET_PROCESS_OUTPUT, value=via, ex=30)
                 with open(TMP_PATH_INET_VIA, "w") as f:
                     json.dump({"internet_via": via}, f)
         except (Exception,) as ex:

@@ -231,4 +231,9 @@
 6.0.0x      07/10/26
 
     simplifying DDH structure threads / processes
+    new history table ENABLED by default
+    HBW ENABLED by default
+    SLO ENABLED by default
+    AWS symlinks ENABLED by default
+    Linus fish website _DISABLED_ by default
 
