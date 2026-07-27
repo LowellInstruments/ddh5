@@ -1,8 +1,6 @@
 import signal
 import sys
 from pathlib import Path
-
-from PyQt6.QtWebEngineCore import QWebEngineProfile
 from threading import Thread
 
 import psutil
@@ -113,7 +111,7 @@ from utils.ddh_common import (
     STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
     STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
-    PATH_FLAG_DDH_GPS_ERR, exp_get_new_table_history, ddh_get_path_to_root_application_folder,
+    PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
     exp_use_show_fish_website,
 )
 import datetime
@@ -231,11 +229,9 @@ def gui_setup_view(my_win):
     a.lbl_gps_antenna_img.setPixmap(QPixmap(PATH_GPS_ANTENNA_ICON_START))
     a.lbl_ble_antenna_img.setPixmap(QPixmap(PATH_BLE_ANTENNA_ICON_START))
     a.lbl_cell_wifi_img.setPixmap(QPixmap("ddh/gui/res/new_icon_cell_wifi.png"))
-    a.lbl_power_img.setPixmap(QPixmap("ddh/gui/res/new_icon_power_ok.png"))
     a.lbl_cloud_img.setPixmap(QPixmap(PATH_CLOUD_ICON_OK))
     a.lbl_boat_txt.setText(ddh_config_get_vessel_name())
     a.lbl_gps.setText('-\n-')
-    a.lbl_power_txt.setText('-')
     a.lbl_box_sn.setText('DDH ' + ddh_config_get_box_sn())
     a.lbl_cloud_txt.setText("-")
     a.bar_dl.setVisible(False)
@@ -383,7 +379,7 @@ def _gui_tabs_populate_history_old(my_app):
 
 
 
-def _gui_tabs_populate_history_new(my_app):
+def _gui_tabs_populate_history_new(my_app, index):
     t = my_app.tbl_his
     t.clear()
     t.tableWidget = None
@@ -392,14 +388,22 @@ def _gui_tabs_populate_history_new(my_app):
     t.setColumnCount(5)
 
 
+
     # get history database and order by most recent first
     db = DbHis(ddh_get_path_to_db_history_file())
     ls_d_rows = db.get_all().values()
     ls_d_rows = sorted(ls_d_rows, key=lambda x: x["ep_loc"], reverse=True)
 
 
+    # we don't want all but some specific logger serial number
+    text_dropdown_table = my_app.cbox_table_his.itemText(index)
+    if text_dropdown_table != 'all':
+        ls_d_rows = [d for d in ls_d_rows if d["SN"].lower() == text_dropdown_table.lower()]
+
+
+
     # dictionary index columns
-    d_i_c = {
+    d_idx_cols = {
         'SN': 0,
         'ep_loc': 1,
         'e': 2,
@@ -409,29 +413,35 @@ def _gui_tabs_populate_history_new(my_app):
     ls_sn_done = []
 
 
+    # do not use enumerate() or you will have blank rows
+    idx_table_row = 0
+
+
     # logger, datetime, offload_result, restart, summary table
-    for i_r, d in enumerate(ls_d_rows):
+    for d in ls_d_rows:
         sn = d.get('SN', '')
         if sn in ls_sn_done:
             continue
         if sn == '':
             continue
-        ls_sn_done.append(sn)
+        # this allows to repeat rows when not all
+        if text_dropdown_table == 'all':
+            ls_sn_done.append(sn)
         for k,v in d.items():
-            if k not in d_i_c.keys():
+            if k not in d_idx_cols.keys():
                 continue
             if k == 'ep_loc':
                 dt = datetime.datetime.fromtimestamp(int(v))
-                v = dt.strftime("%b %d %H:%M")
+                v = dt.strftime("%Y %b %d %H:%M")
             if k == 'e':
-                if 'OK' not in v:
+                # v: error comm. TDO or v: ok TDO
+                if 'ok' in v.lower():
                     v = '✅'
                     k_summary = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
                     v_summary = r.get(k_summary)
                     v_summary = v_summary.decode() if v_summary else ''
                     _it = QTableWidgetItem(str(v_summary))
                     _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-                    t.setItem(i_r, 4, _it)
                 else:
                     v = '❌'
             if k == 'rerun':
@@ -440,7 +450,10 @@ def _gui_tabs_populate_history_new(my_app):
             # fill the cell
             _it = QTableWidgetItem(str(v))
             _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-            t.setItem(i_r, d_i_c[k], _it)
+            t.setItem(idx_table_row, d_idx_cols[k], _it)
+
+        # do not use enumerate() or you will have blank rows
+        idx_table_row += 1
 
 
     # table column widths
@@ -467,11 +480,14 @@ def _gui_tabs_populate_history_new(my_app):
 
 
 
-def gui_tabs_populate_history(my_app):
-    if exp_get_new_table_history() == 1:
-        _gui_tabs_populate_history_new(my_app)
-    else:
-        _gui_tabs_populate_history_old(my_app)
+
+def gui_tabs_populate_history(my_app, index=0):
+    _gui_tabs_populate_history_new(my_app, index)
+
+    # if exp_get_new_table_history() == 1:
+    #     _gui_tabs_populate_history_new(my_app)
+    # else:
+    #     _gui_tabs_populate_history_old(my_app)
 
 
 
@@ -498,7 +514,7 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
     # from HISTORY database, grab serial numbers, most recent first
     db = DbHis(ddh_get_path_to_db_history_file())
     rows = db.get_all().values()
-    rows = sorted(rows, key=lambda x: x["ep_loc"], reverse=True)
+    rows = sorted(rows, key=lambda x: str(x["ep_loc"]), reverse=True)
     h_sn = []
     for h in rows:
         if not h['SN']:
@@ -561,6 +577,7 @@ def gui_setup_buttons(my_app):
     a.btn_shortcuts.clicked.connect(a.click_btn_shortcuts)
     a.cbox_scf.activated.connect(a.click_chk_scf)
     a.line_sn.textChanged.connect(a.cb_line_sn_text_changed)
+    a.cbox_table_his.activated.connect(a.click_cbox_table_his_changed)
     a.btn_close_advanced_tab.clicked.connect(a.click_btn_close_advanced_tab)
 
 
@@ -742,7 +759,7 @@ def gui_add_to_history_database(mac, e, lat, lon, ep_loc, ep_utc, rerun, u, info
     sn = ddh_config_get_logger_sn_from_mac(mac)
     db = DbHis(ddh_get_path_to_db_history_file())
     e = e + ' ' + info
-    db.add(mac, sn, e, lat, lon, ep_loc, ep_utc, rerun, u)
+    db.add(mac, sn, e, lat, lon, str(ep_loc), str(ep_utc), rerun, u)
 
 
 
@@ -1254,7 +1271,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     
     
     def click_lbl_commit_pressed(self, ev):
-        r.setex(RD_DDH_GUI_BEACON_FLAG, 120, 1)
+        r.set(RD_DDH_GUI_BEACON_FLAG, value=1, ex=120)
         lg.a("pressed GUI button beacon")
 
 
@@ -1352,6 +1369,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if str(sn).startswith(v):
                 s = f"{m}  {sn}"
                 self.lst_mac_org.addItem(s)
+
+
+
+    def click_cbox_table_his_changed(self):
+        i = self.cbox_table_his.currentIndex()
+        gui_tabs_populate_history(self, index=i)
+
 
 
 
@@ -1500,7 +1524,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                     ans = float(ans.decode())
                     if ans > 80:
                         lg.a(f"debug, box temperature {ans} degrees Celsius")
-                    r.setex(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, 600, str(int(ans)))
+                    r.set(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, value=str(int(ans)), ex=600)
 
             except (Exception,) as ex:
                 lg.a(f"error, getting vcgencmd -> {ex}")
@@ -1573,7 +1597,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         k = RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING
         if not r.exists(k):
             gui_check_all_processes()
-            r.setex(k, 10, 1)
+            r.set(k, value=1, ex=10)
 
 
         # useful to see the debug output terminal
@@ -1609,7 +1633,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # update MODELS tab, prevent freeze at boot, then, every 24 hours
         if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_PERIODIC_REFRESH_MODELS):
             gui_populate_models_tab(self)
-            r.setex(RD_DDH_GUI_PERIODIC_REFRESH_MODELS, 3600 * 24, 1)
+            r.set(RD_DDH_GUI_PERIODIC_REFRESH_MODELS, value=1, ex=3600 * 24)
 
 
 
@@ -1690,7 +1714,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             p = PATH_GPS_ANTENNA_ICON_OK if g else PATH_GPS_ANTENNA_ICON_ERROR
             self.lbl_gps_antenna_img.setPixmap(QPixmap(p))
             # schedule next time we want to check GPS position
-            r.setex(k, 10, 1)
+            r.set(k, value=1, ex=10)
 
 
 
@@ -1704,7 +1728,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             if self.process_state_ble == 'Not running':
                 p = PATH_BLE_ANTENNA_ICON_ERROR
             self.lbl_ble_antenna_img.setPixmap(QPixmap(p))
-            r.setex(k, 10, 1)
+            r.set(k, value=1, ex=10)
 
 
 
@@ -1716,7 +1740,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             p = PATH_CELL_ICON_ERROR if via == 'none' else PATH_CELL_ICON_OK
             self.lbl_cell_wifi_img.setPixmap(QPixmap(p))
             # schedule next time we want this NET via obtention to happen
-            r.setex(k, 10, 1)
+            r.set(k, value=1, ex=10)
             if via in ("wifi", "wi-fi") or not linux_is_rpi():
                 ssid = gui_get_my_current_wlan_ssid()
                 self.lbl_cell_wifi_txt.setText(ssid)
@@ -1730,10 +1754,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         if r.exists(k):
             hat = r.get(k).decode()
             p = PATH_POWER_ICON_ERROR if hat == 'error' else PATH_POWER_ICON_OK
-            self.lbl_power_img.setPixmap(QPixmap(p))
             r.delete(k)
             s = f'{hat}'
-            self.lbl_power_txt.setText(s)
             m_t = r.get(RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE)
             self.lbl_cpu_temp.setText('')
             if m_t:
@@ -1960,6 +1982,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_tabs_hide_setup(self)
         gui_tabs_hide_advanced(self)
         gui_tabs_hide_note(self)
+        # load new dropdown in history table
+        ls = ddh_config_get_list_of_monitored_serial_numbers()
+        ls.insert(0, 'all')
+        self.cbox_table_his.addItems(ls)
         gui_tabs_populate_history(self)
         gui_tabs_hide_models_next_btn(self)
         gui_tabs_populate_note_dropdown(self)
@@ -2088,7 +2114,7 @@ def main_ddh_gui():
     # create a timestamped entry when GUI is NOT doing well
     k = RD_DDH_GUI_RV
     if rv:
-        r.setex(f'{k}_{int(time.time())}', 600, 1)
+        r.set(f'{k}_{int(time.time())}', value=1, ex=600)
 
 
     # when too many of these entries, generate alarm

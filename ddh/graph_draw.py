@@ -962,7 +962,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                     lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
-                r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
+                r.set(RD_DDH_GUI_GRAPH_STATISTICS, value=s, ex=120)
                 k = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
                 r.set(k, s2)
 
@@ -1004,7 +1004,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                     lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
-                r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
+                r.set(RD_DDH_GUI_GRAPH_STATISTICS, value=s, ex=120)
                 k = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
                 r.set(k, s2)
 

@@ -60,6 +60,7 @@ g_counter_sqs = 0
 
 def _get_path_of_aws_binary():
     # apt install awscli
+    # pip3 install awscli --break-system-packages
     # 2024 is 1.22.34
     return "aws"
 
@@ -225,6 +226,7 @@ def _aws_cp(path):
     rv = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     if rv.returncode:
         lg.a(f"error, S3 copy {os.path.basename(path)}, year {y}, {rv.stderr}")
+        lg.a('maybe do pip3 install awscli?')
         _ddh_aws_set_state('error')
         return 1
 
@@ -361,11 +363,11 @@ def _ddh_aws(ignore_gui):
         if r.exists(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST):
             did_aws = True
             r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
-            r.setex(RD_DDH_AWS_SYNC_PERIODIC_FLAG, 12 * 3600, 1)
+            r.set(RD_DDH_AWS_SYNC_PERIODIC_FLAG, value=1, ex=12*3600)
             aws_sync()
 
 
-        # helps updating GUI
+        # helps update GUI
         if did_aws:
             r.set(RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD, 1)
 

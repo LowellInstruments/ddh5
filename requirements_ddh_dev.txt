@@ -19,6 +19,7 @@ boto3
 h5py
 PyQt6
 gsw~=3.6.20
+PyQt6-WebEngine=6.11
 
 
 # for BRT tool

@@ -114,7 +114,7 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
     are_we_in_port = ddh_ask_in_port_to_ddn(gps_pos)
     if are_we_in_port:
         app_state_set(EV_GPS_IN_PORT, t_str(STR_EV_GPS_IN_PORT))
-        r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 10, 1)
+        r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=10)
         return False
 
     return True
@@ -143,7 +143,7 @@ def _ddh_gps_get():
     ns = int(ns.decode()) if ns else 0
     k = RD_DDH_GPS_LIST_LOW_NUMBER_SATELLITES
     if 0 < ns < 5:
-        r.setex(f'{k}_{int(time.time())}', 3600, 1)
+        r.set(f'{k}_{int(time.time())}', value=1, ex=3600)
 
 
     # number of satellites: generate alarm or not every hour
@@ -242,8 +242,7 @@ def ddh_gps_get_fix_upon_cold_boot():
     # Wikipedia: GPS-Time-To-First-Fix for cold start is typ.
     # 2 to 5 minutes, warm <= 45 secs, hot <= 22 secs
 
-    r.setex(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT,
-            PERIOD_GPS_AT_BOOT_SECS, 1)
+    r.set(RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT, value=1, ex=PERIOD_GPS_AT_BOOT_SECS)
     app_state_set(EV_GPS_WAITING_BOOT, 'GPS boot')
     lg.a(f"boot, wait up to {PERIOD_GPS_AT_BOOT_SECS} seconds")
     till = time.perf_counter() + PERIOD_GPS_AT_BOOT_SECS
@@ -269,7 +268,7 @@ def ddh_gps_get_fix_upon_cold_boot():
 
 def _set_redis_gps_number_of_satellites(d):
     if d and 'ns' in d.keys():
-        r.setex(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES, 60, d['ns'])
+        r.set(RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES, value=d['ns'], ex=60)
 
 
 
@@ -284,7 +283,7 @@ def _set_redis_gps_fix_dict(d: dict):
         #     "sentence": "$GPGGA,184028.163,,,,,0,00,,,M,0.0,M,,0000*55"
         # }
         j = json.dumps(d)
-        r.setex(RD_DDH_GPS_FIX_POSITION, 5, j)
+        r.set(RD_DDH_GPS_FIX_POSITION, value=j, ex=5)
     else:
         lg.a(f"warning, _send_dict_to_redis discarded sentence {d['sentence']}")
 
@@ -293,7 +292,7 @@ def _set_redis_gps_fix_dict(d: dict):
 def _set_redis_gps_speed(d: dict):
     if d and 'speed' in d.keys():
         s = d['speed']
-        r.setex(RD_DDH_GPS_FIX_SPEED, 2, s)
+        r.set(RD_DDH_GPS_FIX_SPEED, value=s, ex=2)
 
 
 
@@ -382,7 +381,7 @@ def _ddh_gps(ignore_gui):
             # periodically enumerate ports and sent AT+QGPS=1
             gps_hat_needs_ports_re_enumeration = False
             if not r.get(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM):
-                r.setex(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM, 300, 1)
+                r.set(RD_DDH_GPS_LAST_HAT_USB_PORT_ENUM, value=1, ex=300)
                 gps_hat_needs_ports_re_enumeration = True
 
 
@@ -393,7 +392,7 @@ def _ddh_gps(ignore_gui):
                 _sc, _st = app_state_get()
                 lg.a("warning, starting power-cycle GPS hat shield")
                 app_state_set(EV_GPS_HAT_POWER_CYCLE, t_str(STR_EV_GPS_HAT_POWER_CYCLE))
-                r.setex(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, 5, 1)
+                r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=5)
                 gps_hat_power_cycle_ddc(port_ctrl, use_print=False)
                 lg.a("warning, end power-cycle GPS hat shield")
                 app_state_set(_sc, t_str(_st))
@@ -431,13 +430,13 @@ def _ddh_gps(ignore_gui):
         # check GPS is doing OK, otherwise, alarm
         if not bb_g and 'error_gps' in d.keys():
             if not r.exists(RD_DDH_GPS_LAST_ERROR_NOTIFICATION):
-                r.setex(RD_DDH_GPS_LAST_ERROR_NOTIFICATION, 1800, 1)
+                r.set(RD_DDH_GPS_LAST_ERROR_NOTIFICATION, value=1, ex=1800)
                 lg.a('warning, too many GPS errors, generating SQS file')
                 notify_ddh_error_hw_gps()
 
             if _using_hat:
                 if not r.exists(RD_DDH_GPS_LAST_HAT_POWER_CYCLE):
-                    r.setex(RD_DDH_GPS_LAST_HAT_POWER_CYCLE, 43200, 1)
+                    r.set(RD_DDH_GPS_LAST_HAT_POWER_CYCLE, value=1, ex=43200)
                     gps_hat_needs_power_cycle = True
                 else:
                     gps_hat_needs_power_cycle = False

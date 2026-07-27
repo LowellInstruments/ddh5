@@ -23,7 +23,7 @@ def slo_add(mac):
         return
     mac = mac.replace(':', '-')
     k = f"{RD_DDH_SLO_LS}{mac}"
-    r.setex(k, 120, 1)
+    r.set(k, value=1, ex=120)
 
 
 
