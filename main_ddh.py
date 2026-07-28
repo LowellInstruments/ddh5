@@ -1845,8 +1845,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             pi = PATH_TEMPLATE_MAIN_BLE_SCAN_IMG.format(i)
         elif code in (
                 EV_GUI_ERROR_REDIS,
-                EV_GUI_ERROR_POWER_J4H,
-                EV_GUI_ERROR_POWER_SAH
+                # EV_GUI_ERROR_POWER_J4H,
+                # EV_GUI_ERROR_POWER_SAH
         ):
             pi = PATH_MAIN_BLE_DL_ERROR
         else:
