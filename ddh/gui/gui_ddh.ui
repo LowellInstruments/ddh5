@@ -1150,7 +1150,7 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
                </sizepolicy>
               </property>
               <property name="text">
-               <string>⠇</string>
+               <string> ⠇</string>
               </property>
              </widget>
             </item>
@@ -1475,7 +1475,7 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
                <string/>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
               </property>
               <property name="wordWrap">
                <bool>true</bool>
