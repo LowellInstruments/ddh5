@@ -1466,8 +1466,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         atcom_current_is_bad = False
         try:
             xc = float(rv.stdout.decode().strip())
-            lg.a(f'atcom is at {xc} %')
             if xc >= 99:
+                lg.a(f'atcom is at {xc} %')
                 atcom_current_is_bad = True
         except (Exception, ):
             g_atcom_last_bad = False
