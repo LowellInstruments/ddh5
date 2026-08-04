@@ -20,9 +20,11 @@ import ddh.gui.gui_ddh as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
 
 from clear import (
-    cb_when_ddh_receives_ctrl_c, cb_when_ddh_receives_kill_signal,
-    gui_kill_all_processes, \
-    gui_check_all_processes, linux_is_process_running_strict
+    cb_when_ddh_receives_ctrl_c,
+    cb_when_ddh_receives_kill_signal,
+    gui_kill_all_processes,
+    gui_check_all_processes,
+    linux_is_process_running_strict
 )
 from ddh.graph_draw import graph_request
 from ddh.preferences import preferences_set_models_index
@@ -36,25 +38,33 @@ from ddh.notifications_v2 import (
 from ddh.slo import slo_delete, slo_delete_all
 from ddh_net import main_ddh_net
 from utils.redis import (
-    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE,
-    RD_DDH_BLE_NO_EXPIRES_ANTENNA, \
-    RD_DDH_GPS_NO_EXPIRES_ANTENNA, RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT,
-    RD_DDH_NET_PROCESS_OUTPUT, \
-    RD_DDH_BLE_SEMAPHORE, \
+    RD_DDH_GUI_PLOT_REASON,
+    RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE,
+    RD_DDH_BLE_NO_EXPIRES_ANTENNA,
+    RD_DDH_GPS_NO_EXPIRES_ANTENNA,
+    RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT,
+    RD_DDH_NET_PROCESS_OUTPUT,
+    RD_DDH_BLE_SEMAPHORE,
     RD_DDH_GPS_COUNTDOWN_FOR_FIX_AT_BOOT,
-    RD_DDH_GUI_STATE_EVENT_ICON_LOCK, RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE, \
-    RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS, RD_DDH_GUI_PERIODIC_CHECK_ICON_NET,
+    RD_DDH_GUI_STATE_EVENT_ICON_LOCK,
+    RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE,
+    RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS,
+    RD_DDH_GUI_PERIODIC_CHECK_ICON_NET,
     RD_DDH_GUI_PLOT_FOLDER,
     RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING,
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_LOW,
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_MID,
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP,
-    RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_REFRESH_MODELS,
+    RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS,
+    RD_DDH_GUI_PERIODIC_REFRESH_MODELS,
     RD_DDH_GUI_RV,
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
-    RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
-    RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE
+    RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST,
+    RD_DDH_AWS_SYNC_PERIODIC_FLAG,
+    RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
+    RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE,
+    RD_DDH_GUI_BEACON_FLAG
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -71,7 +81,8 @@ from utils.ddh_common import (
     ddh_config_does_flag_file_download_test_mode_exist,
     ddh_config_is_skip_in_port_enabled,
     ddh_config_get_list_of_monitored_serial_numbers,
-    ddh_config_get_forget_time_seconds, ddh_config_get_monitored_pairs,
+    ddh_config_get_forget_time_seconds,
+    ddh_config_get_monitored_pairs,
     ddh_config_load_file, ddh_config_save_to_file,
     ddh_get_path_to_folder_scripts,
     ddh_config_get_logger_mac_from_sn,

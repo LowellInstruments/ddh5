@@ -1,6 +1,9 @@
 import glob
 import os
 import sys
+
+import numpy as np
+import pandas as pd
 import setproctitle
 import time
 import redis
@@ -165,13 +168,66 @@ def _boot_cnv():
 
 
 def csv_do_summary(path_csv, sn, dt_s, e, rr):
+
     p = ddh_get_path_to_db_new_history_file()
-    bn = os.path.basename(path_csv)
-    summary = f'implement {bn}'
+    bn_csv = os.path.basename(path_csv)
+    lg.a(f'note, doing CSV summary for file: {bn_csv}')
+    summary = f''
+    df = pd.read_csv(path_csv)
+
+
+    # this will contain filtered values
+    ls_t_filtered = []
+    ls_p_filtered = []
+    ls_dot_filtered = []
+    ls_doc_filtered = []
+
+
+    # do the summary for file in path_csv
+    if '_TDO' in bn_csv:
+        ls_t = list(df['Temperature (C)'])
+        ls_p = list(df['Pressure (dbar)'])
+        limit_80 = max(ls_p) * .80
+        for i, pv in enumerate(ls_p):
+            if float(pv) >= limit_80:
+                ls_t_filtered.append(ls_t[i])
+                ls_p_filtered.append(ls_p[i])
+    elif '_CTD' in bn_csv:
+        summary = 'implement soon'
+    elif '_DissolvedOxygen' in bn_csv:
+        ls_dot = list(df['DO Temperature (C)'])
+        ls_doc = list(df['Dissolved Oxygen (mg/l)'])
+        if 'Water Detect (%)' in df.columns:
+            ls_wat = list(df['Water Detect (%)'])
+            for i, wv in enumerate(ls_wat):
+                if float(wv) >= 50:
+                    ls_dot_filtered.append(ls_dot[i])
+                    ls_doc_filtered.append(ls_doc[i])
+        else:
+            # do nothing, keep all DO because we have no water sensor
+            ls_dot_filtered = ls_dot
+            ls_doc_filtered = ls_doc
+
+
+    # build the summary statistics string for the table
+    if ls_t_filtered:
+        vt_filtered = np.nanmean(ls_t_filtered)
+        summary += f'{vt_filtered:.2f} °C_'
+    if ls_p_filtered:
+        vp_filtered = np.nanmean(ls_p_filtered)
+        summary += f'{vp_filtered:.2f} dbar_'
+    if ls_dot_filtered:
+        vdot_filtered = np.nanmean(ls_dot_filtered)
+        summary += f'{vdot_filtered:.2f} °C_'
+    if ls_doc_filtered:
+        vdoc_filtered = np.nanmean(ls_doc_filtered)
+        summary += f'{vdoc_filtered:.2f} mg/l'
+    if summary.endswith('_'):
+        summary = summary[:-1]
+
+
     with open(p, 'a') as f:
         f.write(f'{sn.lower()},{dt_s},{e},{rr},{summary}\n')
-
-
 
 
 
@@ -253,4 +309,10 @@ def main_ddh_cnv():
 
 
 if __name__ == '__main__':
-    main_ddh_cnv()
+    # main_ddh_cnv()
+
+    print('alkjdfslkjfdsalkadfjslkadfsjlakdfsjladfksjfdja')
+    path_csv = '/home/kaz/Downloads/2407110_BIX_20260804_144321_TDO.csv'
+    # path_csv = '/home/kaz/Downloads/2002048_low_20200806_091131_fixed_DissolvedOxygen.csv'
+    csv_do_summary(path_csv, '1111111', 'a', 'b', 'c')
+

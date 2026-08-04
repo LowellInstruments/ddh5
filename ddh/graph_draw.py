@@ -16,8 +16,11 @@ from ddh.graph_utils import (
     utils_graph_get_abs_fol_list,
     utils_graph_fetch_csv_data,
 )
-from utils.redis import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, \
-    RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE
+from utils.redis import (
+    RD_DDH_GUI_PLOT_REASON,
+    RD_DDH_GUI_PLOT_FOLDER,
+    RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS
+)
 from utils.ddh_common import (
     calculate_path_to_folder_within_dl_files_from_mac_address,
     get_total_number_of_hauls,
@@ -963,8 +966,6 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
                 r.set(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, value=s, ex=120)
-                k = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
-                r.set(k, s2)
 
 
 
@@ -1005,8 +1006,6 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
                 r.set(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, value=s, ex=120)
-                k = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
-                r.set(k, s2)
 
 
     except (Exception, ) as ex:
