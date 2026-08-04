@@ -102,13 +102,13 @@ def _convert_file(p):
 
     for suf in ("_DissolvedOxygen", "_Temperature", "_Pressure", "_TDO", "_CTD"):
         if os.path.basename(p).startswith('test'):
-            return 1
+            return 1, ''
         if TESTMODE_FILENAME_PREFIX in os.path.basename(p):
-            return 1
+            return 1, ''
         if not p.endswith('.lid'):
             bn = os.path.basename(p)
             lg.a(f'error, filename {bn} does not end in .lid')
-            return 1
+            return 1, ''
 
 
         # SKIP when CSV files already exist
@@ -116,7 +116,7 @@ def _convert_file(p):
         if os.path.exists(f_csv):
             bn = os.path.basename(p)
             lg.a(f'CSV file already exists for {bn}')
-            return 0
+            return 1, ''
 
 
         # try to convert LID file
@@ -133,12 +133,12 @@ def _convert_file(p):
                 link_csv = f'{fol}/upload/{os.path.basename(f_csv)}'
                 if not os.path.exists(link_csv):
                     os.symlink(f_csv, link_csv)
-                return 0
+                return 0, f_csv
 
         except (ValueError, Exception) as ex:
             bn = os.path.basename(p)
             lg.a(f"error, converting file {bn}, metric {suf} --> {str(ex)}")
-            return 1
+            return 1, ''
 
 
 
@@ -226,6 +226,7 @@ def csv_do_summary(path_csv, sn, dt_s, e, rr):
         summary = summary[:-1]
 
 
+    # writing to new simplified database
     with open(p, 'a') as f:
         f.write(f'{sn.lower()},{dt_s},{e},{rr},{summary}\n')
 
@@ -265,13 +266,13 @@ def _ddh_cnv():
             # ------------------------
             # try to convert lid file
             # ------------------------
-            rv = _convert_file(p)
+            rv, path_csv = _convert_file(p)
             if rv == 0:
                 ls_converted_files.append(p)
                 if sn:
                     # empty when enqueuing files at boot, populated on BLE
                     try:
-                        csv_do_summary(p, sn, dt_s, e, rr)
+                        csv_do_summary(path_csv, sn, dt_s, e, rr)
                     except Exception as ex:
                         lg.a(f'error, csv_do_summary -> {ex}')
                     finally:
