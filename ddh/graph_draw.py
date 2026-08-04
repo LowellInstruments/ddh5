@@ -16,7 +16,7 @@ from ddh.graph_utils import (
     utils_graph_get_abs_fol_list,
     utils_graph_fetch_csv_data,
 )
-from utils.redis import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_GRAPH_STATISTICS, \
+from utils.redis import RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, \
     RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE
 from utils.ddh_common import (
     calculate_path_to_folder_within_dl_files_from_mac_address,
@@ -924,7 +924,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
     # ------------------------------------
     # statistics: stats box in main tab
     # ------------------------------------
-    r.delete(RD_DDH_GUI_GRAPH_STATISTICS)
+    r.delete(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS)
     is_rpi = linux_is_rpi()
 
     # used for new history table fromat
@@ -962,7 +962,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                     lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
-                r.set(RD_DDH_GUI_GRAPH_STATISTICS, value=s, ex=120)
+                r.set(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, value=s, ex=120)
                 k = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
                 r.set(k, s2)
 
@@ -1004,7 +1004,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                     lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
-                r.set(RD_DDH_GUI_GRAPH_STATISTICS, value=s, ex=120)
+                r.set(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, value=s, ex=120)
                 k = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
                 r.set(k, s2)
 
