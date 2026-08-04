@@ -49,7 +49,7 @@ from utils.redis import (
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_LOW,
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_MID,
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP,
-    RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_REFRESH_MODELS,
+    RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_REFRESH_MODELS,
     RD_DDH_GUI_RV,
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
@@ -1872,7 +1872,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # show or not STATISTICS box
         if t_str(STR_EV_BLE_DL_OK) in self.lbl_main_txt.text():
-            s = r.get(RD_DDH_GUI_GRAPH_STATISTICS)
+            s = r.get(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS)
             s = s.decode() if s else ''
             s = s.replace('mg_l', 'mg/l')
             self.frame_lbl_summary_dl.setVisible(s != '')

@@ -12,7 +12,7 @@ RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP = p + 'side_button_top'
 RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_MID = p + 'side_button_mid'
 RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_LOW = p + 'side_button_low'
 # sensor summary box in main tab
-RD_DDH_GUI_GRAPH_STATISTICS = p + 'graph_statistics'
+RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS = p + 'graph_statistics'
 # checked outside the ddh_main
 RD_DDH_GUI_RV = p + 'rv'
 # for beacon purposes
