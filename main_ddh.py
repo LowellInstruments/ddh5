@@ -428,7 +428,6 @@ def _gui_tabs_populate_history_new(my_app, index):
 
 
         # row items, serial number
-        lg.a(f'error, text_dd {text_dropdown_table}, line {line}')
         _it = QTableWidgetItem(sn)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 0, _it)
@@ -454,6 +453,7 @@ def _gui_tabs_populate_history_new(my_app, index):
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 3, _it)
         # row items, summary
+        stats_summary = stats_summary.replace('_', ', ')
         _it = QTableWidgetItem(stats_summary)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 4, _it)
