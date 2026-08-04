@@ -25,7 +25,7 @@ from utils.ddh_common import (
     TESTMODE_FILENAME_PREFIX,
     ddh_get_path_to_folder_dl_files,
     ddh_this_process_needs_to_quit,
-    ddh_get_path_to_root_application_folder
+    ddh_get_path_to_root_application_folder, ddh_get_path_to_db_new_history_file
 )
 from ddh_log import lg_cnv as lg
 
@@ -165,8 +165,11 @@ def _boot_cnv():
 
 
 def csv_do_summary(path_csv, sn, dt_s, e, rr):
-    with open('/tmp/new_db.txt', 'a') as f:
-        f.write(f'{sn.lower()},{dt_s},{e},{rr},{path_csv}\n')
+    p = ddh_get_path_to_db_new_history_file()
+    bn = os.path.basename(path_csv)
+    summary = f'implement {bn}'
+    with open(p, 'a') as f:
+        f.write(f'{sn.lower()},{dt_s},{e},{rr},{summary}\n')
 
 
 
