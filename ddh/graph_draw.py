@@ -350,7 +350,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
 
 
     # # ------------------------------------
-    # # statistics: summary box in main tab
+    # # statistics: display box in main tab
     # # ------------------------------------
     # r.delete(RD_DDH_GUI_GRAPH_STATISTICS)
     # is_rpi = linux_is_rpi()
@@ -373,7 +373,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
     #                     ls_p.append(dp[i])
     #                     ls_t.append(dt[i])
     #
-    #             s = f'{sn}\nhaul summary\nTDO\n'
+    #             s = f'{sn}\nhaul stats\nTDO\n'
     #             units_p = 'fathoms' if imp_or_metric == 'Imperial' else 'm'
     #             units_t = 'F' if imp_or_metric == 'Imperial' else 'C'
     #             if been_water:
@@ -389,7 +389,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
     #             r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
     #
     # except (Exception,) as ex:
-    #     lg.a(f'warning, exception {ex} while doing summary box for {imp_or_metric}')
+    #     lg.a(f'warning, exception {ex} while doing stats box for {imp_or_metric}')
 
 
 
@@ -922,7 +922,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
 
 
     # ------------------------------------
-    # statistics: summary box in main tab
+    # statistics: stats box in main tab
     # ------------------------------------
     r.delete(RD_DDH_GUI_GRAPH_STATISTICS)
     is_rpi = linux_is_rpi()
@@ -948,7 +948,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                         ls_p.append(dp[i])
                         ls_t.append(dt[i])
 
-                s = f'{sn}\nhaul summary\nTDO\n'
+                s = f'{sn}\nhaul stats\nTDO\n'
                 units_p = 'fathoms' if imp_or_metric == 'Imperial' else 'm'
                 units_t = 'F' if imp_or_metric == 'Imperial' else 'C'
                 if been_water:
@@ -992,7 +992,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                     ls_do = _do
                     ls_dt = dt
 
-                s = f'{sn}\nhaul summary\noxygen\n'
+                s = f'{sn}\nhaul stats\noxygen\n'
                 units_t = 'F' if imp_or_metric == 'Imperial' else 'C'
                 if been_water:
                     s += f'{t1}\n{t2}\n'
@@ -1010,7 +1010,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
 
 
     except (Exception, ) as ex:
-        lg.a(f'warning, exception {ex} while doing summary box for {imp_or_metric}')
+        lg.a(f'warning, exception {ex} while doing statistics box for {imp_or_metric}')
 
 
 

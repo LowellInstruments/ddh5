@@ -97,6 +97,12 @@ def ddh_get_path_to_db_history_file() -> str:
 
 
 
+def ddh_get_path_to_db_new_history_file() -> str:
+    p = str(ddh_get_path_to_root_application_folder())
+    return f"{p}/ddh/db/db_history_new.txt"
+
+
+
 def ddh_get_path_to_db_aws_status_file() -> str:
     p = str(ddh_get_path_to_root_application_folder())
     return f"{p}/ddh/db/db_status.json"

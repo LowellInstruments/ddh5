@@ -112,7 +112,7 @@ from utils.ddh_common import (
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
     STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
     PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
-    exp_use_show_fish_website,
+    exp_use_show_fish_website, ddh_get_path_to_db_new_history_file,
 )
 import datetime
 import os
@@ -396,7 +396,7 @@ def _gui_tabs_populate_history_new(my_app, index):
 
     # read new database, simpler
     ls_lines = []
-    path_db = '/tmp/new_db.txt'
+    path_db = ddh_get_path_to_db_new_history_file()
     if os.path.exists(path_db):
         with open(path_db, 'r') as f:
             ls_lines = f.readlines()
@@ -406,20 +406,18 @@ def _gui_tabs_populate_history_new(my_app, index):
     i = 0
 
 
-    # logger, datetime, offload_result, restart, summary table
+    # logger, datetime, offload_result, restart, summary stats
     for line in ls_lines:
-        sn, dt_s, e, rr, path_csv = line.replace('\n', '').split(',')
-        lg.a(f'error, text_dropdown_table {text_dropdown_table}')
+        sn, dt_s, e, rr, stats_summary = line.replace('\n', '').split(',')
         if (sn in ls_sn_done) and text_dropdown_table == 'all':
             # do NOT repeat rows when ALL, repeat them when not all
             continue
         if sn not in ls_sn_done:
             ls_sn_done.append(sn)
 
-        # lg.a(f'error, line {line}')
-
 
         # row items, serial number
+        lg.a(f'error, text_dd {text_dropdown_table}, line {line}')
         _it = QTableWidgetItem(sn)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 0, _it)
@@ -428,30 +426,27 @@ def _gui_tabs_populate_history_new(my_app, index):
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 1, _it)
         # row items, error
+        if 'error' in e.lower():
+            e = e.replace('error', '❌')
+        if 'ok' in e.lower():
+            e = '✅'
         _it = QTableWidgetItem(e)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 2, _it)
         # row items, re-run
+        if 'True' in rr:
+            rr = '✅'
+        else:
+            rr = '❌'
+
         _it = QTableWidgetItem(rr)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 3, _it)
         # row items, summary
-        _it = QTableWidgetItem(path_csv)
+        _it = QTableWidgetItem(stats_summary)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 4, _it)
         i += 1
-
-    #     # v: error comm. TDO or v: ok TDO
-    #     if 'ok' in v.lower():
-    #         v = '✅'
-    #         k_summary = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
-    #         v_summary = r.get(k_summary)
-    #         v_summary = v_summary.decode() if v_summary else ''
-    #         _it = QTableWidgetItem(str(v_summary))
-    #     else:
-    #         v = '❌'
-    # if k == 'rerun':
-    #     v = '✅' if v == 'True' else '❌'
 
 
     # table column widths
