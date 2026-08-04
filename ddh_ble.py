@@ -497,7 +497,6 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
         my_e = f'error {my_e}'
     e = 'ok' if not rv else my_e
     gui_add_to_history_database(mac, e, lat, lon, ep_loc, ep_utc, rerun, u, name)
-    r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE, 1)
 
 
 
@@ -571,18 +570,27 @@ def _ddh_ble_logger_id_and_download(gps_pos, dev, antenna_idx, antenna_desc):
         if p_dl.endswith('.lid'):
             bn = os.path.basename(p_dl)
             lg.a(f'post download push to CNV queue = {bn}')
-            r.rpush(RD_DDH_CNV_QUEUE, p_dl)
+            g = d_interaction['gps_pos']
+            dt = str(g[2]) if len(g) == 4 else ''
+            # dt: 'dt 2026-08-04 13:46:58
+            e = d_interaction['error'] if rv == 1 else 'OK'
+            rr = d_interaction['rerun']
+            # p_dl: '/home/<full_path_dl>/whatever.lid'
+            p_dl_extended = f'{p_dl}&{sn}&{dt}&{e}&{rr}'
+            r.rpush(RD_DDH_CNV_QUEUE, p_dl_extended)
+
 
 
 
     # ---------------------------------------------------
-    # symlink files so AWS can upload-coppy-delete them
+    # symlink files so AWS can upload-copy-delete them
     # ---------------------------------------------------
     fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
     os.makedirs(fol_upload, exist_ok=True)
     for p_dl in d_interaction['dl_files']:
         bn_dl = os.path.basename(p_dl)
         # SYM: create a symlink to know we have to upload LID, GPS file
+        # the CSV symlink is created in ddh_cnv
         link_dl = f'{ddh_get_path_to_root_application_folder()}/upload/{bn_dl}'
         if not os.path.exists(link_dl):
             os.symlink(p_dl, link_dl)
