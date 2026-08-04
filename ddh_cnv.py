@@ -19,7 +19,7 @@ from mat.lix import (
 )
 from utils.redis import (
     RD_DDH_CNV_QUEUE,
-    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER
+    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE
 )
 from utils.ddh_common import (
     TESTMODE_FILENAME_PREFIX,
@@ -164,6 +164,12 @@ def _boot_cnv():
 
 
 
+def csv_do_summary(path_csv, sn, dt_s, e, rr):
+    with open('/tmp/new_db.txt', 'a') as f:
+        f.write(f'{sn.lower()},{dt_s},{e},{rr},{path_csv}\n')
+
+
+
 
 
 def _ddh_cnv():
@@ -187,6 +193,13 @@ def _ddh_cnv():
         for i in range(r.llen(q)):
             _, p = r.blpop([q])
             p = p.decode()
+            sn = ''
+            dt_s = ''
+            e = ''
+            rr = ''
+            if '&' in p:
+                p, sn, dt_s, e, rr = p.split('&')
+
             bn = os.path.basename(p)
             lg.a(f'dequeuing file {bn}')
 
@@ -196,6 +209,16 @@ def _ddh_cnv():
             rv = _convert_file(p)
             if rv == 0:
                 ls_converted_files.append(p)
+                if sn:
+                    # empty when enqueuing files at boot, populated on BLE
+                    try:
+                        csv_do_summary(p, sn, dt_s, e, rr)
+                    except Exception as ex:
+                        lg.a(f'error, csv_do_summary -> {ex}')
+                    finally:
+                        r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE, 1)
+
+
             else:
                 lg.a(f'error, file {bn}')
 

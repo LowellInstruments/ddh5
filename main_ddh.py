@@ -389,71 +389,69 @@ def _gui_tabs_populate_history_new(my_app, index):
 
 
 
-    # get history database and order by most recent first
-    db = DbHis(ddh_get_path_to_db_history_file())
-    ls_d_rows = db.get_all().values()
-    ls_d_rows = sorted(ls_d_rows, key=lambda x: x["ep_loc"], reverse=True)
-
-
-    # we don't want all but some specific logger serial number
+    # know which kind of table we want to show
     text_dropdown_table = my_app.cbox_table_his.itemText(index)
-    if text_dropdown_table != 'all':
-        ls_d_rows = [d for d in ls_d_rows if d["SN"].lower() == text_dropdown_table.lower()]
-
-
-
-    # dictionary index columns
-    d_idx_cols = {
-        'SN': 0,
-        'ep_loc': 1,
-        'e': 2,
-        'rerun': 3,
-        'summary': 4
-    }
     ls_sn_done = []
 
 
+    # read new database, simpler
+    ls_lines = []
+    path_db = '/tmp/new_db.txt'
+    if os.path.exists(path_db):
+        with open(path_db, 'r') as f:
+            ls_lines = f.readlines()
+
+
     # do not use enumerate() or you will have blank rows
-    idx_table_row = 0
+    i = 0
 
 
     # logger, datetime, offload_result, restart, summary table
-    for d in ls_d_rows:
-        sn = d.get('SN', '')
-        if sn in ls_sn_done:
+    for line in ls_lines:
+        sn, dt_s, e, rr, path_csv = line.replace('\n', '').split(',')
+        lg.a(f'error, text_dropdown_table {text_dropdown_table}')
+        if (sn in ls_sn_done) and text_dropdown_table == 'all':
+            # do NOT repeat rows when ALL, repeat them when not all
             continue
-        if sn == '':
-            continue
-        # this allows to repeat rows when not all
-        if text_dropdown_table == 'all':
+        if sn not in ls_sn_done:
             ls_sn_done.append(sn)
-        for k,v in d.items():
-            if k not in d_idx_cols.keys():
-                continue
-            if k == 'ep_loc':
-                dt = datetime.datetime.fromtimestamp(int(v))
-                v = dt.strftime("%Y %b %d %H:%M")
-            if k == 'e':
-                # v: error comm. TDO or v: ok TDO
-                if 'ok' in v.lower():
-                    v = '✅'
-                    k_summary = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
-                    v_summary = r.get(k_summary)
-                    v_summary = v_summary.decode() if v_summary else ''
-                    _it = QTableWidgetItem(str(v_summary))
-                    _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-                else:
-                    v = '❌'
-            if k == 'rerun':
-                v = '✅' if v == 'True' else '❌'
 
-            # fill the cell
-            _it = QTableWidgetItem(str(v))
-            _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-            t.setItem(idx_table_row, d_idx_cols[k], _it)
+        # lg.a(f'error, line {line}')
 
-        # do not use enumerate() or you will have blank rows
-        idx_table_row += 1
+
+        # row items, serial number
+        _it = QTableWidgetItem(sn)
+        _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        t.setItem(i, 0, _it)
+        # row items, datetime
+        _it = QTableWidgetItem(dt_s)
+        _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        t.setItem(i, 1, _it)
+        # row items, error
+        _it = QTableWidgetItem(e)
+        _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        t.setItem(i, 2, _it)
+        # row items, re-run
+        _it = QTableWidgetItem(rr)
+        _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        t.setItem(i, 3, _it)
+        # row items, summary
+        _it = QTableWidgetItem(path_csv)
+        _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        t.setItem(i, 4, _it)
+        i += 1
+
+    #     # v: error comm. TDO or v: ok TDO
+    #     if 'ok' in v.lower():
+    #         v = '✅'
+    #         k_summary = RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE.format(sn)
+    #         v_summary = r.get(k_summary)
+    #         v_summary = v_summary.decode() if v_summary else ''
+    #         _it = QTableWidgetItem(str(v_summary))
+    #     else:
+    #         v = '❌'
+    # if k == 'rerun':
+    #     v = '✅' if v == 'True' else '❌'
 
 
     # table column widths
@@ -466,28 +464,38 @@ def _gui_tabs_populate_history_new(my_app, index):
     h.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
 
 
-
     # table column titles
-    d_titles = {
-        'SN': 'logger SN',
-        'ep_loc': 'datetime',
-        'e': 'result',
-        'rerun': 're-run',
-        'summary': 'summary'
-    }
-    t.setHorizontalHeaderLabels(list(d_titles.values()))
+    t.setHorizontalHeaderLabels(['logger SN', 'datetime', 'result', 'rerun', 'summary'])
 
 
 
 
 
-def gui_tabs_populate_history(my_app, index=0):
+def _gui_tabs_populate_table_history(my_app):
+    index = my_app.cbox_table_his.currentIndex()
     _gui_tabs_populate_history_new(my_app, index)
 
-    # if exp_get_new_table_history() == 1:
-    #     _gui_tabs_populate_history_new(my_app)
-    # else:
-    #     _gui_tabs_populate_history_old(my_app)
+
+
+
+def gui_tabs_populate_table_history_on_purge_history_db(my_app):
+    _gui_tabs_populate_table_history(my_app)
+
+
+
+def gui_tabs_populate_table_history_on_dropdown_all_sn_changed(my_app):
+    _gui_tabs_populate_table_history(my_app)
+
+
+
+def gui_tabs_populate_table_history_on_timer_refresh(my_app):
+    _gui_tabs_populate_table_history(my_app)
+
+
+
+def gui_tabs_populate_table_history_at_boot(my_app):
+    _gui_tabs_populate_table_history(my_app)
+
 
 
 
@@ -1091,7 +1099,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             db = DbHis(p)
             lg.a(f"pressed btn_purge_dl_folder, path = {p}")
             db.delete_all()
-        gui_tabs_populate_history(self)
+        gui_tabs_populate_table_history_on_purge_history_db(self)
 
 
 
@@ -1373,8 +1381,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_cbox_table_his_changed(self):
-        i = self.cbox_table_his.currentIndex()
-        gui_tabs_populate_history(self, index=i)
+        gui_tabs_populate_table_history_on_dropdown_all_sn_changed(self)
 
 
 
@@ -1651,7 +1658,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             # pre-processing key history table
             if rd_key == RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE:
                 if v:
-                    gui_tabs_populate_history(self)
+                    gui_tabs_populate_table_history_on_timer_refresh(self)
                     gui_tabs_populate_graph_dropdown_sn(self)
                     r.delete(rd_key)
                 continue
@@ -1986,7 +1993,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         ls = ddh_config_get_list_of_monitored_serial_numbers()
         ls.insert(0, 'all')
         self.cbox_table_his.addItems(ls)
-        gui_tabs_populate_history(self)
+        gui_tabs_populate_table_history_at_boot(self)
         gui_tabs_hide_models_next_btn(self)
         gui_tabs_populate_note_dropdown(self)
         gui_tabs_populate_graph_dropdown_sn(self)
