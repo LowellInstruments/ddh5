@@ -309,10 +309,9 @@ def main_ddh_cnv():
 
 
 if __name__ == '__main__':
-    # main_ddh_cnv()
+    main_ddh_cnv()
 
-    print('alkjdfslkjfdsalkadfjslkadfsjlakdfsjladfksjfdja')
-    path_csv = '/home/kaz/Downloads/2407110_BIX_20260804_144321_TDO.csv'
+    # path_csv = '/home/kaz/Downloads/2407110_BIX_20260804_144321_TDO.csv'
     # path_csv = '/home/kaz/Downloads/2002048_low_20200806_091131_fixed_DissolvedOxygen.csv'
-    csv_do_summary(path_csv, '1111111', 'a', 'b', 'c')
+    # csv_do_summary(path_csv, '1111111', 'a', 'b', 'c')
 
