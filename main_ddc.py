@@ -270,6 +270,11 @@ def _menu_cb_gps_signal_quality():
         question = input().lower()
         if question in ('y', 'yes'):
             gps_hat_power_cycle_ddc(p_ctl)
+            p_gps, p_ctl, port_type = gps_find_any_usb_port()
+            if not port_type:
+                _p_e('could not detect quectel USB ports to get GPS signal quality')
+                time.sleep(3)
+                return
 
 
     # figure out the baudrate
