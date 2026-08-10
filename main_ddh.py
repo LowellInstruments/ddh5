@@ -2,7 +2,6 @@ import signal
 import sys
 from pathlib import Path
 from threading import Thread
-
 import psutil
 import glob
 import pathlib
@@ -149,6 +148,11 @@ from utils.ddh_common import (
     ddh_get_local_software_version,
 )
 from ddh_log import lg_gui as lg, main_ddh_log
+
+
+if exp_use_show_fish_website() == 1:
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
+
 
 
 
@@ -669,10 +673,7 @@ def gui_translate(ui):
     i = gui_tabs_get_index('tab_maps_new')
     ui.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_maps.png"))
     ui.tabs.setTabText(i, f" {t_str(STR_TAB_NAME_MAPS_NEW)}")
-    if exp_use_show_fish_website() == 1:
-        ui.tabs.setTabVisible(i, True)
-    else:
-        ui.tabs.setTabVisible(i, False)
+    ui.tabs.setTabVisible(i, exp_use_show_fish_website() == 1)
 
 
     # other buttons
@@ -2060,7 +2061,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # $ apt install python3-pyqt6.qtwebengine
         if exp_use_show_fish_website() == 1:
             try:
-                from PyQt6.QtWebEngineWidgets import QWebEngineView
                 os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
                 os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
                 self.browser = QWebEngineView()
