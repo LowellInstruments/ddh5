@@ -2064,9 +2064,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                 os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
                 os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--disable-gpu'
                 self.browser = QWebEngineView()
-                if linux_is_rpi():
-                    custom_ua = "Mozilla/5.0 Gecko/20100101 Firefox/152.0"
-                    self.browser.page().profile().setHttpUserAgent(custom_ua)
+                custom_ua = "Mozilla/5.0 Gecko/20100101 Firefox/152.0"
+                self.browser.page().profile().setHttpUserAgent(custom_ua)
                 u = "https://ondeckdata.com/database/osm_fishbot_explorer.html"
                 self.browser.setUrl(QUrl(u))
                 self.lay_maps.addWidget(self.browser)

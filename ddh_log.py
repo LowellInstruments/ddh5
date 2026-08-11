@@ -98,7 +98,7 @@ def _write_to_log_file(s):
 def _dequeue_n_log():
     global g_last_now
 
-    for i in range(r.llen(q)):
+    try:
         _, b = r.blpop([q])
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -115,6 +115,9 @@ def _dequeue_n_log():
         # PRINTS a bunch of colored text to console
         _color_write_to_console(b)
 
+    except (Exception, ):
+        time.sleep(.2)
+
 
 
 
@@ -129,7 +132,6 @@ def main_ddh_log():
 
     while 1:
         try:
-            time.sleep(.5)
             _dequeue_n_log()
         except (Exception, ) as ex:
             print(f'LOG: error, process LOG restarting after crash -> {ex}')

@@ -156,6 +156,11 @@ async def ble_download_tdo(d, full_query=False):
 
 
 
+    rv, gci_ms = await lc.cmd_gci()
+    if rv == 0:
+        lg.a(f"GCI | {gci_ms} ms")
+
+
 
     rv, v = await lc.cmd_gfv()
     _rae(rv, "gfv")
