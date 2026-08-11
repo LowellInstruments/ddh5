@@ -888,9 +888,13 @@ def _ddc_run_check():
     if not (flag_vp_gps_quectel or flag_vp_gps_puck1 or flag_vp_gps_puck2):
         _e('no GPS hardware present')
 
-    if not ok_shield_j4h and not ok_shield_sailor:
-        _e('no power shield detected')
-        rv += 1
+    c = 'df -h | grep mmcblk0p3'
+    rv_sdcard = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    if rv_sdcard.returncode:
+        # failed, so it is a DISK
+        if not ok_shield_j4h and not ok_shield_sailor:
+            _e('no power shield detected')
+            rv += 1
 
     # make GPS dummy permanent
     _ddc_run_check_gps_dummy()
