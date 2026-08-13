@@ -550,13 +550,17 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
     c_sn = [i.lower() for i in c_sn if i not in h_sn]
 
 
-    # add first HISTORY ones, next CONFIGURATION ones
-    for i in h_sn:
-        a.cb_g_sn.addItem(i)
-    for i in c_sn:
-        if i not in h_sn:
-            a.cb_g_sn.addItem(i)
+    # version A) both serial numbers in history and config file
+    # for i in h_sn:
+    #     a.cb_g_sn.addItem(i)
+    # for i in c_sn:
+    #     if i not in h_sn:
+    #         a.cb_g_sn.addItem(i)
 
+
+    # version B) only serial numbers in config file
+    for i in c_sn:
+        a.cb_g_sn.addItem(i)
 
 
 def gui_setup_buttons(my_app):
