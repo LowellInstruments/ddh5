@@ -237,3 +237,7 @@
     AWS symlinks ENABLED by default
     Linus fish website _DISABLED_ by default
 
+
+6.0.03      08/17/26
+
+    better x-temp plotting for TDO

@@ -39,6 +39,9 @@ pg.setConfigOption('leftButtonPan', False)
 pw_it = None
 pw_vb = None
 just_booted = True
+label_p80 = None
+
+
 
 # this one is dynamic so it needs a backup
 p3 = None
@@ -294,6 +297,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
         y1 = [y * 1.8288 for y in y1]
         y2 = [((y -32) * (5/9)) for y in y2]
 
+
     # set any pressure value < 0 to 0
     arr = np.array(y1)
     arr[arr < 0] = 0
@@ -510,11 +514,13 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
     # -----------------------------------
     # fol: MAC folder to plot
     # plot_reason: who asked this plot
+    # CTD plotting LEAVES here
     # -----------------------------------
     if _graph_are_we_plotting_ctd(fol):
         _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view)
         return
     a.lay_g_h2.addWidget(pw)
+
 
 
 
@@ -685,14 +691,11 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
     clr_2 = _graph_get_color_by_label(lbl2)
     clr_3 = _graph_get_color_by_label(lbl3)
     clr_4 = 'magenta'
+    clr_0 = 'black'
     lbl1 = lbl1 + ' ─'
     lbl2 = lbl2 + ' - -'
     lbl3 = lbl3 + ' ─'
-    # todo: this seems to not work on PyqT6
-    # pen1 = pg.mkPen(color=clr_1, width=2, style=QtCore.Qt.SolidLine)
-    # pen2 = pg.mkPen(color=clr_2, width=2, style=QtCore.Qt.DashLine)
-    # pen3 = pg.mkPen(color=clr_3, width=1, style=QtCore.Qt.SolidLine)
-    # pen4 = pg.mkPen(color=clr_4, width=2, style=QtCore.Qt.SolidLine)
+    pen0 = pg.mkPen(color=clr_0, width=2)
     pen1 = pg.mkPen(color=clr_1, width=2)
     pen2 = pg.mkPen(color=clr_2, width=2)
     pen3 = pg.mkPen(color=clr_3, width=1)
@@ -805,23 +808,29 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
 
 
             # --------------------------------------------
-            # plot RED horizontal line bottom temperature
+            # display label with BOTTOM information
             # ---------------------------------------------
-            x_bottom = []
-            y2_bottom = []
             max_depth_80 = max(y1) * 0.80
-            mean_t_80 = np.nanmean(y2)
+            fil_y2 = [y2[i] for i, v in enumerate(y1) if v > max_depth_80]
+            mean_t_80 = np.nanmean(fil_y2)
+            # Celsius / Fahrenheit were already decided before
+            s = ''
             if imp_or_metric == "Imperial":
                 # 2 meter = 1.09361 fathom
                 max_depth_80 = max_depth_80 + 1.09361
+                s = f'{max_depth_80:.2f} ftm, {mean_t_80:.2f} °F'
             else:
                 max_depth_80 = max_depth_80 + 2
-            for i,_ in enumerate(y1):
-                if y1[i] >= max_depth_80:
-                    x_bottom.append(x[i])
-                    y2_bottom.append(mean_t_80)
-            pw_vb.addItem(pg.PlotCurveItem(x_bottom, y2_bottom, pen=pen5,
-                                           hoverable=True, connect='finite'))
+                s = f'{max_depth_80:.2f} m, {mean_t_80:.2f} °C'
+
+            global label_p80
+            if label_p80:
+                # fixes overwriting the same position with different text
+                pw_it.scene().removeItem(label_p80)
+            label_p80 = pg.LabelItem(s, **_sty(clr_0), size='14pt')
+            label_p80.setParentItem(pw_it.graphicsItem())
+            label_p80.anchor(itemPos=(0.1, 0.05), parentPos=(0.1, 0.05))
+
 
 
 
@@ -870,10 +879,10 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
 
         # type of TDO plot 2/2: T (y2) / D (y1) vs time
         elif 'x-Temp' in tdo_graph_type:
-            pw_it.getAxis('left').setTextPen(clr_4)
-            pw_it.setLabel("left", 'Depth (fathoms)' + ' ─', **_sty(clr_4))
+            pw_it.getAxis('left').setTextPen(pen0)
+            pw_it.setLabel("left", 'Depth (fathoms)' + ' ─', **_sty(clr_0))
             if imp_or_metric == "Metric":
-                pw_it.setLabel("left", 'Depth (m)' + ' ─', **_sty(clr_4))
+                pw_it.setLabel("left", 'Depth (m)' + ' ─', **_sty(clr_0))
 
             # remove whole right axis
             pw.getPlotItem().hideAxis('right')
@@ -891,12 +900,38 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
             # in this case, x-ticks are T
             # p1.plot(x=cy2, y=cy1, pen=pen4, hoverable=True)
 
+
+            # separate upward from downward
+            fil_y1_a = []
+            fil_y1_b = []
+            fil_y2_a = []
+            fil_y2_b = []
+            index_max_pressure = np.argmax(y1)
+            max_p = y1[index_max_pressure] * .95
+            pen_pt_down = pg.mkPen(color='blue', width=2)
+            pen_pt_up = pg.mkPen(color='red', width=2)
+            for _i, _ in enumerate(y1):
+                if y1[_i] < max_p:
+                    if _i <= index_max_pressure:
+                        fil_y1_a.append(y1[_i])
+                        fil_y2_a.append(y2[_i])
+                    else:
+                        fil_y1_b.append(y1[_i])
+                        fil_y2_b.append(y2[_i])
+
+
             # don't modify
-            pw_it.plot(x=y2, y=y1, pen=pen4, hoverable=True)
+            # pw_it.plot(x=y2, y=y1, pen=pen4, hoverable=True)
+            pw_it.addLegend(labelTextSize="14pt", offset=(10, 10))
+            pw_it.plot(x=fil_y2_a, y=fil_y1_a, pen=pen_pt_down, hoverable=True, name='▼')
+            pw_it.plot(x=fil_y2_b, y=fil_y1_b, pen=pen_pt_up, hoverable=True, name='▲')
+
+
 
             # left y inverted: 1st parameter y-up, 2nd y-low
             # .1 prevents displaying negative pressure values
             pw_it.setYRange(.1, np.nanmax(y1), padding=0)
+
 
             # title and bottom axis
             if imp_or_metric == "Imperial":
@@ -904,6 +939,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
             else:
                 title = f'Temperature (C) {title}'
             pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
+
 
             # patch for bottom ticks, y2 are floats
             # solves the problem of the x-axis ticks changing
@@ -918,15 +954,16 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
             # or we could set the x-axis label on top
             # a.g.setTitle(e, color="red", size="15pt")
 
+
     # statistics: benchmark and number of points
     end_ts = time.perf_counter()
     el_ts = int((end_ts - start_ts) * 1000)
     lg.a(f'took {el_ts} ms to DISPLAY {len(x)} {met} data points')
 
 
-    # ------------------------------------
-    # statistics: stats box in main tab
-    # ------------------------------------
+    # ------------------------------------------------------------
+    # statistics: stats box in main tab only plot_reason is BLE
+    # ------------------------------------------------------------
     r.delete(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS)
     is_rpi = linux_is_rpi()
 
@@ -940,9 +977,11 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                 dp = y1
                 dt = y2
 
+
                 # calculate 80th percentile to target bottom sea values
                 p80 = _percentile(dp, 80)
                 lg.a(f'statistics TDO, pressure percentile 80 = {p80} for {imp_or_metric}')
+
 
                 ls_p, ls_t = [], []
                 for i, p in enumerate(dp):
