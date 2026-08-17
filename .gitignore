@@ -8,6 +8,8 @@ logs/*
 # databases
 db_his.json*
 db_status.json*
+ddh/db/db_history_v3.txt
+
 
 # files extensions
 *.so
