@@ -156,6 +156,7 @@ def _aws_sync(past_year):
             f'--exclude "{TESTMODE_FILENAME_PREFIX}_*.*" '
             # 2024-07-24T14:11:07Z#nameofboat_track
             f'--include "{y}-*.txt" '
+            '--exclude "*.csf" '
             f'{dr}'
         )
 

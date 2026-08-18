@@ -23,9 +23,10 @@ from utils.redis import (
 )
 from utils.ddh_common import (
     calculate_path_to_folder_within_dl_files_from_mac_address,
-    get_total_number_of_hauls,
-    ddh_config_get_logger_mac_from_sn, linux_is_rpi, STR_ERROR_GRAPH_SN_NOT_IN_CONFIG, t_str,
-    calculate_mac_address_from_folder_within_dl_files, ddh_config_get_logger_sn_from_mac
+    ddh_config_get_logger_mac_from_sn, linux_is_rpi,
+    STR_ERROR_GRAPH_SN_NOT_IN_CONFIG, t_str,
+    calculate_mac_address_from_folder_within_dl_files,
+    ddh_config_get_logger_sn_from_mac, ddh_do_we_graph_out_of_water_data
 )
 from ddh_log import lg_gra as lg
 
@@ -182,6 +183,54 @@ class FiniteLinearRegionItem(LinearRegionItem):
 
 
 
+def _graph_get_total_number_of_hauls(path):
+    # path: /home/kaz/PycharmProjects/ddh/dl_files/<mac>
+    ls_lid = len(glob.glob(f'{path}/*.lid'))
+    ls_bin = (len(glob.glob(f'{path}/moana*.bin')) +
+              len(glob.glob(f'{path}/MOANA*.bin')))
+    mask = '__what__'
+
+
+    # water-content of graph we are doing
+    if ddh_do_we_graph_out_of_water_data():
+        lg.a('note, detected out-of-water GUI check, so GRAPHING all data')
+        extension = 'csv'
+    else:
+        extension = 'csf'
+
+
+
+    if ls_lid:
+        # for DO & TP & TDO loggers
+        mask_do = f'{path}/*_DissolvedOxygen.{extension}'
+        mask_mat = f'{path}/*_Pressure.{extension}'
+        mask_tdo = f'{path}/*_TDO.{extension}'
+        mask_ctd = f'{path}/*_CTD.{extension}'
+        n_do = len(glob.glob(mask_do))
+        n_tdo = len(glob.glob(mask_tdo))
+        n_ctd = len(glob.glob(mask_ctd))
+        if n_tdo:
+            mask = mask_tdo
+        elif n_do:
+            mask = mask_do
+        elif n_ctd:
+            mask = mask_ctd
+        else:
+            mask = mask_mat
+    elif ls_bin:
+        # NOT MOANA*.csv but Lowell generated files
+        mask = f'{path}/*_Pressure.{extension}'
+
+
+    # example, when no .LID or .BIN files downloaded
+    n = len(glob.glob(mask))
+    # bn = os.path.basename(path)
+    # print(f"debug, get_number_of_hauls = {n} for {bn}, mask {os.path.basename(mask)}")
+    return n
+
+
+
+
 def _graph_check_mac_has_dl_files(mac, fol_ls):
     for i in fol_ls:
         if mac.upper() in i.upper():
@@ -228,18 +277,6 @@ def _graph_clear():
         pw_vb.clear()
     if p3:
         p3.clear()
-
-
-
-
-
-def _graph_are_we_plotting_ctd(fol) -> bool:
-    # path: /home/kaz/PycharmProjects/ddh/dl_files/<mac>
-    mask_ctd = f'{fol}/*_CTD.csv'
-    n_ctd = len(glob.glob(mask_ctd))
-    return n_ctd > 0
-
-
 
 
 
@@ -483,7 +520,7 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
 
     # get number of hauls inside this folder
     bn_fol = fol.split('/')[-1]
-    nh = get_total_number_of_hauls(fol)
+    nh = _graph_get_total_number_of_hauls(fol)
     lg.a(f'found {nh} total hauls in dl_files/{bn_fol}')
     if nh == 0:
         bn_fol = os.path.basename(fol)
@@ -516,7 +553,8 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
     # plot_reason: who asked this plot
     # CTD plotting LEAVES here
     # -----------------------------------
-    if _graph_are_we_plotting_ctd(fol):
+    mask_ctd = f'{fol}/*_CTD.csv'
+    if len(glob.glob(mask_ctd)):
         _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view)
         return
     a.lay_g_h2.addWidget(pw)

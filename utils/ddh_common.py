@@ -3,6 +3,9 @@ import asyncio
 import copy
 import glob
 import pathlib
+
+import numpy as np
+import pandas as pd
 import redis
 import time
 import git
@@ -211,41 +214,6 @@ def create_path_to_folder_dl_files_from_mac(mac):
     fol = calculate_path_to_folder_within_dl_files_from_mac_address(mac)
     os.makedirs(fol, exist_ok=True)
     return fol
-
-
-
-def get_total_number_of_hauls(path):
-    # path: /home/kaz/PycharmProjects/ddh/dl_files/<mac>
-    ls_lid = len(glob.glob(f'{path}/*.lid'))
-    ls_bin = (len(glob.glob(f'{path}/moana*.bin')) +
-              len(glob.glob(f'{path}/MOANA*.bin')))
-    mask = '__what__'
-    if ls_lid:
-        # for DO & TP & TDO loggers
-        mask_do = f'{path}/*_DissolvedOxygen.csv'
-        mask_mat = f'{path}/*_Pressure.csv'
-        mask_tdo = f'{path}/*_TDO.csv'
-        mask_ctd = f'{path}/*_CTD.csv'
-        n_do = len(glob.glob(mask_do))
-        n_tdo = len(glob.glob(mask_tdo))
-        n_ctd = len(glob.glob(mask_ctd))
-        if n_tdo:
-            mask = mask_tdo
-        elif n_do:
-            mask = mask_do
-        elif n_ctd:
-            mask = mask_ctd
-        else:
-            mask = mask_mat
-    elif ls_bin:
-        # NOT MOANA*.csv but Lowell generated files
-        mask = f'{path}/*_Pressure.csv'
-
-    # example, when no .LID or .BIN files downloaded
-    n = len(glob.glob(mask))
-    # bn = os.path.basename(path)
-    # print(f"debug, get_number_of_hauls = {n} for {bn}, mask {os.path.basename(mask)}")
-    return n
 
 
 
@@ -511,7 +479,6 @@ def ddh_config_check_file_is_ok():
             'aws_en',
             'sqs_en',
             'ble_en',
-            'sms_en',
             'skip_dl_in_port_en',
             'hook_gps_error_measurement_forced',
         ]:
@@ -632,6 +599,69 @@ def ddh_ble_logger_needs_a_reset(mac):
     if rv:
         os.unlink(p)
     return rv
+
+
+
+def ddh_summarize_csv_file(path_csv) -> str:
+
+    bn_csv = os.path.basename(path_csv)
+    summary = f''
+    df = pd.read_csv(path_csv)
+
+
+    # this will contain filtered values
+    ls_t_filtered = []
+    ls_p_filtered = []
+    ls_dot_filtered = []
+    ls_doc_filtered = []
+
+
+    # do the summary for file in path_csv
+    if '_TDO' in bn_csv:
+        ls_t = list(df['Temperature (C)'])
+        ls_p = list(df['Pressure (dbar)'])
+        limit_80 = max(ls_p) * .80
+        for i, pv in enumerate(ls_p):
+            if float(pv) >= limit_80:
+                ls_t_filtered.append(ls_t[i])
+                ls_p_filtered.append(ls_p[i])
+
+    elif '_CTD' in bn_csv:
+        summary = 'implement soon'
+
+    elif '_DissolvedOxygen' in bn_csv:
+        ls_dot = list(df['DO Temperature (C)'])
+        ls_doc = list(df['Dissolved Oxygen (mg/l)'])
+        if 'Water Detect (%)' in df.columns:
+            ls_wat = list(df['Water Detect (%)'])
+            for i, wv in enumerate(ls_wat):
+                if float(wv) >= 50:
+                    ls_dot_filtered.append(ls_dot[i])
+                    ls_doc_filtered.append(ls_doc[i])
+        else:
+            # do nothing, keep all DO because we have no water sensor
+            ls_dot_filtered = ls_dot
+            ls_doc_filtered = ls_doc
+
+
+    # build the summary statistics string for the table
+    if ls_t_filtered:
+        vt_filtered = np.nanmean(ls_t_filtered)
+        summary += f'{vt_filtered:.2f} °C_'
+    if ls_p_filtered:
+        vp_filtered = np.nanmean(ls_p_filtered)
+        summary += f'{vp_filtered:.2f} dbar_'
+    if ls_dot_filtered:
+        vdot_filtered = np.nanmean(ls_dot_filtered)
+        summary += f'{vdot_filtered:.2f} °C_'
+    if ls_doc_filtered:
+        vdoc_filtered = np.nanmean(ls_doc_filtered)
+        summary += f'{vdoc_filtered:.2f} mg/l'
+    if summary.endswith('_'):
+        summary = summary[:-1]
+
+    return summary
+
 
 
 

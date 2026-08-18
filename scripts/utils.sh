@@ -13,7 +13,6 @@ export FOL_DDT=$FOL_LI/ddt
 export FOL_VEN=$FOL_LI/venv
 export FOL_VAN=$FOL_LI/venv_api
 export GPS_DUMMY_MODE_FILE=$FOL_LI/.gps_dummy_mode.json
-export GPS_EXTERNAL_FILE_FLAG=$FOL_LI/.ddt_gps_external.flag
 export GROUPED_S3_FILE_FLAG=$FOL_LI/.ddt_this_box_has_grouped_s3_uplink.flag
 export LI_FILE_ICCID=$FOL_LI/.iccid
 export LI_DDH_NEEDS_REBOOT_POST_INSTALL=/tmp/.ddh_needs_reboot_post_install.flag
