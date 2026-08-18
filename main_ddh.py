@@ -409,7 +409,7 @@ def _gui_tabs_populate_history_new(my_app, index):
     ls_sn_done = []
 
 
-    # read new database, simpler
+    # read new simpler HISTORY DATABASE
     ls_lines = []
     path_db = ddh_get_path_to_db_new_history_file()
     if os.path.exists(path_db):

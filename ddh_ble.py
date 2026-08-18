@@ -167,35 +167,6 @@ def _ddh_ble_hardware_health_check(antenna_idx):
 
 
 
-# def _ble_detect_hypoxia_after_download(f_lid, bat, g, u=''):
-#     try:
-#         if not f_lid.endswith('.lid') or not is_a_do2_file(f_lid):
-#             return
-#         f_csv = f_lid.replace('.lid', '_DissolvedOxygen.csv')
-#         if not os.path.exists(f_csv):
-#             return
-#
-#         # f_csv: 2404725_lab_20240407_230609.csv
-#         sn = os.path.basename(f_csv).split('_')[0]
-#         mac = ddh_get_cfg_logger_mac_from_sn(sn)
-#         ln = LoggerNotification(mac, sn, 'DOX', bat)
-#         ln.uuid_interaction = u
-#         with open(f_csv, 'r') as f:
-#             ll = f.readlines()
-#             # headers: 'ISO 8601 Time,elapsed time (s),agg. time(s),Dissolved Oxygen (mg/l)...'
-#             for i in ll[1:]:
-#                 do_mg_l = float(i.split(',')[3])
-#                 if do_mg_l <= 0.0:
-#                     notify_logger_dox_hypoxia(g, ln)
-#                     break
-#     except (Exception, ) as ex:
-#         lg.a(f'error: testing _ble_detect_hypoxia -> {ex}')
-
-
-
-
-
-
 def _ble_logger_is_do1_or_do2(info: str):
     return info.startswith("DO1") or info.startswith("DO2") or info.startswith("DO-")
 
@@ -469,6 +440,18 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
             notify_logger_error_retries(gps_pos, ln)
             _g_logger_errors[mac] = 0
 
+
+            # download BLE ERR to history, we have no filename '_'
+            g = gps_pos
+            dt = str(g[2]) if len(g) == 4 else ''
+            # dt: 'dt 2026-08-04 13:46:58
+            e = d['error'] if rv == 1 else 'OK'
+            rr = d['rerun']
+            p_dl_extended = f'_&{sn}&{dt}&{e}&{rr}'
+            r.rpush(RD_DDH_CNV_QUEUE, p_dl_extended)
+
+
+        # failed, but not all retries used yet
         else:
             lg.a(f"warning, logger {mac}/{sn} NOT done, adding to orange list")
             rm_mac_orange(mac)

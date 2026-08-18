@@ -19,10 +19,6 @@ The presence of this field indicates the DDH uses the power shield sailor-hat ha
 
 DDH uploads its file to AWS S3 in a grouped structure.
 
-### .ddt_gps_external.flag
-
-DDH uses a GPS puck to get its GPS position instead of the cell shield.
-
 ### .fw_cell_ver
 
 Contains the firmware version of the cell shield. Populated when DDH python code runs.
@@ -112,10 +108,6 @@ Solves some old bugs.
 
 DDH application logs, contains python messages.
 
-### rpc
-
-I don't think we will ever use the RPC version of this. So much work. But, meh, leave it there.
-
 ### settings/rerun_flag.toml
 
 Stores the ``advanced`` tab configuration setting to re-run logger after being downloaded or not.
@@ -157,22 +149,6 @@ Contains the last GPS position of the DDH. Used by API.
 ### ble_iface_used.json
 
 Written to tell which BLE interface is being used, internal or external.
-
-### gui_closed.flag
-
-Indicates the DDH GUI has been closed pressing the upper-right ``X``.
-
-### ddh_aws_has_something_to_do_via_gui.flag
-
-Useful to indicate from the GUI we want to force an AWS sync. The user may have pressed the cloud icon.
-
-### ddh_cnv_requested_via_gui.flag
-
-Useful to indicate from the GUI we want to force a LID conversion process.
-
-### ddh_got_update_file.flag
-
-Indicates the DDH updated itself recently (beta).
 
 ### ddh_app_override_file.flag
 

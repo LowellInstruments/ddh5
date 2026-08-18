@@ -1,14 +1,8 @@
 import glob
 import os
-import sys
-
-import numpy as np
-import pandas as pd
-import setproctitle
 import time
 import redis
 from ddh.graph_draw import graph_request
-from ddh.graph_utils import utils_graph_classify_file_wc_mode
 from lix.lix import parse_lid_v2_data_file
 from mat.data_converter import (
     default_parameters,
@@ -22,13 +16,15 @@ from mat.lix import (
 )
 from utils.redis import (
     RD_DDH_CNV_QUEUE,
-    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER, RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE
+    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER,
+    RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE
 )
 from utils.ddh_common import (
     TESTMODE_FILENAME_PREFIX,
     ddh_get_path_to_folder_dl_files,
-    ddh_this_process_needs_to_quit,
-    ddh_get_path_to_root_application_folder, ddh_get_path_to_db_new_history_file
+    ddh_get_path_to_root_application_folder,
+    ddh_get_path_to_db_new_history_file,
+    ddh_summarize_csv_file
 )
 from ddh_log import lg_cnv as lg
 
@@ -37,8 +33,7 @@ from ddh_log import lg_cnv as lg
 # =========================================================
 # ddh_cnv
 #   - dequeues requests to convert LID to CSV from BLE
-#   - enqueues new CSV files to AWS copy queue
-#   - also classify files for Water Column mode
+#   - creates CSV symlinks for  AWS copy queue
 #   - also enqueues new requests to plot
 # =========================================================
 
@@ -76,7 +71,7 @@ def _convert_lid_file_v1(f, suf):
         lg.a(f'warning, skip v1 conversion, file {dn}/{bn} has no {suf} data')
         return 1
 
-    # do the v1 conversion
+    # old v1 conversion
     _params = default_parameters()
     DataConverter(f, _params).convert()
     lg.a(f"OK, converted LID file v1 {dn}/{bn} for suffix {suf}")
@@ -98,7 +93,9 @@ def _convert_lid_file_v2(f, suf):
 
 
 
-def _convert_file(p):
+
+
+def _convert_lid_file(p):
 
     for suf in ("_DissolvedOxygen", "_Temperature", "_Pressure", "_TDO", "_CTD"):
         if os.path.basename(p).startswith('test'):
@@ -126,7 +123,9 @@ def _convert_file(p):
             if rv_v1 == 0 or rv_v2 == 0:
                 graph_request(reason='ble')
 
-                # SYM: create a symlink to know we have to upload CSV file
+                # ----------------------------------------------------------
+                # SYM: create a symlink for AWS to know to upload CSV file
+                # ----------------------------------------------------------
                 fol = str(ddh_get_path_to_root_application_folder())
                 os.makedirs(f'{fol}/upload', exist_ok=True)
                 f_csv = p.replace('.lid', f'{suf}.csv')
@@ -144,7 +143,7 @@ def _convert_file(p):
 
 def _boot_cnv():
 
-    # upon boot, enqueue to our own CNV queue
+    # upon boot, enqueue LID files w/o proper CSV to our own CNV queue
     fol = ddh_get_path_to_folder_dl_files()
     mask_all_lid = f'{fol}/**/*.lid'
     ls_lid = glob.glob(mask_all_lid, recursive=True)
@@ -158,96 +157,22 @@ def _boot_cnv():
             r.rpush(RD_DDH_CNV_QUEUE, pb)
 
 
-    # upon boot, CSV to FMG / SMG
-    ls_tdo = glob.glob(f'{fol}/**/*_TDO.csv', recursive=True)
-    ls_dox = glob.glob(f'{fol}/**/*_DissolvedOxygen.csv', recursive=True)
-    ls = ls_tdo + ls_dox
-    for i in ls:
-        utils_graph_classify_file_wc_mode(i)
-
-
-
-def csv_do_summary(path_csv, sn, dt_s, e, rr):
-
-    p = ddh_get_path_to_db_new_history_file()
-    bn_csv = os.path.basename(path_csv)
-    lg.a(f'note, doing CSV summary for file: {bn_csv}')
-    summary = f''
-    df = pd.read_csv(path_csv)
-
-
-    # this will contain filtered values
-    ls_t_filtered = []
-    ls_p_filtered = []
-    ls_dot_filtered = []
-    ls_doc_filtered = []
-
-
-    # do the summary for file in path_csv
-    if '_TDO' in bn_csv:
-        ls_t = list(df['Temperature (C)'])
-        ls_p = list(df['Pressure (dbar)'])
-        limit_80 = max(ls_p) * .80
-        for i, pv in enumerate(ls_p):
-            if float(pv) >= limit_80:
-                ls_t_filtered.append(ls_t[i])
-                ls_p_filtered.append(ls_p[i])
-    elif '_CTD' in bn_csv:
-        summary = 'implement soon'
-    elif '_DissolvedOxygen' in bn_csv:
-        ls_dot = list(df['DO Temperature (C)'])
-        ls_doc = list(df['Dissolved Oxygen (mg/l)'])
-        if 'Water Detect (%)' in df.columns:
-            ls_wat = list(df['Water Detect (%)'])
-            for i, wv in enumerate(ls_wat):
-                if float(wv) >= 50:
-                    ls_dot_filtered.append(ls_dot[i])
-                    ls_doc_filtered.append(ls_doc[i])
-        else:
-            # do nothing, keep all DO because we have no water sensor
-            ls_dot_filtered = ls_dot
-            ls_doc_filtered = ls_doc
-
-
-    # build the summary statistics string for the table
-    if ls_t_filtered:
-        vt_filtered = np.nanmean(ls_t_filtered)
-        summary += f'{vt_filtered:.2f} °C_'
-    if ls_p_filtered:
-        vp_filtered = np.nanmean(ls_p_filtered)
-        summary += f'{vp_filtered:.2f} dbar_'
-    if ls_dot_filtered:
-        vdot_filtered = np.nanmean(ls_dot_filtered)
-        summary += f'{vdot_filtered:.2f} °C_'
-    if ls_doc_filtered:
-        vdoc_filtered = np.nanmean(ls_doc_filtered)
-        summary += f'{vdoc_filtered:.2f} mg/l'
-    if summary.endswith('_'):
-        summary = summary[:-1]
-
-
-    # writing to new simplified database
-    with open(p, 'a') as f:
-        f.write(f'{sn.lower()},{dt_s},{e},{rr},{summary}\n')
 
 
 
 def _ddh_cnv():
 
-    # prepare CNV process
     r.delete(RD_DDH_CNV_QUEUE)
     _boot_cnv()
 
 
-    # forever loop collecting CNV requests
     while 1:
-
 
         # prevent CPU hog
         time.sleep(1)
 
 
-        # queue CONTAINS files when 1) CNV boot 2) BLE downloads
+        # dequeue messages that may contain '&' or not
         ls_converted_files = []
         q = RD_DDH_CNV_QUEUE
         for i in range(r.llen(q)):
@@ -263,16 +188,26 @@ def _ddh_cnv():
             bn = os.path.basename(p)
             lg.a(f'dequeuing file {bn}')
 
-            # ------------------------
-            # try to convert lid file
-            # ------------------------
-            rv, path_csv = _convert_file(p)
+
+            # --------------------------------
+            # convert LID file from queue
+            # 1) at CNV booting  (SN empty)
+            # 2) at BLE download (SN filled)
+            # --------------------------------
+
+            rv, path_csv = _convert_lid_file(p)
             if rv == 0:
                 ls_converted_files.append(p)
-                if sn:
-                    # empty when enqueuing files at boot, populated on BLE
+                if sn and 'ok' in e.lower():
                     try:
-                        csv_do_summary(path_csv, sn, dt_s, e, rr)
+                        lg.a(f'doing summary for file {os.path.basename(path_csv)}')
+                        summary = ddh_summarize_csv_file(path_csv)
+
+                        # download BLE OK to history
+                        # search for 'download BLE ERR to history'
+                        path_file_history = ddh_get_path_to_db_new_history_file()
+                        with open(path_file_history, 'a') as f:
+                            f.write(f'{sn.lower()},{dt_s},{e},{rr},{summary}\n')
                     except Exception as ex:
                         lg.a(f'error, csv_do_summary -> {ex}')
                     finally:
@@ -283,15 +218,13 @@ def _ddh_cnv():
                 lg.a(f'error, file {bn}')
 
 
-        # push so it will AWS COPY queue any new CSV file
+        # plot
         for pb in ls_converted_files:
             mask = pb.replace('.lid', '') + '*.csv'
             ls_csv = glob.glob(mask)
             for pc in ls_csv:
-                bn = os.path.basename(pc)
-                dn = os.path.dirname(pc)
-                lg.a(f'post conversion analysis of water mode = {bn}')
-                utils_graph_classify_file_wc_mode(pc)
+                bn = os.path.basename(str(pc))
+                dn = os.path.dirname(str(pc))
                 lg.a(f'post conversion plot = {bn}')
                 r.set(RD_DDH_GUI_PLOT_REASON, 'BLE')
                 r.set(RD_DDH_GUI_PLOT_FOLDER, dn)
@@ -311,8 +244,4 @@ def main_ddh_cnv():
 
 if __name__ == '__main__':
     main_ddh_cnv()
-
-    # path_csv = '/home/kaz/Downloads/2407110_BIX_20260804_144321_TDO.csv'
-    # path_csv = '/home/kaz/Downloads/2002048_low_20200806_091131_fixed_DissolvedOxygen.csv'
-    # csv_do_summary(path_csv, '1111111', 'a', 'b', 'c')
 

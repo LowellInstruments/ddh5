@@ -1,11 +1,9 @@
 import os
-import pathlib
 import redis
 import time
 from functools import lru_cache
 from glob import glob
 from os.path import basename
-import numpy as np
 import dateutil.parser as dp
 import pandas as pd
 from utils.ddh_common import (
@@ -23,95 +21,6 @@ CTT_ATM_PRESSURE_DBAR = 10.1325
 d_last_haul_index = {
     # fol: haul_index
 }
-
-
-
-def _gfm_build_filename_wc(path):
-    # wc: water column, legacy versions called fast (profiling) mode graph (fmg)
-    bn = '._' + os.path.basename(path)[:-4] + '.fmg'
-    return f'{os.path.dirname(path)}/{bn}'
-
-
-
-def _gfm_build_filename_no_wc(path):
-    # legacy: old slow (no profiling) mode graph (smg) files w/o water column data
-    bn = '._' + os.path.basename(path)[:-4] + '.smg'
-    return f'{os.path.dirname(path)}/{bn}'
-
-
-
-def utils_graph_classify_file_wc_mode(p):
-    # p: full path
-    p = str(p)
-    bn = os.path.basename(p)
-    _is_tdo = p.endswith('_TDO.csv')
-    _is_dox = p.endswith('_DissolvedOxygen.csv')
-    _is_ctd = p.endswith('_CTD.csv')
-
-    if not _is_tdo and not _is_dox and not _is_ctd:
-        lg.a('error, bad file to set water column mode')
-        return False
-
-    # early leave when "cache" hit
-    f_wc = _gfm_build_filename_wc(p)
-    f_nowc = _gfm_build_filename_no_wc(p)
-    if os.path.exists(f_wc):
-        return True
-    if os.path.exists(f_nowc):
-        return False
-
-    # process new file, read header line
-    try:
-        with open(p) as f:
-            h = f.readline()
-    except (Exception, ) as ex:
-        lg.a(f'error, reading header in file {bn} -> {ex}')
-
-    # decision for DO-1 loggers
-    if _is_dox and 'Water' not in h:
-        lg.a(f'note, graph water column mode = True for DO-1 file {bn}')
-        pathlib.Path(f_wc).touch()
-        return True
-
-    # decision for DO2 loggers, water is last column
-    if _is_dox and 'Water' in h:
-        lg.a(f'processing water column mode for DO2 file {bn}')
-        with open(p) as f:
-            ll = f.readlines()
-        for i in ll[3:]:
-            w_cur = float(i.split(',')[-1])
-            if w_cur > 50:
-                lg.a(f'note, graph water column mode = True for DO2 file {bn}')
-                pathlib.Path(f_wc).touch()
-                return True
-
-        lg.a(f'note, graph water column mode = False for DO2 file {bn}')
-        pathlib.Path(f_nowc).touch()
-        return False
-
-
-    # decision for TDO loggers, check pressure threshold
-    if _is_tdo or _is_ctd:
-        _t = 'TDO' if _is_tdo else 'CTD'
-        lg.a(f'processing water column mode for {_t} file {bn}')
-        df = _utils_graph_cached_read_csv(p)
-
-        # df_iw: dataframe of values in water
-        df_iw = df[df['Pressure (dbar)'] > 12]
-
-        been_in_water = len(df_iw) > 0
-        if been_in_water:
-            lg.a(f'note, graph water column mode = True for {_t} file {bn}')
-            pathlib.Path(f_wc).touch()
-            return True
-
-        lg.a(f'note, graph water column mode = False for {_t} {bn}')
-        pathlib.Path(f_nowc).touch()
-        return False
-
-
-    lg.a(f'error, _utils_graph_classify_file_wc_mode = Unknown for file {p}')
-    return False
 
 
 
@@ -152,13 +61,23 @@ def utils_graph_fetch_csv_data(
         pressed_haul_next
 ) -> dict:
 
+
+    if ddh_do_we_graph_out_of_water_data():
+        lg.a('note, detected out-of-water GUI check, so GRAPHING all data')
+        extension = 'csv'
+    else:
+        extension = 'csf'
+
+
     # grab all CSV files for all metrics for this folder
-    _g_ff_t = sorted(glob(f"{fol}/*_Temperature.csv"))
-    _g_ff_p = sorted(glob(f"{fol}/*_Pressure.csv"))
-    _g_ff_dot = sorted(glob(f"{fol}/*_DissolvedOxygen.csv"))
-    _g_ff_tdo = sorted(glob(f"{fol}/*_TDO.csv"))
-    _g_ff_ctd = sorted(glob(f"{fol}/*_CTD.csv"))
+    _g_ff_t = sorted(glob(f"{fol}/*_Temperature.{extension}"))
+    _g_ff_p = sorted(glob(f"{fol}/*_Pressure.{extension}"))
+    _g_ff_dot = sorted(glob(f"{fol}/*_DissolvedOxygen.{extension}"))
+    _g_ff_tdo = sorted(glob(f"{fol}/*_TDO.{extension}"))
+    _g_ff_ctd = sorted(glob(f"{fol}/*_CTD.{extension}"))
     n_tdo_pre_test = len(_g_ff_tdo)
+
+
 
     # don't plot files starting with testfile_
     _g_ff_t = [i for i in _g_ff_t if TESTMODE_FILENAME_PREFIX not in i]
@@ -173,37 +92,6 @@ def utils_graph_fetch_csv_data(
     _g_ff_tdo = _filter_tdo_by_size
 
 
-    # ---------------------------------------------------------
-    # include files NOT having a NO_WC flag
-    # water mode graph filtering properly done on a file basis
-    # ---------------------------------------------------------
-    if ddh_do_we_graph_out_of_water_data():
-        lg.a('note, detected out-of-water GUI check, so GRAPHING all data')
-        _g_ff_dot_wc = _g_ff_dot
-        _g_ff_tdo_wc = _g_ff_tdo
-        _g_ff_ctd_wc = _g_ff_ctd
-    else:
-        lg.a('note, empty out-of-water GUI check, so NOT-GRAPHING such data')
-        _g_ff_dot_wc = [
-            i for i in _g_ff_dot
-            if not os.path.exists(_gfm_build_filename_no_wc(i))
-        ]
-        _g_ff_tdo_wc = [
-            i for i in _g_ff_tdo
-            if not os.path.exists(_gfm_build_filename_no_wc(i))
-        ]
-        _g_ff_ctd_wc = [
-            i for i in _g_ff_ctd
-            if not os.path.exists(_gfm_build_filename_no_wc(i))
-        ]
-
-
-    # set them back
-    _g_ff_dot = _g_ff_dot_wc
-    _g_ff_tdo = _g_ff_tdo_wc
-    _g_ff_ctd = _g_ff_ctd_wc
-
-
     # debug, show them
     # for i in _g_ff_tdo:
         # print(os.path.basename(i), os.path.getsize(i))
@@ -214,6 +102,7 @@ def utils_graph_fetch_csv_data(
         e = f'error, all data for {basename(fol)} is out of water'
         lg.a(e)
         return {'error': e}
+
 
     # fast leaving case for TDO loggers
     if n_tdo_pre_test and not _g_ff_tdo:
@@ -337,28 +226,20 @@ def utils_graph_fetch_csv_data(
             p += list(df['Pressure (dbar)'])
             is_moana = 'MOANA' in f or 'moana' in f
 
+
     elif met == 'DO':
         for f in _g_ff_dot:
             bn = os.path.basename(f)
             lg.a(f'reading DO file {bn}')
             df = _utils_graph_cached_read_csv(f)
             x += list(df['ISO 8601 Time'])
+            doc += list(df['Dissolved Oxygen (mg/l)'])
+            dot += list(df['DO Temperature (C)'])
+            try:
+                wat += list(df['Water Detect (%)'])
+            except (Exception, ):
+                pass
 
-            # plot water column files, nice gap others
-            if f in _g_ff_dot_wc:
-                doc += list(df['Dissolved Oxygen (mg/l)'])
-                dot += list(df['DO Temperature (C)'])
-                try:
-                    wat += list(df['Water Detect (%)'])
-                except (Exception, ):
-                    pass
-            else:
-                lg.a(f'warning, file {bn} no-show for water column mode')
-                # so when plotting with connect='finite' these don't appear
-                # although the space occupied by them is there
-                _m = len(list(df['ISO 8601 Time']))
-                doc += [np.nan] * _m
-                dot += [np.nan] * _m
 
     elif met == 'TDO':
         for f in _g_ff_tdo:
@@ -366,21 +247,12 @@ def utils_graph_fetch_csv_data(
             lg.a(f'reading {met} file {bn}')
             df = _utils_graph_cached_read_csv(f)
             x += list(df['ISO 8601 Time'])
+            tdo_t += list(df['Temperature (C)'])
+            tdo_p += list(df['Pressure (dbar)'])
+            tdo_ax += list(df['Ax'])
+            tdo_ay += list(df['Ay'])
+            tdo_az += list(df['Az'])
 
-            # plot water column files, nice gap others
-            if f in _g_ff_tdo_wc:
-                tdo_t += list(df['Temperature (C)'])
-                tdo_p += list(df['Pressure (dbar)'])
-                tdo_ax += list(df['Ax'])
-                tdo_ay += list(df['Ay'])
-                tdo_az += list(df['Az'])
-            else:
-                lg.a(f'warning, file {bn} no-show due to water column mode')
-                # so when plotting with connect='finite' these don't display
-                # although the space occupied by them is there
-                _m = len(list(df['ISO 8601 Time']))
-                tdo_t += [np.nan] * _m
-                tdo_p += [np.nan] * _m
 
     elif met == 'CTD':
         for f in _g_ff_ctd:
@@ -388,23 +260,12 @@ def utils_graph_fetch_csv_data(
             lg.a(f'reading {met} file {bn}')
             df = _utils_graph_cached_read_csv(f)
             x += list(df['ISO 8601 Time'])
-
-            # plot water column files, nice gap others
-            if f in _g_ff_ctd_wc:
-                tdo_t += list(df['Temperature (C)'])
-                tdo_p += list(df['Pressure (dbar)'])
-                tdo_ax += list(df['Ax'])
-                tdo_ay += list(df['Ay'])
-                tdo_az += list(df['Az'])
-                ctd = list(df['Conductivity (mS/cm)'])
-            else:
-                lg.a(f'warning, file {bn} no-show due to water column mode')
-                # so when plotting with connect='finite' these don't display
-                # although the space occupied by them is there
-                _m = len(list(df['ISO 8601 Time']))
-                tdo_t += [np.nan] * _m
-                tdo_p += [np.nan] * _m
-                ctd += [np.nan] * _m
+            tdo_t += list(df['Temperature (C)'])
+            tdo_p += list(df['Pressure (dbar)'])
+            tdo_ax += list(df['Ax'])
+            tdo_ay += list(df['Ay'])
+            tdo_az += list(df['Az'])
+            ctd = list(df['Conductivity (mS/cm)'])
 
 
     # simplify stuff
