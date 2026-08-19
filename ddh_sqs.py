@@ -1,10 +1,8 @@
 import redis
-
-from clear import ddh_write_timestamp_aws_sqs
 from utils.ddh_common import (
     ddh_config_get_vessel_name,
     ddh_config_is_sqs_enabled,
-    linux_is_rpi
+    linux_is_rpi, ddh_write_timestamp_aws_sqs
 )
 from ddh_log import lg_aws as lg
 import glob

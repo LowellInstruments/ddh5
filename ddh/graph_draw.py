@@ -282,7 +282,12 @@ def _graph_clear():
 
 
 
-def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
+def _graph_process_n_draw_ctd(
+        a,
+        plot_reason,
+        fol,
+        _haul_time_view
+):
 
     # CLEAR graph LAYOUT
     for i in reversed(range(a.lay_g_h2.count())):
@@ -360,7 +365,7 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
 
 
 
-    # data
+    # plot data
     p1 = pw.addPlot()
     p1.getAxis('left').setLabel(lbl1)
     p1.getAxis('left').label.setFont(font)
@@ -439,17 +444,9 @@ def _graph_process_n_draw_ctd(a, plot_reason, fol, _haul_time_view):
 
 
 
-
-
-
-
-
-
-
-
-
-
-def _graph_process_n_draw_non_ctd(a, plot_reason=''):
+def _graph_process_n_draw_non_ctd(
+        a,
+        plot_reason=''):
 
     # CLEAR graph LAYOUT of any plot widget
     for i in reversed(range(a.lay_g_h2.count())):
@@ -792,9 +789,9 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
                                          brush=(176, 255, 66, alpha),
                                          movable=False))
 
-    # -----------------------------------------
-    # graph old Temperature / Pressure loggers
-    # -----------------------------------------
+    # -----------------------------------------------
+    # graph old MAT Temperature / Pressure loggers
+    # -----------------------------------------------
     if met == 'TP':
         # draw T and D lines
         pw_it.setLabel("left", lbl1, )
@@ -999,9 +996,9 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
     lg.a(f'took {el_ts} ms to DISPLAY {len(x)} {met} data points')
 
 
-    # ------------------------------------------------------------
-    # statistics: stats box in main tab only plot_reason is BLE
-    # ------------------------------------------------------------
+    # ----------------------------------------------------------------
+    # statistics: stats box in main tab ONLY WHEN plot_reason is BLE
+    # ----------------------------------------------------------------
     r.delete(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS)
     is_rpi = linux_is_rpi()
 
@@ -1091,7 +1088,9 @@ def _graph_process_n_draw_non_ctd(a, plot_reason=''):
 
 
 
-def graph_process_n_draw(app, reason=''):
+def graph_process_n_draw(
+        app,
+        reason=''):
     try:
         app.lbl_graph_err.setVisible(False)
         app.lbl_graph_busy.setVisible(True)
