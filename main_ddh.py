@@ -119,7 +119,8 @@ from utils.ddh_common import (
     STR_TAB_NAME_MORE_INFO, STR_TAB_NAME_MAPS_NEW, STR_DESC_INTERNAL,
     STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
-    STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
+    STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK,
+    exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
     PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
     exp_use_show_fish_website, ddh_get_path_to_db_new_history_file, LI_PATH_PLT_ALSO_OUT_OF_WATER,
 )
@@ -299,7 +300,7 @@ def gui_setup_view(my_win):
     a.cbox_scf.addItems(['none', 'slow', 'mid', 'fast', 'fixed5min'])
 
     # advanced tab graphs choice to include out of water data
-    a.chk_ow(os.path.exists(LI_PATH_PLT_ALSO_OUT_OF_WATER))
+    a.chk_ow.setChecked(os.path.exists(LI_PATH_PLT_ALSO_OUT_OF_WATER))
 
     return a
 
@@ -543,7 +544,6 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
 
     # from CONFIGURATION file, grab serial numbers
     c_sn = ddh_config_get_list_of_monitored_serial_numbers()
-    c_sn = [i.lower() for i in c_sn if i not in h_sn]
 
 
     # version A) both serial numbers in history and config file
@@ -557,6 +557,7 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
     # version B) only serial numbers in config file
     for i in c_sn:
         a.cb_g_sn.addItem(i)
+
 
 
 def gui_setup_buttons(my_app):
@@ -1162,7 +1163,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         lg.a("pressed GUI button 'OK' to clear ONE specific logger time-out")
         flag = ddh_get_path_to_app_override_flag_file()
         pathlib.Path(flag).touch()
-        lg.a("BLE op conditions override set as 1")
+        lg.a("❗ BLE operational conditions overridden")
         gui_tabs_hide_note(self)
         self.tabs.setCurrentIndex(0)
 
@@ -1203,7 +1204,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         lg.a("pressed GUI button 'OK' to clear ALL loggers time-out")
         flag = ddh_get_path_to_app_override_flag_file()
         pathlib.Path(flag).touch()
-        lg.a("BLE op conditions override set as 1")
+        lg.a("❗ BLE operational conditions overridden")
         gui_tabs_hide_note(self)
         self.tabs.setCurrentIndex(0)
 

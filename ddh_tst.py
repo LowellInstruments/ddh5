@@ -1,8 +1,7 @@
 import time
 import setproctitle
 from ddh_log import lg_tst as lg
-
-
+from utils.ddh_common import ddh_summarize_csv_file_for_history_table
 
 # =================================================
 # ddh_tst
@@ -47,4 +46,9 @@ def main_ddh_tst(ignore_gui=False):
 if __name__ == '__main__':
 
     # normal run
-    main_ddh_tst(ignore_gui=False)
+    # main_ddh_tst(ignore_gui=False)
+    s = ddh_summarize_csv_file_for_history_table(
+        '/home/kaz/PycharmProjects/ddh/dl_files/f0-5e-cd-25-a0-3d/2699991_BIX_20260819_133724_DissolvedOxygen.csv',
+        data_out_water=True
+    )
+    print(s)

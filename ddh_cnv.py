@@ -24,7 +24,7 @@ from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
     ddh_get_path_to_root_application_folder,
     ddh_get_path_to_db_new_history_file,
-    ddh_summarize_csv_file
+    ddh_summarize_csv_file_for_history_table, ddh_do_we_graph_out_of_water_data
 )
 from ddh_log import lg_cnv as lg
 
@@ -201,7 +201,7 @@ def _ddh_cnv():
                 if sn and 'ok' in e.lower():
                     try:
                         lg.a(f'doing summary for file {os.path.basename(path_csv)}')
-                        summary = ddh_summarize_csv_file(path_csv)
+                        summary = ddh_summarize_csv_file_for_history_table(path_csv)
 
                         # download BLE OK to history
                         # search for 'download BLE ERR to history'
