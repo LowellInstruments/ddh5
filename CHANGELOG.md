@@ -228,7 +228,7 @@
 
     diabled atcom timer because BUG
 
-6.0.0x      07/10/26
+6.0.04      07/10/26
 
     simplifying DDH structure threads / processes
     new history table ENABLED by default
@@ -236,8 +236,6 @@
     SLO ENABLED by default
     AWS symlinks ENABLED by default
     Linus fish website _DISABLED_ by default
-
-
-6.0.03      08/17/26
-
     better x-temp plotting for TDO
+
+
