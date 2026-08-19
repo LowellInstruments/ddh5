@@ -1,14 +1,11 @@
 import sys
-
 from ddh_log import LogDDHByModule
 import subprocess as sp
 import time
-import json
 from utils.ddh_common import (
     NAME_EXE_AWS,
     NAME_EXE_BLE,
     NAME_EXE_GPS,
-    ddh_get_path_to_db_aws_status_file,
 )
 
 
@@ -19,39 +16,6 @@ d_processes = {
     NAME_EXE_BLE: None,
     NAME_EXE_GPS: None,
 }
-
-
-
-def ddh_write_timestamp_aws_sqs(k, v):
-    assert k in ('aws', 'sqs')
-    # v: 'ok', 'error', 'unknown'
-    assert type(v) is str
-
-    # epoch utc
-    t = int(time.time())
-    p = ddh_get_path_to_db_aws_status_file()
-
-    # first time ever
-    j = {
-        'aws': ('unknown', t),
-        'sqs': ('unknown', t)
-    }
-
-    # load file or get default content
-    try:
-        with open(p, 'r') as f:
-            j = json.load(f)
-    except (Exception, ):
-        pass
-
-    # update file content
-    try:
-        j[k] = (v, t)
-        with open(p, 'w') as f:
-            json.dump(j, f)
-    except (Exception, ):
-        lg_gui.a(f'error, cannot ddh_write_timestamp_aws_sqs to {p}')
-
 
 
 

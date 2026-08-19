@@ -8,11 +8,8 @@ import setproctitle
 import time
 import redis
 import subprocess as sp
-
-from clear import ddh_write_timestamp_aws_sqs
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 from ddh.notifications_v2 import notify_error_sw_aws_s3
-from ddh.tracking import get_path_current_track_file
 from ddh_net import ddh_net_calculate_via
 from ddh_sqs import main_ddh_sqs
 
@@ -32,7 +29,7 @@ from utils.ddh_common import (
     ddh_config_get_vessel_name,
     ddh_config_get_one_aws_credential_value,
     LI_PATH_LAST_YEAR_AWS_TEMPLATE,
-    ddh_this_process_needs_to_quit, linux_is_rpi, ddh_get_path_to_root_application_folder)
+    ddh_this_process_needs_to_quit, linux_is_rpi, ddh_get_path_to_root_application_folder, ddh_write_timestamp_aws_sqs)
 from ddh_log import lg_aws as lg
 
 

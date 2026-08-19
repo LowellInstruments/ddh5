@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
 import ddh.gui.gui_ddh as d_m
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
 
-from clear import (
+from ddh.signals import (
     cb_when_ddh_receives_ctrl_c,
     cb_when_ddh_receives_kill_signal,
     gui_kill_all_processes,
@@ -87,7 +87,6 @@ from utils.ddh_common import (
     ddh_config_get_logger_mac_from_sn,
     ddh_config_get_list_of_monitored_macs,
     ddh_config_get_logger_sn_from_mac, NAME_EXE_BLE,
-    LI_PATH_PLT_ONLY_INSIDE_WATER,
     LI_PATH_GROUPED_S3_FILE_FLAG, app_state_get,
     EV_BLE_SCAN, EV_GUI_BOOT, EV_BLE_DL_PROGRESS,
     EV_BLE_DL_OK, EV_BLE_DL_OK_NO_RERUN, t_str, STR_EV_GUI_BOOT,
@@ -122,7 +121,7 @@ from utils.ddh_common import (
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
     STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK, exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
     PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
-    exp_use_show_fish_website, ddh_get_path_to_db_new_history_file,
+    exp_use_show_fish_website, ddh_get_path_to_db_new_history_file, LI_PATH_PLT_ALSO_OUT_OF_WATER,
 )
 import datetime
 import os
@@ -300,10 +299,7 @@ def gui_setup_view(my_win):
     a.cbox_scf.addItems(['none', 'slow', 'mid', 'fast', 'fixed5min'])
 
     # advanced tab graphs choice to include out of water data
-    if os.path.exists(LI_PATH_PLT_ONLY_INSIDE_WATER):
-        a.chk_ow.setChecked(False)
-    else:
-        a.chk_ow.setChecked(True)
+    a.chk_ow(os.path.exists(LI_PATH_PLT_ALSO_OUT_OF_WATER))
 
     return a
 
@@ -1324,14 +1320,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_chk_ow(self, _):
-        path = LI_PATH_PLT_ONLY_INSIDE_WATER
+        path = LI_PATH_PLT_ALSO_OUT_OF_WATER
         if self.chk_ow.isChecked():
-            lg.a('user selected graphs INCLUDE out-of-water data')
+            lg.a('user clicked for graphs to INCLUDE out-of-water data')
+            pathlib.Path(path).touch()
+        else:
+            lg.a('user clicked for graphs to OMIT out-of-water data')
             if os.path.exists(path):
                 os.unlink(path)
-        else:
-            lg.a('user selected graphs SKIP out-of-water data')
-            pathlib.Path(path).touch()
+
 
 
     def click_btn_shortcuts(self, _):

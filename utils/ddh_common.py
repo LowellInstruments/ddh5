@@ -1,3 +1,4 @@
+import json
 import os
 import asyncio
 import copy
@@ -74,8 +75,9 @@ def ddh_get_path_to_folder_gui_res() -> Path:
 
 
 
+
 def ddh_do_we_graph_out_of_water_data():
-    return not os.path.exists(LI_PATH_PLT_ONLY_INSIDE_WATER)
+    return os.path.exists(LI_PATH_PLT_ALSO_OUT_OF_WATER)
 
 
 
@@ -602,6 +604,42 @@ def ddh_ble_logger_needs_a_reset(mac):
 
 
 
+def ddh_write_timestamp_aws_sqs(
+        k,
+        v):
+
+
+    # v: 'ok', 'error', 'unknown'
+    assert type(v) is str
+
+    # epoch utc
+    t = int(time.time())
+    p = ddh_get_path_to_db_aws_status_file()
+
+    # first time ever
+    j = {
+        'aws': ('unknown', t),
+        'sqs': ('unknown', t)
+    }
+
+    # load file or get default content
+    try:
+        with open(p, 'r') as f:
+            j = json.load(f)
+    except (Exception, ):
+        pass
+
+    # update file content
+    try:
+        j[k] = (v, t)
+        with open(p, 'w') as f:
+            json.dump(j, f)
+    except (Exception, ):
+        print(f'error, cannot ddh_write_timestamp_aws_sqs to {p}')
+
+
+
+
 def ddh_summarize_csv_file(path_csv) -> str:
 
     bn_csv = os.path.basename(path_csv)
@@ -698,7 +736,7 @@ DDH_USES_SHIELD_JUICE4HALT = f'{d}/.ddt_j4h_shield.flag'
 DDH_USES_SHIELD_SAILOR = f'{d}/.ddt_sailor_shield.flag'
 LI_FILE_ICCID = f'{d}/.iccid'
 LI_PATH_TEST_MODE = f'{d}/.ddh_test_mode.flag'
-LI_PATH_PLT_ONLY_INSIDE_WATER = f'{d}/.ddh_plt_only_inside_water'
+LI_PATH_PLT_ALSO_OUT_OF_WATER = f'{d}/.ddh_plt_also_out_of_water'
 # when present, DDH simulates latitude and longitude values from config.toml
 LI_PATH_GPS_DUMMY = f'{d}/.gps_dummy_mode.json'
 
