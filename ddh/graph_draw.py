@@ -937,29 +937,59 @@ def _graph_process_n_draw_non_ctd(
 
 
             # separate upward from downward
-            fil_y1_a = []
-            fil_y1_b = []
-            fil_y2_a = []
-            fil_y2_b = []
-            index_max_pressure = np.argmax(y1)
-            max_p = y1[index_max_pressure] * .95
             pen_pt_down = pg.mkPen(color='blue', width=2)
             pen_pt_up = pg.mkPen(color='red', width=2)
-            for _i, _ in enumerate(y1):
-                if y1[_i] < max_p:
-                    if _i <= index_max_pressure:
-                        fil_y1_a.append(y1[_i])
-                        fil_y2_a.append(y2[_i])
-                    else:
-                        fil_y1_b.append(y1[_i])
-                        fil_y2_b.append(y2[_i])
-
-
-            # don't modify
-            # pw_it.plot(x=y2, y=y1, pen=pen4, hoverable=True)
             pw_it.addLegend(labelTextSize="14pt", offset=(10, 10))
-            pw_it.plot(x=fil_y2_a, y=fil_y1_a, pen=pen_pt_down, hoverable=True, name='▼')
-            pw_it.plot(x=fil_y2_b, y=fil_y1_b, pen=pen_pt_up, hoverable=True, name='▲')
+
+
+
+            # version 1 of this plotting P vs T
+            # fil_y1_a = []
+            # fil_y1_b = []
+            # fil_y2_a = []
+            # fil_y2_b = []
+            # index_max_pressure = np.argmax(y1)
+            # max_p = y1[index_max_pressure] * .95
+            # for _i, _ in enumerate(y1):
+            #     if y1[_i] < max_p:
+            #         if _i <= index_max_pressure:
+            #             fil_y1_a.append(y1[_i])
+            #             fil_y2_a.append(y2[_i])
+            #         else:
+            #             fil_y1_b.append(y1[_i])
+            #             fil_y2_b.append(y2[_i])
+            # pw_it.plot(x=fil_y2_a, y=fil_y1_a, pen=pen_pt_down, hoverable=True, name='▼')
+            # pw_it.plot(x=fil_y2_b, y=fil_y1_b, pen=pen_pt_up, hoverable=True, name='▲')
+
+
+            # version 2 of this plotting P vs T
+            num_slope_segments = 10
+            ls_p = data['Pressure (dbar) TDO']
+            len_ls_p = len(ls_p)
+            n_len_ls_p = int(math.floor(len_ls_p /  10))
+            l_up = False
+            l_down = False
+            lg.a(f'plotting P vs T with {num_slope_segments} slope segments')
+            for _i in range(0, len_ls_p, n_len_ls_p):
+                # y1 is pressure, positive slope means more pressure
+                ar_y = y1[_i:_i+n_len_ls_p]
+                ar_x = y2[_i:_i+n_len_ls_p]
+                slope = 1 if ar_y[0] > ar_y[-1] else -1
+                print('slope', slope)
+                if slope > 0:
+                    if not l_up:
+                        pw_it.plot(x=ar_x, y=ar_y, pen=pen_pt_up, hoverable=True, name='▲')
+                        l_up = True
+                    else:
+                        pw_it.plot(x=ar_x, y=ar_y, pen=pen_pt_up, hoverable=True)
+                else:
+                    if not l_down:
+                        pw_it.plot(x=ar_x, y=ar_y, pen=pen_pt_down, hoverable=True, name='▼')
+                        l_down = True
+                    else:
+                        pw_it.plot(x=ar_x, y=ar_y, pen=pen_pt_down, hoverable=True)
+
+
 
 
 

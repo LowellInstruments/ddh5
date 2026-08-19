@@ -480,7 +480,6 @@ def ddh_config_check_file_is_ok():
         for i in [
             'aws_en',
             'sqs_en',
-            'ble_en',
             'skip_dl_in_port_en',
             'hook_gps_error_measurement_forced',
         ]:
@@ -640,7 +639,9 @@ def ddh_write_timestamp_aws_sqs(
 
 
 
-def ddh_summarize_csv_file(path_csv) -> str:
+def ddh_summarize_csv_file_for_history_table(
+        path_csv
+) -> str:
 
     bn_csv = os.path.basename(path_csv)
     summary = f''
@@ -654,13 +655,16 @@ def ddh_summarize_csv_file(path_csv) -> str:
     ls_doc_filtered = []
 
 
-    # do the summary for file in path_csv
+    # ------------------------------------------
+    # calculate summary ONLY for data IN-WATER
+    # ------------------------------------------
+    # TDO
     if '_TDO' in bn_csv:
         ls_t = list(df['Temperature (C)'])
         ls_p = list(df['Pressure (dbar)'])
         limit_80 = max(ls_p) * .80
         for i, pv in enumerate(ls_p):
-            if float(pv) >= limit_80:
+            if pv >= limit_80:
                 ls_t_filtered.append(ls_t[i])
                 ls_p_filtered.append(ls_p[i])
 
@@ -697,6 +701,11 @@ def ddh_summarize_csv_file(path_csv) -> str:
         summary += f'{vdoc_filtered:.2f} mg/l'
     if summary.endswith('_'):
         summary = summary[:-1]
+
+
+    if summary == "":
+        summary = 'no data in-water'
+
 
     return summary
 
