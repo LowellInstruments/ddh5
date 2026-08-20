@@ -252,7 +252,7 @@ async def _ble_logger_id_and_download(d):
 
     if rv == 0:
         # add to single record
-        now_localtime_s = datetime.datetime.now().strftime('%Y %B, %d at %H:%M:%S')
+        now_localtime_s = datetime.datetime.now().strftime('%y-%m-%d %H:%M:%S')
         r.set(RD_DDH_BLE_LAST_OK_DL_FOR_MAC_ + mac, str(now_localtime_s))
 
         # add to record with all entries
