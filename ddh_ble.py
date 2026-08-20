@@ -251,12 +251,24 @@ async def _ble_logger_id_and_download(d):
 
 
     if rv == 0:
-        now = datetime.datetime.now().strftime('%Y %B, %d at %H:%M:%S')
-        r.set(RD_DDH_BLE_LAST_OK_DL_FOR_MAC_ + mac, str(now) + ' / localtime')
+        # add to single record
+        now_localtime_s = datetime.datetime.now().strftime('%Y %B, %d at %H:%M:%S')
+        r.set(RD_DDH_BLE_LAST_OK_DL_FOR_MAC_ + mac, str(now_localtime_s))
 
+        # add to record with all entries
+        k = RD_DDH_BLE_ALL_LAST_OK_DL
+        s = r.get(k)
+        s = s.decode() if s else ''
+        v = f'{mac}_{now_localtime_s}'
+        # add or update (remove existing one first)
+        if s:
+            ls = s.split('&')
+            ls = [i for i in ls if mac not in i]
+            ls.insert(0, f'{v}')
+            v = '&'.join(ls)
+        r.set(k, v)
 
     return rv
-
 
 
 
