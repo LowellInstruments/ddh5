@@ -357,6 +357,7 @@ def _ddh_aws(ignore_gui):
 
         # user asked for a AWS sync via GUI
         if r.exists(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST):
+            lg.a('doing AWS sync because user request')
             did_aws = True
             r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
             r.setex(RD_DDH_AWS_SYNC_PERIODIC_FLAG, 12 * 3600, 1)
@@ -365,6 +366,7 @@ def _ddh_aws(ignore_gui):
 
         # AWS SYNC upload every 12 hours or when user deletes the flag
         if not r.exists(RD_DDH_AWS_SYNC_PERIODIC_FLAG):
+            lg.a('doing AWS sync because periodic request')
             did_aws = True
             r.setex(RD_DDH_AWS_SYNC_PERIODIC_FLAG, 12 * 3600, 1)
             r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
