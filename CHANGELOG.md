@@ -237,3 +237,6 @@
     less demanding ddh_net constants
     crontab files redacted to not run if DDU is running
 
+5.0.54      08/26/26
+
+    ddh_sqs.py -> changed order files checking to ping    

@@ -81,22 +81,25 @@ def _sqs_serve():
         return
 
 
-    if ddh_net_calculate_via() == "none":
-        return
+
 
 
     # grab / collect SQS files to send
     fol = ddh_get_path_to_folder_sqs()
     files = glob.glob(f"{fol}/*.sqs")
-    if files:
-        lg.a(f"serving {len(files)} SQS files")
+    if not files:
+        return
 
+
+
+    if ddh_net_calculate_via() == "none":
+        return
 
 
     # -----------------------------
     # loop through SQS local files
     # -----------------------------
-
+    lg.a(f"serving {len(files)} SQS files")
     for i_f in files:
 
         # this happens not often but did once
