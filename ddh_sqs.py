@@ -82,6 +82,7 @@ def _sqs_serve():
     if not files:
         return
 
+
     if ddh_net_calculate_via() == "none":
         return
 
@@ -91,7 +92,6 @@ def _sqs_serve():
     # loop through SQS local files
     # -----------------------------
     lg.a(f"serving {len(files)} SQS files")
-
     for i_f in files:
 
         # this happens not often but did once
