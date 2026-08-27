@@ -46,6 +46,9 @@ RD_DDH_BLE_NO_EXPIRES_ANTENNA = p + 'antenna_ble'
 RD_DDH_BLE_PREVENT_FULL_QUERY = p + 'full_query'
 RD_DDH_BLE_LAST_OK_DL_FOR_MAC_ = p + 'last_ok_dl_for_mac_'
 RD_DDH_BLE_ALL_LAST_OK_DL = p + 'all_ok_dl'
+RD_DDH_BLE_LAST_SEEN_FOR_MAC_ = p + 'last_seen_for_mac_'
+RD_DDH_BLE_ALL_LAST_SEEN = p + 'all_seen'
+
 
 
 
