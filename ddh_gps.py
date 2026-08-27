@@ -112,6 +112,7 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
     # if exp_get_use_local_geo_port() == 1:
     #     are_we_in_port = ddh_ask_in_port_to_local_db(gps_pos)
     are_we_in_port = ddh_ask_in_port_to_ddn(gps_pos)
+    r.set(RD_DDH_GPS_ARE_WE_IN_PORT, value=int(are_we_in_port), ex=30)
     if are_we_in_port:
         app_state_set(EV_GPS_IN_PORT, t_str(STR_EV_GPS_IN_PORT))
         r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=10)
