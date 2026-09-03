@@ -21,6 +21,7 @@ from ble.ble_linux import (
 from ble.ble_oop import ble_scan_slow, LoggerBle
 from ddh.ble_ctd import ble_download_ctd
 from ddh.ble_dox import ble_download_dox
+from ddh.ble_ph import ble_download_ph
 from ddh_gps import (
     ddh_gps_get_fix_upon_cold_boot,
     ddh_gps_know_we_are_using_dummy,
@@ -171,6 +172,9 @@ def _ble_logger_is_do1_or_do2(info: str):
     return info.startswith("DO1") or info.startswith("DO2") or info.startswith("DO-")
 
 
+def _ble_logger_is_ph(info: str):
+    return 'PH1' in info
+
 
 def _ble_logger_is_tdo(info: str):
     return "TDO" in info
@@ -240,6 +244,9 @@ async def _ble_logger_id_and_download(d):
 
         elif _ble_logger_is_do1_or_do2(name):
             rv = await ble_download_dox(d)
+
+        elif _ble_logger_is_ph(name):
+            rv = await ble_download_ph(d)
 
         elif _ble_logger_is_moana(name):
             print('will do this someday, I am not in a hurry')

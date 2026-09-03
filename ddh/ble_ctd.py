@@ -278,7 +278,6 @@ async def ble_download_ctd(d, full_query=False):
         # download file
         rv, file_data = await lc.cmd_dwl(int(size))
         _rae(rv, "dwl")
-        # todo: DWL or DWF
         lg.a(f"OK downloaded file {name}")
 
 

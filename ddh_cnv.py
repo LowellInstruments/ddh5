@@ -47,7 +47,7 @@ DDH_BPSL = BAROMETRIC_PRESSURE_SEA_LEVEL_IN_DECIBAR
 
 
 def _lid_v1_file_has_sensor_data_type(path, suffix):
-    if suffix == '_TDO':
+    if suffix in ('_TDO', '_CTD', '_pH'):
         # this cannot be
         return None
     _map = {
@@ -97,7 +97,7 @@ def _convert_lid_file_v2(f, suf):
 
 def _convert_lid_file(p):
 
-    for suf in ("_DissolvedOxygen", "_Temperature", "_Pressure", "_TDO", "_CTD"):
+    for suf in ("_DissolvedOxygen", "_Temperature", "_Pressure", "_TDO", "_CTD", "_pH"):
         if os.path.basename(p).startswith('test'):
             return 1, ''
         if TESTMODE_FILENAME_PREFIX in os.path.basename(p):
@@ -244,4 +244,6 @@ def main_ddh_cnv():
 
 if __name__ == '__main__':
     main_ddh_cnv()
+
+    # _convert_lid_file('/home/kaz/PycharmProjects/ddh/dl_files/f0-5e-cd-25-a0-3d/2699991_BIL_20260903_163804.lid')
 

@@ -206,15 +206,19 @@ def _graph_get_total_number_of_hauls(path):
         mask_mat = f'{path}/*_Pressure.{extension}'
         mask_tdo = f'{path}/*_TDO.{extension}'
         mask_ctd = f'{path}/*_CTD.{extension}'
+        mask_ph = f'{path}/*_pH.{extension}'
         n_do = len(glob.glob(mask_do))
         n_tdo = len(glob.glob(mask_tdo))
         n_ctd = len(glob.glob(mask_ctd))
+        n_ph = len(glob.glob(mask_ph))
         if n_tdo:
             mask = mask_tdo
         elif n_do:
             mask = mask_do
         elif n_ctd:
             mask = mask_ctd
+        elif n_ph:
+            mask = mask_ph
         else:
             mask = mask_mat
     elif ls_bin:

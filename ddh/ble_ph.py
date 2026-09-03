@@ -8,6 +8,7 @@ from ddh.notifications_v2 import (
     notify_logger_error_low_battery,
     notify_logger_error_sensor_pressure
 )
+from lix.lix import ph16temp_to_float, ph16acid_to_float
 from utils.ddh_common import (
     ddh_config_get_logger_sn_from_mac,
     create_path_to_folder_dl_files_from_mac,
@@ -27,13 +28,11 @@ from utils.ddh_common import (
 from ddh_log import lg_ble as lg
 from utils.redis import RD_DDH_BLE_PREVENT_FULL_QUERY
 
+
+
 lc = LoggerBle()
-
-
-
-
 g_debug_not_delete_files = False
-BAT_FACTOR_TDO = 0.5454
+BAT_FACTOR_PH = 0.4545
 MIN_VERSION_HBW_CMD = "4.2.21"
 
 
@@ -45,7 +44,7 @@ class BLEAppException(Exception):
 
 def _rae(rv, s):
     if rv:
-        raise BLEAppException("TDO interact " + s)
+        raise BLEAppException("PH interact " + s)
 
 
 
@@ -58,65 +57,7 @@ def _une(rv, d, e, ce=0):
 
 
 
-async def _tdo_reconfigure_profiling(ver):
-    if ver <= '4.0.20':
-        lg.a('warning, TDO profiling reconfiguration not available on loggers <= v4.0.20')
-        return
-    lg.a(f'TDO profiling reconfiguration, firmware v{ver} can do it')
-
-
-    # check we want to load a dynamic SCF file
-    d_prf_file = {}
-    fol_ddh = f'{ddh_get_path_to_folder_scripts()}/..'
-    for i in ('slow', 'mid', 'fast', 'fixed5min'):
-        pdf = f'{fol_ddh}/.decided_scf_{i}.toml'
-        if os.path.exists(pdf):
-            lg.a(f'loading SCF file {os.path.basename(pdf)}')
-            d_prf_file = toml.load(pdf)['profiling']
-            d_prf_file['mode'] = i
-            break
-
-    if not d_prf_file:
-        lg.a('TDO profiling reconfiguration, no SCF dictionary from file, not doing it')
-        return
-
-    rv, str_gcf = await lc.cmd_gcf()
-    if rv:
-        lg.a('GCF failed, not configuring TDO on-the-fly')
-        return
-
-    # banner
-    lg.a(f"TDO profiling reconfiguration to mode {d_prf_file['mode']}")
-
-    # str_gcf: 'GCF 2d000040000100001000600000200003000010719900030'
-    str_gcf = str_gcf[6:]
-    i_prf = 0
-    for tag, v in d_prf_file.items():
-        if tag == 'mode':
-            continue
-        if len(tag) != 3:
-            lg.a(f'error, bad SCF tag {tag}')
-            break
-        if tag == 'MAC':
-            continue
-        if len(v) != 5:
-            lg.a(f'error, bad SCF value {v} for tag {tag}')
-            break
-        v_prf = str_gcf[i_prf:i_prf+5]
-        i_prf += 5
-        if v_prf != v:
-            lg.a(f'warning, sent SCF {tag} {v}, old value was {v_prf}')
-            rv = await lc.cmd_scf(tag, v)
-            bad_rv = rv == 1
-            _rae(bad_rv, f"scf {tag}")
-        else:
-            lg.a(f'not sent SCF {tag} {v}, it\'s the same')
-
-
-
-
-
-async def ble_download_tdo(d, full_query=False):
+async def ble_download_ph(d, full_query=False):
 
     # d: {'battery_level': 65535,
     #     'error': 'error comm.',
@@ -124,7 +65,7 @@ async def ble_download_tdo(d, full_query=False):
     #     'dl_files': [],
     #     'rerun': False,
     #     'gfv': '',
-    #     'dev': BLEDevice(D0:2E:AB:D9:29:48, TDO_AAA),
+    #     'dev': BLEDevice(D0:2E:AB:D9:29:48, PH_AAA),
     #     'gps_pos': ('+41.610100', '-70.609300', datetime.datetime(2025, 8, 8, 15, 12, 29), '0'),
     #     'antenna_idx': 0,
     #     'antenna_desc': 'internal',
@@ -141,10 +82,11 @@ async def ble_download_tdo(d, full_query=False):
     _une(not rv, d, "comm.")
     _rae(not rv, "connecting")
     lg.a(f"connected to {mac}")
+
     if full_query:
-        lg.a(f'OK, TDO download full query ON')
+        lg.a(f'OK, PH download full query ON')
     else:
-        lg.a(f'note, TDO download full query OFF')
+        lg.a(f'note, PH download full query OFF')
 
 
 
@@ -152,7 +94,7 @@ async def ble_download_tdo(d, full_query=False):
         lg.a(f"warning, logger reset file {mac} found, deleting it")
         await lc.cmd_rst()
         # out of here for sure
-        raise BLEAppException("TDO interact logger reset file")
+        raise BLEAppException("PH interact logger reset file")
 
 
 
@@ -217,11 +159,11 @@ async def ble_download_tdo(d, full_query=False):
     rv, b = await lc.cmd_bat()
     _rae(rv, "bat")
     adc_b = b
-    b /= BAT_FACTOR_TDO
+    b /= BAT_FACTOR_PH
     lg.a(f"BAT | ADC {adc_b} mV -> battery {int(b)} mV")
     d["battery_level"] = b
     if adc_b < 982:
-        ln = LoggerNotification(mac, sn, 'TDO', adc_b)
+        ln = LoggerNotification(mac, sn, 'PH1', adc_b)
         notify_logger_error_low_battery(g, ln)
         app_state_set(EV_BLE_LOW_BATTERY, t_str(STR_EV_BLE_LOW_BATTERY))
         d['error'] = 'low battery'
@@ -318,35 +260,29 @@ async def ble_download_tdo(d, full_query=False):
 
 
 
-    # check sensor Temperature
-    if full_query:
-        rv = await lc.cmd_gst()
-        # rv: (0, 46741)
-        bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
-        if bad_rv:
-            _une(bad_rv, d, "T_sensor_error", ce=1)
-            lg.a(f'GST | error {rv}')
-            d['error'] = 'sensor T'
-        _rae(bad_rv, "gst")
-
-
-
-    # check sensor Pressure, always full query because HBW
-    rv = await lc.cmd_gsp()
-    # rv: (0, 1241)
-    bad_rv = not rv or rv[0] == 1 or rv[1] == 0xFFFF or rv[1] == 0
+    # check sensor pH
+    rv = await lc.cmd_gph()
+    bad_rv = (not rv or (rv[0] == 1 or b'0000' in rv[1] or b'9999' in rv[1]))
     if bad_rv:
-        _une(bad_rv, d, "P_sensor_error", ce=1)
-        lg.a(f'GSP | error {rv}')
-        ln = LoggerNotification(mac, sn, 'TDO', b)
-        notify_logger_error_sensor_pressure(g, ln)
-        d['error'] = 'sensor P'
-    _rae(bad_rv, "gsp")
+        lg.a(f'GPH | error {rv}')
+        d['error'] = 'sensor PH'
+        _une(bad_rv, d, "PH_sensor_error", ce=1)
+    _rae(bad_rv, "gph")
 
 
+    # b'12' to 0x12
+    hex_temp = int(rv[1][:2], 16) << 8
+    hex_temp += int(rv[1][2:4], 16) << 0
+    hex_ph = int(rv[1][4:6], 16) << 8
+    hex_ph += int(rv[1][6:8], 16) << 0
+    temp = ph16temp_to_float(hex_temp)
+    ph = ph16acid_to_float(hex_ph)
 
-    # reconfigure the logger settings
-    await _tdo_reconfigure_profiling(d['gfv'])
+
+    # only two decimals
+    temp = '{:.2f}'.format(temp)
+    ph = '{:.2f}'.format(ph)
+    lg.a(f'measurements pH = {ph}, temperature = {temp} °')
 
 
     # wake mode
