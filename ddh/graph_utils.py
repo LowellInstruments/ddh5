@@ -75,6 +75,8 @@ def utils_graph_fetch_csv_data(
     _g_ff_dot = sorted(glob(f"{fol}/*_DissolvedOxygen.{extension}"))
     _g_ff_tdo = sorted(glob(f"{fol}/*_TDO.{extension}"))
     _g_ff_ctd = sorted(glob(f"{fol}/*_CTD.{extension}"))
+    _g_ff_ph = sorted(glob(f"{fol}/*_pH.{extension}"))
+
     n_tdo_pre_test = len(_g_ff_tdo)
 
 
@@ -85,6 +87,7 @@ def utils_graph_fetch_csv_data(
     _g_ff_dot = [i for i in _g_ff_dot if TESTMODE_FILENAME_PREFIX not in i]
     _g_ff_tdo = [i for i in _g_ff_tdo if TESTMODE_FILENAME_PREFIX not in i]
     _g_ff_ctd = [i for i in _g_ff_ctd if TESTMODE_FILENAME_PREFIX not in i]
+    _g_ff_ph = [i for i in _g_ff_ph if TESTMODE_FILENAME_PREFIX not in i]
 
 
     # exclude TDO files which are too small (~50 bytes per line)
@@ -98,10 +101,10 @@ def utils_graph_fetch_csv_data(
 
 
     # better GUI messages
-    if n_tdo_pre_test and not _g_ff_tdo and not ddh_do_we_graph_out_of_water_data():
-        e = f'error, all data for {basename(fol)} is out of water'
-        lg.a(e)
-        return {'error': e}
+    # if n_tdo_pre_test and not _g_ff_tdo and not ddh_do_we_graph_out_of_water_data():
+    #     e = f'error, all data for {basename(fol)} is out of water'
+    #     lg.a(e)
+    #     return {'error': e}
 
 
     # fast leaving case for TDO loggers
@@ -131,7 +134,8 @@ def utils_graph_fetch_csv_data(
         len(_g_ff_p),
         len(_g_ff_dot),
         len(_g_ff_tdo),
-        len(_g_ff_ctd)
+        len(_g_ff_ctd),
+        len(_g_ff_ph)
     )
 
 
@@ -187,6 +191,14 @@ def utils_graph_fetch_csv_data(
             _g_ff_ctd = _g_ff_ctd[-1:]
         else:
             _g_ff_ctd = [_g_ff_ctd[hi]]
+    if _g_ff_ph:
+        met = 'PH'
+        if htv == 'all':
+            _g_ff_ph = _g_ff_ph
+        elif htv == 'last':
+            _g_ff_ph = _g_ff_ph[-1:]
+        else:
+            _g_ff_ph = [_g_ff_ph[hi]]
 
 
     # check
@@ -212,6 +224,8 @@ def utils_graph_fetch_csv_data(
     doc, dot, wat = [], [], []
     tdo_t, tdo_p, tdo_ax, tdo_ay, tdo_az = [], [], [], [], []
     ctd = []
+    ph_acid = []
+    ph_temp = []
     is_moana = False
 
     if met == 'TP':
@@ -268,6 +282,16 @@ def utils_graph_fetch_csv_data(
             ctd = list(df['Conductivity (mS/cm)'])
 
 
+    elif met == 'PH':
+        for f in _g_ff_ph:
+            bn = os.path.basename(f)
+            lg.a(f'reading {met} file {bn}')
+            df = _utils_graph_cached_read_csv(f)
+            x += list(df['ISO 8601 Time'])
+            ph_temp += list(df['Temperature (C)'])
+            ph_acid += list(df['pH'])
+
+
     # simplify stuff
     if not met:
         lg.a(f'error, graph_get_all_csv() unknown metric {met}')
@@ -296,6 +320,8 @@ def utils_graph_fetch_csv_data(
     tdo_ay = tdo_ay[::n]
     tdo_az = tdo_az[::n]
     ctd = ctd[::n]
+    ph_acid = ph_acid[::n]
+    ph_temp = ph_temp[::n]
 
 
     # Celsius to Fahrenheit
@@ -313,9 +339,15 @@ def utils_graph_fetch_csv_data(
         tdo_ay.pop(i)
         tdo_az.pop(i)
         ctd.pop(i)
+        ph_acid.pop(i)
+        ph_temp.pop(i)
     tdo_tf = []
     for c in tdo_t:
         tdo_tf.append(((float(c) * 9) / 5) + 32)
+    ph_temp_f = []
+    for c in ph_temp:
+        ph_temp_f.append(((float(c) * 9) / 5) + 32)
+
 
     # Depth conversion to fathoms ftm
     pftm = [dbar_to_fathoms(d - CTT_ATM_PRESSURE_DBAR) for d in p]
@@ -360,6 +392,9 @@ def utils_graph_fetch_csv_data(
         'Ax TDO': tdo_ax,
         'Ay TDO': tdo_ay,
         'Az TDO': tdo_az,
+        'Temperature (C) PH': ph_temp,
+        'Temperature (F) PH': ph_temp_f,
+        'pH': ph_acid,
         'Conductivity (mS/cm)': ctd,
         'pruned': n != 1,
         'logger_type': lg_t
