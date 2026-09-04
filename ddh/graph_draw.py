@@ -101,6 +101,10 @@ def _graph_get_color_by_label(lbl):
         return 'limegreen'
     if 'Conductivity' in lbl:
         return 'green'
+    if 'pH' in lbl:
+        return 'cyan'
+    if 'PH' in lbl:
+        return 'cyan'
     return 'green'
 
 
@@ -695,6 +699,9 @@ def _graph_process_n_draw_non_ctd(
         y3 = data['Ax TDO']
         y4 = data['Ay TDO']
         y5 = data['Az TDO']
+    elif met == 'PH':
+        lbl1 = 'pH'
+        lbl2 = 'Temperature (F) PH'
 
 
     # grab the data
@@ -713,10 +720,13 @@ def _graph_process_n_draw_non_ctd(
         # Fahrenheit to Celsius
         y2 = [((y -32) * (5/9)) for y in y2]
     elif imp_or_metric == "Metric" and met == "DO":
-        lbl2 = 'Temperature (C) TDO'
+        lbl2 = 'Temperature (C) DO'
         # Fahrenheit to Celsius
         y2 = [((y -32) * (5/9)) for y in y2]
-
+    elif imp_or_metric == "Metric" and met == "PH":
+        lbl2 = 'Temperature (C) PH'
+        # Fahrenheit to Celsius
+        y2 = [((y -32) * (5/9)) for y in y2]
 
 
     # see if we need Depth-axis inverted
@@ -724,8 +734,11 @@ def _graph_process_n_draw_non_ctd(
 
     # colors
     lbl1 = lbl1.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
+    lbl1 = lbl1.replace(' PH', '')
     lbl2 = lbl2.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
+    lbl2 = lbl2.replace(' PH', '')
     lbl3 = lbl3.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
+    lbl3 = lbl3.replace(' PH', '')
     clr_1 = _graph_get_color_by_label(lbl1)
     clr_2 = _graph_get_color_by_label(lbl2)
     clr_3 = _graph_get_color_by_label(lbl3)
@@ -1022,6 +1035,30 @@ def _graph_process_n_draw_non_ctd(
 
             # or we could set the x-axis label on top
             # a.g.setTitle(e, color="red", size="15pt")
+
+
+    # ------------------
+    # graph PH loggers
+    # ------------------
+    if met == 'PH':
+        a.cb_g_switch_tp.setVisible(False)
+
+        # draw pH (y1) and T (y2) lines
+        pw_it.setLabel("left", lbl1, **_sty(clr_1))
+        pw_it.getAxis('right').setLabel(lbl2, **_sty(clr_2))
+        pw_it.plot(x, y1, pen=pen1, hoverable=True)
+        pw_vb.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True, connect='finite'))
+
+        # dynamic upper top of PH graphs
+        upper_top_ph = 12
+
+        # y-axis DOX ranges, bottom-axis label
+        pw_it.setYRange(0, upper_top_ph, padding=0)
+        pw_vb.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
+        pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
+
+
+
 
 
     # statistics: benchmark and number of points
