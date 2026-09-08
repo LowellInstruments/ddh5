@@ -102,9 +102,7 @@ def _graph_get_color_by_label(lbl):
     if 'Conductivity' in lbl:
         return 'green'
     if 'pH' in lbl:
-        return 'cyan'
-    if 'PH' in lbl:
-        return 'cyan'
+        return 'green'
     return 'green'
 
 
