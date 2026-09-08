@@ -526,6 +526,41 @@ def _check_aws_run(f):
     return 1
 
 
+def _menu_cb_copy_wifis():
+    fol_wifis = '/etc/NetworkManager/system-connections'
+    c = f'ls {fol_wifis}'
+    rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    if rv.returncode:
+        print('error listing wifi-connections')
+        input()
+        return
+    ls = rv.stdout.decode().split('\n')
+    ls = [i for i in ls if i.endswith('nmconnection') and 'preconfigured' not in i]
+    ls = [f'{fol_wifis}/{i}' for i in ls]
+    for i in ls:
+        bn = os.path.basename(i)
+        c = f'sudo cp {i} /run/{bn}'
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        if rv.returncode:
+            print(f'error copying wifi {bn} to /run')
+            input()
+            return
+
+    # make chroot copy this
+    for i in ls:
+        bn = os.path.basename(i)
+        c = f'sudo overlayroot-chroot bash -c "chmod 0600 /run/{bn} && cp /run/{bn} {fol_wifis}"'
+        rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        if rv.returncode:
+            print(f'error copying wifi {bn} to {fol_wifis}')
+            input()
+            return
+
+    print(f'seems copying wifis worked')
+    print('you need to power-cycle DDH now')
+    input()
+
+
 
 
 def _menu_cb_print_check_all_keys(verbose=True):
@@ -943,6 +978,7 @@ def main_ddc():
             '3': (f"3) check all keys    [{fdk}]", _menu_cb_print_check_all_keys),
             '4': (f"4) test GPS", _menu_cb_gps_signal_quality),
             '5': (f"5) test side buttons", _menu_cb_test_buttons),
+            '7': (f"7) make wifis permanent", _menu_cb_copy_wifis),
             'r': (f"r) BLE range tool", _menu_cb_run_brt),
             'o': (f"o) deploy logger DOX", _menu_cb_run_deploy_dox),
             't': (f"t) deploy logger TDO", _menu_cb_run_deploy_tdo),
