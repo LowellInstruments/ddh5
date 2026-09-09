@@ -240,3 +240,8 @@
 5.0.54      08/26/26
 
     ddh_sqs.py -> changed order files checking to ping    
+
+5.0.55      09/09/26
+
+    DDC - added option to make wifis persistent
+
