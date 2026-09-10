@@ -248,3 +248,7 @@
 5.0.56      09/10/26
 
     improved service wifi - cell switching
+
+5.0.57      09/10/26
+
+    again, improved service wifi - cell switching
