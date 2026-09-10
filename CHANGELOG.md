@@ -245,3 +245,6 @@
 
     DDC - added option to make wifis persistent
 
+5.0.56      09/10/26
+
+    improved service wifi - cell switching
