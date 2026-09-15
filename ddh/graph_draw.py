@@ -198,6 +198,7 @@ def _graph_get_total_number_of_hauls(path):
         lg.a('note, detected out-of-water GUI check, so GRAPHING all data')
         extension = 'csv'
     else:
+        lg.a('note, not detected out-of-water GUI check, GRAPHING only in-water data')
         extension = 'csf'
 
 
@@ -535,14 +536,14 @@ def _graph_process_n_draw_non_ctd(
 
 
     # get number of hauls inside this folder
+    ow = ddh_do_we_graph_out_of_water_data()
     bn_fol = fol.split('/')[-1]
     nh = _graph_get_total_number_of_hauls(fol)
-    lg.a(f'found {nh} total hauls in dl_files/{bn_fol}')
+    lg.a(f'found {nh} hauls in dl_files/{bn_fol}')
     if nh == 0:
         bn_fol = os.path.basename(fol)
-        ow = ddh_do_we_graph_out_of_water_data()
         lg.a(f'note, no hauls for {bn_fol}, we will show NO statistics box')
-        raise GraphException(f'error, no hauls for {bn_fol}, we_graph_out_of_water_data = {ow}')
+        raise GraphException(f'error, no hauls for {bn_fol}')
 
 
     # reason = user changed the single file to plot with '<' button
@@ -973,7 +974,7 @@ def _graph_process_n_draw_non_ctd(
 
 
 
-            # version 1 of this plotting P vs T
+            # version 1 of this plotting P vs T, 2 segments, halfs
             # fil_y1_a = []
             # fil_y1_b = []
             # fil_y2_a = []
@@ -992,7 +993,7 @@ def _graph_process_n_draw_non_ctd(
             # pw_it.plot(x=fil_y2_b, y=fil_y1_b, pen=pen_pt_up, hoverable=True, name='▲')
 
 
-            # version 2 of this plotting P vs T
+            # version 2 of this plotting P vs T, 10 segments
             num_slope_segments = 10
             ls_p = data['Pressure (dbar) TDO']
             len_ls_p = len(ls_p)
