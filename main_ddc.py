@@ -341,7 +341,6 @@ def _menu_cb_gps_signal_quality():
         print(ls_gsv)
 
 
-
         # parse line GPRMC
         s = '\n'
         if not line_rmc:
@@ -388,16 +387,24 @@ def _menu_cb_gps_signal_quality():
                 except (Exception, ):
                     pass
 
-        n = len(d)
+
+        # d (bad): {'10': '*77', '19': '*73', '28': '*76', '32': '*70'}
+        d = {k: v for k, v in d.items() if v and not '*' in v}
+
+
         if d:
             # d: {'1': {'04': '26', '05': '35', '06': '34', '09': '32'},
             #     '2': {'11': '30', '12': '35', '19': '30', '21': '34'},
             #     '3': {'25': '30', '29': '30', '13': '', '17': ''}}
-            d = {k: v for k, v in d.items() if v}
+            n = len(d)
             m = len(d)
             s += f'GSV --> {n} satellites, {n - m} of which reporting no SNR\n'
             s += '\n[ id ] snr     (max 99)\n'
             s += '-----------------------\n'
+
+            # RMC --> ,,,,
+            # s: GSV --> 15 satellites, 11 of which reporting no SNR
+
             for k, v in d.items():
                 s += f'[ {k} ] snr {v} '
                 s += ('#' * int(v)) + '\n'
