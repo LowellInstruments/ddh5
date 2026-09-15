@@ -29,7 +29,8 @@ from utils.ddh_common import (
     ddh_config_get_vessel_name,
     ddh_config_get_one_aws_credential_value,
     LI_PATH_LAST_YEAR_AWS_TEMPLATE,
-    ddh_this_process_needs_to_quit, linux_is_rpi, ddh_get_path_to_root_application_folder, ddh_write_timestamp_aws_sqs)
+    ddh_this_process_needs_to_quit, linux_is_rpi,
+    ddh_get_path_to_root_application_folder, ddh_write_timestamp_aws_sqs)
 from ddh_log import lg_aws as lg
 
 
@@ -331,9 +332,11 @@ def _ddh_aws(ignore_gui):
                 lg.a(f'deleting link to non-existing file {p}')
                 os.unlink(link)
                 continue
-            bn = os.path.basename(p)
-            if 'MAT.cfg' in bn:
+            if 'MAT.cfg' in p:
+                lg.a(f'deleting link to MAT.cfg file {p}')
+                os.unlink(link)
                 continue
+            bn = os.path.basename(p)
             dn = os.path.dirname(p).split('/')[-1]
             lg.a(f'copying to bucket file {dn}/{bn}')
             did_aws = True
@@ -358,7 +361,7 @@ def _ddh_aws(ignore_gui):
                 _ddh_aws_set_state('error')
 
 
-        # user asked for a AWS sync via GUI
+        # user asked for one AWS sync via GUI
         if r.exists(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST):
             did_aws = True
             r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)

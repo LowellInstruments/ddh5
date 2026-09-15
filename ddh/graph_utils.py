@@ -206,7 +206,7 @@ def utils_graph_fetch_csv_data(
         lg.a(f'error, no metric keys to graph folder {fol}')
         return {}
 
-    # summary
+    # display graph parameters
     rv: dict
     s = "note, graph parameters\n\tmetric {}\n\tfolder {}\n\thauls {}\n\thi {}"
     lg.a(s.format(met, basename(fol), htv, hi))
