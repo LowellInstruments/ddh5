@@ -87,7 +87,7 @@ def _convert_lid_file_v2(f, suf):
     bn = os.path.basename(f)
     dn = os.path.dirname(f).split('/')[-1]
     lg.a(f"converting LID file v2 {dn}/{bn} suffix {suf}")
-    rv = parse_lid_v2_data_file(f)
+    rv = parse_lid_v2_data_file(f, create_csf=True)
     lg.a(f"OK, converted LID file v2 {dn}/{bn} suffix {suf}")
     return rv
 
@@ -143,7 +143,7 @@ def _convert_lid_file(p):
 
 def _boot_cnv():
 
-    # upon boot, enqueue LID files w/o proper CSV to our own CNV queue
+    # upon boot, enqueue LID files w/o CSV to our OWN CNV queue
     fol = ddh_get_path_to_folder_dl_files()
     mask_all_lid = f'{fol}/**/*.lid'
     ls_lid = glob.glob(mask_all_lid, recursive=True)
@@ -172,21 +172,22 @@ def _ddh_cnv():
         time.sleep(1)
 
 
-        # dequeue messages that may contain '&' or not
+        # dequeue messages that may contain '&SN' or not
         ls_converted_files = []
         q = RD_DDH_CNV_QUEUE
         for i in range(r.llen(q)):
             _, p = r.blpop([q])
             p = p.decode()
+            bn = os.path.basename(p)
             sn = ''
             dt_s = ''
             e = ''
             rr = ''
             if '&' in p:
                 p, sn, dt_s, e, rr = p.split('&')
-
-            bn = os.path.basename(p)
-            lg.a(f'dequeuing file {bn}')
+                lg.a(f'dequeuing file {bn} upon BLE download')
+            else:
+                lg.a(f'dequeuing file {bn} upon DDH booting')
 
 
             # --------------------------------
@@ -199,6 +200,7 @@ def _ddh_cnv():
             if rv == 0:
                 ls_converted_files.append(p)
                 if sn and 'ok' in e.lower():
+                    # this is a conversion request from BLE, add it to history table
                     try:
                         lg.a(f'summarizing file {os.path.basename(path_csv)} for history table')
                         summary = ddh_summarize_csv_file_for_history_table(path_csv)
