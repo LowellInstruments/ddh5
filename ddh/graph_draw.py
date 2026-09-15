@@ -353,7 +353,7 @@ def _graph_process_n_draw_ctd(
 
 
 
-    # colors
+    # CTD colors
     lbl1 = lbl1.replace(' TDO', '')
     lbl2 = lbl2.replace(' TDO', '')
     clr_1 = _graph_get_color_by_label(lbl1)
@@ -371,7 +371,7 @@ def _graph_process_n_draw_ctd(
 
 
 
-    # plot data
+    # CTD plot data
     p1 = pw.addPlot()
     p1.getAxis('left').setLabel(lbl1)
     p1.getAxis('left').label.setFont(font)
@@ -404,11 +404,12 @@ def _graph_process_n_draw_ctd(
     lg.a(f'took {el_ts} ms to DISPLAY {len(y1)} CTD data points')
 
 
-    # # ------------------------------------
-    # # statistics: display box in main tab
-    # # ------------------------------------
-    # r.delete(RD_DDH_GUI_GRAPH_STATISTICS)
-    # is_rpi = linux_is_rpi()
+    # -----------------------------------------------
+    # statistics: display statistics box in main tab
+    #
+    # -----------------------------------------------
+    r.delete(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS)
+    is_rpi = linux_is_rpi()
     #
     # try:
     #     been_water = False
@@ -440,6 +441,7 @@ def _graph_process_n_draw_ctd(
     #                 lg.a(f"statistics TDO for SN {sn}")
     #                 lg.a(s)
     #             else:
+    #                 lg.a('note, we don\'t compute CTD statistics for data non-in-water')
     #                 s += f'{t1}\n{t2}\n(not available)'
     #             r.setex(RD_DDH_GUI_GRAPH_STATISTICS, 120, s)
     #
@@ -453,6 +455,17 @@ def _graph_process_n_draw_ctd(
 def _graph_process_n_draw_non_ctd(
         a,
         plot_reason=''):
+
+
+    # ----------------------------------------------------
+    # all plot requests are processed here
+    # when reason is BLE:
+    #     - it comes from CNV, and it is a single file
+    #     - it will try to show statistics box
+    # when reason is USER:
+    #     - it can be plot multiple files
+    #     - it will NOT show statistics box
+    # ----------------------------------------------------
 
     # CLEAR graph LAYOUT of any plot widget
     for i in reversed(range(a.lay_g_h2.count())):
@@ -478,7 +491,7 @@ def _graph_process_n_draw_non_ctd(
     _haul_time_view = d[a.cb_g_cycle_haul.currentIndex()]
 
 
-    # transform reason BLE automatic download to user choice
+    # emulates reason BLE automatic download -> user choice
     if plot_reason == 'BLE':
         fol = r.get(RD_DDH_GUI_PLOT_FOLDER)
         if not fol:
@@ -500,7 +513,7 @@ def _graph_process_n_draw_non_ctd(
 
 
 
-    # from this point on, all reason is user pressing GUI graph buttons
+    # from this point on, all reason is considered user pressing GUI graph buttons
     sn = a.cb_g_sn.currentText()
     if not sn:
         e = 'error, no one asked for graph?'
@@ -527,7 +540,9 @@ def _graph_process_n_draw_non_ctd(
     lg.a(f'found {nh} total hauls in dl_files/{bn_fol}')
     if nh == 0:
         bn_fol = os.path.basename(fol)
-        raise GraphException(f'error, no hauls for {bn_fol}')
+        ow = ddh_do_we_graph_out_of_water_data()
+        lg.a(f'note, no hauls for {bn_fol}, we will show NO statistics box')
+        raise GraphException(f'error, no hauls for {bn_fol}, we_graph_out_of_water_data = {ow}')
 
 
     # reason = user changed the single file to plot with '<' button
@@ -1108,6 +1123,7 @@ def _graph_process_n_draw_non_ctd(
                     lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
+                    lg.a('note, we don\'t compute TDO statistics for data non-in-water')
                 r.set(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, value=s, ex=120)
 
 
@@ -1148,6 +1164,7 @@ def _graph_process_n_draw_non_ctd(
                     lg.a(s)
                 else:
                     s += f'{t1}\n{t2}\n(not available)'
+                    lg.a('note, we don\'t compute DOX statistics for data non-in-water')
                 r.set(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS, value=s, ex=120)
 
 
@@ -1159,12 +1176,12 @@ def _graph_process_n_draw_non_ctd(
 
 def graph_process_n_draw(
         app,
-        reason=''):
+        plot_reason=''):
     try:
         app.lbl_graph_err.setVisible(False)
         app.lbl_graph_busy.setVisible(True)
         QCoreApplication.processEvents()
-        _graph_process_n_draw_non_ctd(app, reason)
+        _graph_process_n_draw_non_ctd(app, plot_reason)
         # remove any past error
         app.pw.setTitle('')
 
@@ -1192,5 +1209,5 @@ def graph_process_n_draw(
 
 
 def graph_request(reason='user'):
-    lg.a(f"note, generating PLOT request towards GUI with reason = {reason}")
+    lg.a(f"note, requesting PLOT to GUI with reason = {reason}")
     r.set(RD_DDH_GUI_PLOT_REASON, reason)

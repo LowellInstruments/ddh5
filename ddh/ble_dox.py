@@ -185,7 +185,26 @@ async def ble_download_dox(d):
     _rae(rv, "dir error " + str(rv))
     lg.a(f"DIR | {ls}")
     if MC_FILE not in ls.keys():
-        _rae(1, "error, no configuration file in logger")
+        d_cfg = dict()
+        d_cfg['DFN'] = 'DDH'
+        d_cfg['TMP'] = 0
+        d_cfg['PRS'] = 0
+        d_cfg['DOS'] = 1
+        d_cfg['DOP'] = 1
+        d_cfg['DOT'] = 1
+        d_cfg['TRI'] = 10
+        d_cfg['ORI'] = 10
+        d_cfg['DRI'] = 900
+        d_cfg['PRR'] = 1
+        d_cfg['PRN'] = 1
+        d_cfg['STM'] = "2012-11-12 12:14:00"
+        d_cfg['ETM'] = "2040-11-12 12:14:20"
+        d_cfg['LED'] = 1
+        rv_cfg = await lc.cmd_cfg(d_cfg)
+        _rae(rv_cfg, "error, no configuration file in logger")
+        lg.a('note, there was no CFG in DOX logger, we sent fresh one 15 minutes')
+
+
 
 
 

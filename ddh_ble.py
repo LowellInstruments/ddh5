@@ -477,7 +477,7 @@ def _ddh_ble_analyze_logger_download_result(d, rv):
             _g_logger_errors[mac] = 0
 
 
-            # download BLE ERR to history, we have no filename '_'
+            # after 5 retries, download BLE ERR to history, we have no filename '_'
             g = gps_pos
             dt = str(g[2]) if len(g) == 4 else ''
             # dt: 'dt 2026-08-04 13:46:58

@@ -1321,14 +1321,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_chk_ow(self, _):
-        path = LI_PATH_PLT_ALSO_OUT_OF_WATER
+        p = LI_PATH_PLT_ALSO_OUT_OF_WATER
         if self.chk_ow.isChecked():
             lg.a('user clicked for graphs to INCLUDE out-of-water data')
-            pathlib.Path(path).touch()
+            pathlib.Path(p).touch()
         else:
             lg.a('user clicked for graphs to OMIT out-of-water data')
-            if os.path.exists(path):
-                os.unlink(path)
+            if os.path.exists(p):
+                os.unlink(p)
 
 
 
@@ -1623,14 +1623,18 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             os.unlink('/tmp/ddh_minimize')
 
 
-        # check there is something to plot
+        # ------------------------------------------------
+        # periodically check there is something to plot
+        # when BLE, it is only one file, from CNV
+        # when user, can be aggregated data 'all hauls'
+        # ------------------------------------------------
         p_r = r.get(RD_DDH_GUI_PLOT_REASON)
         if p_r:
             # p_r: means plot_reason, can be 'ble', 'user', 'hauls_next', 'hauls_labels'
             # BLE needs a FOLDER path written on another redis key
             p_r = p_r.decode()
             lg.a(f"note, GUI received PLOT request with reason = {p_r}")
-            graph_process_n_draw(self, reason=p_r)
+            graph_process_n_draw(self, plot_reason=p_r)
             r.delete(RD_DDH_GUI_PLOT_REASON)
 
 

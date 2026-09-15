@@ -200,10 +200,10 @@ def _ddh_cnv():
                 ls_converted_files.append(p)
                 if sn and 'ok' in e.lower():
                     try:
-                        lg.a(f'doing summary for file {os.path.basename(path_csv)}')
+                        lg.a(f'summarizing file {os.path.basename(path_csv)} for history table')
                         summary = ddh_summarize_csv_file_for_history_table(path_csv)
 
-                        # download BLE OK to history
+                        # BLE download as OK to history
                         # search for 'download BLE ERR to history'
                         path_file_history = ddh_get_path_to_db_new_history_file()
                         with open(path_file_history, 'a') as f:
