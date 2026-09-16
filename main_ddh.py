@@ -1980,13 +1980,16 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         fol_track = str(ddh_get_path_to_folder_dl_files())
         fol_track = f'{fol_track}/ddh#{ddh_config_get_vessel_name().replace(" ", "_")}'
         fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
+        does_fol_upload_exists = os.path.isdir(fol_upload)
         os.makedirs(fol_upload, exist_ok=True)
-        mask_track = f'{fol_track}/*_track.txt'
-        for f in glob.glob(mask_track):
-            link = f'{fol_upload}/{os.path.basename(f)}'
-            if not os.path.exists(link):
-                lg.a(f'boot, adding link track file {link}')
-                os.symlink(f, link)
+        if not does_fol_upload_exists:
+            lg.a('OK, created folder \'upload\', adding all tracking files')
+            mask_track = f'{fol_track}/*_track.txt'
+            for f in glob.glob(mask_track):
+                link = f'{fol_upload}/{os.path.basename(f)}'
+                if not os.path.exists(link):
+                    lg.a(f'boot, adding link track file {link}')
+                    os.symlink(f, link)
 
 
 
