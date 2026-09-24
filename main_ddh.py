@@ -1,3 +1,5 @@
+import threading
+
 import signal
 import sys
 from pathlib import Path
@@ -55,7 +57,7 @@ from utils.redis import (
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_MID,
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP,
     RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS,
-    RD_DDH_GUI_PERIODIC_REFRESH_MODELS,
+    RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS,
     RD_DDH_GUI_RV,
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
@@ -63,7 +65,7 @@ from utils.redis import (
     RD_DDH_AWS_SYNC_PERIODIC_FLAG,
     RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
     RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE,
-    RD_DDH_GUI_BEACON_FLAG
+    RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_DISPLAY_MODELS
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -137,7 +139,7 @@ from ddh.preferences import (
     preferences_get_brightness_clicks,
     preferences_get_models_index, preferences_set_brightness_clicks
 )
-from ddh.utils_models import gui_populate_models_tab
+from ddh.utils_models import gui_populate_models_tab, th_gui_download_models_from_ddn
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 import subprocess as sp
 import pyqtgraph as pg
@@ -190,15 +192,13 @@ def _calc_app_uptime():
 
 
 def gui_init_redis():
-    for k in (
-            RD_DDH_GUI_PLOT_REASON,
-            RD_DDH_GUI_PLOT_FOLDER,
-            RD_DDH_BLE_SEMAPHORE,
-            RD_DDH_GUI_STATE_EVENT_ICON_LOCK,
-            RD_DDH_AWS_SYNC_PERIODIC_FLAG,
-            RD_DDH_GUI_PERIODIC_REFRESH_MODELS
-    ):
-        r.delete(k)
+    r.delete(RD_DDH_GUI_PLOT_REASON)
+    r.delete(RD_DDH_GUI_PLOT_FOLDER)
+    r.delete(RD_DDH_BLE_SEMAPHORE)
+    r.delete(RD_DDH_GUI_STATE_EVENT_ICON_LOCK)
+    r.delete(RD_DDH_AWS_SYNC_PERIODIC_FLAG)
+    r.delete(RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS)
+    r.delete(RD_DDH_GUI_DISPLAY_MODELS)
 
 
 
@@ -1559,9 +1559,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # update MODELS tab, prevent freeze at boot, then, every 24 hours
-        if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_PERIODIC_REFRESH_MODELS):
+        # this redis key is deleted at boot
+        if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS):
+            th = threading.Thread(target=th_gui_download_models_from_ddn, args=(r, ))
+            th.start()
+            r.set(RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS, value=1, ex=3600 * 24)
+        if r.exists(RD_DDH_GUI_DISPLAY_MODELS):
+            r.delete(RD_DDH_GUI_DISPLAY_MODELS)
             gui_populate_models_tab(self)
-            r.set(RD_DDH_GUI_PERIODIC_REFRESH_MODELS, value=1, ex=3600 * 24)
+
 
 
 
