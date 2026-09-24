@@ -4,28 +4,29 @@ import os
 import time
 import requests
 from PyQt6.QtGui import QMovie
-
 from ddh.preferences import preferences_get_models_index
 from utils.ddh_common import (
     ddh_get_path_to_folder_gui_res, linux_is_rpi,
 )
 from ddh_log import lg_gui as lg
+from utils.redis import RD_DDH_GUI_DISPLAY_MODELS
 
 
 
+def th_gui_download_models_from_ddn(r):
 
-def gui_populate_models_tab(my_app):
     addr_ddn_api = 'ddn.lowellinstruments.com'
     port_ddn_api = 9000
-    deg = 'F'
 
-    # create names for maps
+
+    # build FILENAMES for maps
+    deg = 'F'
     fol = str(ddh_get_path_to_folder_gui_res())
     now = str(datetime.datetime.now().strftime('%Y%m%d'))
     fg_dtm = f"{fol}/{now}_{deg}_dtm.gif"
     fg_gom = f"{fol}/{now}_{deg}_gom.gif"
     fg_mab = f"{fol}/{now}_{deg}_mab.gif"
-    got_dtm = got_gom = got_mab = False
+
 
     # delete any previous (not today's) map gifs
     for i in glob.glob(f"{fol}/*.gif"):
@@ -37,6 +38,7 @@ def gui_populate_models_tab(my_app):
         lg.a(f'deleting old model gif file {os.path.basename(i)}')
         os.unlink(i)
 
+
     # when developing, delete even today's maps
     if not linux_is_rpi():
         lg.a('debug, when developing, delete even today\'s models gif files')
@@ -46,67 +48,70 @@ def gui_populate_models_tab(my_app):
             os.unlink(i)
 
 
+    # -----------------------------------------------
+    # each of these might take 15 seconds to timeout
+    # when an error ccurs
+    # -----------------------------------------------
+
+
+
     # get DTM map from DDN
     t = 5
-    _el = time.perf_counter()
-    bn = os.path.basename(fg_dtm)
     if not os.path.exists(fg_dtm):
-        lg.a(f"requesting today's DTM model file {bn}")
+        lg.a(f"requesting today's DTM model file {os.path.basename(fg_dtm)}")
         url = f'http://{addr_ddn_api}:{port_ddn_api}/dtm?t={now}&deg={deg}'
         try:
             rsp = requests.get(url, timeout=t)
             rsp.raise_for_status()
             with open(fg_dtm, 'wb') as f:
                 f.write(rsp.content)
-                got_dtm = True
         except (Exception,) as err:
-            _el = int(time.perf_counter() - _el)
-            lg.a(f'error, DTM models request -> {err}, took {_el} seconds')
-    else:
-        got_dtm = True
-        lg.a(f"re-using today's DTM forecast model file {bn}")
+            lg.a(f'error, DTM models request -> {err}')
 
 
     # get GOM map from DDN
-    _el = time.perf_counter()
-    bn = os.path.basename(fg_gom)
     if not os.path.exists(fg_gom):
-        lg.a(f"requesting today's GOM model file {bn}")
-        t = 5
+        lg.a(f"requesting today's GOM model file {os.path.basename(fg_gom)}")
         url = f'http://{addr_ddn_api}:{port_ddn_api}/gom?t={now}&deg={deg}'
         try:
             rsp = requests.get(url, timeout=t)
             rsp.raise_for_status()
             with open(fg_gom, 'wb') as f:
                 f.write(rsp.content)
-                got_gom = True
         except (Exception,) as err:
-            _el = int(time.perf_counter() - _el)
-            lg.a(f'error, GOM models request -> {err}, took {_el} seconds')
-    else:
-        got_gom = True
-        lg.a(f"re-using today's GOM forecast model file {bn}")
+            lg.a(f'error, GOM models request -> {err}')
 
 
     # get MAB map from DDN
-    _el = time.perf_counter()
-    bn = os.path.basename(fg_mab)
     if not os.path.exists(fg_mab):
-        lg.a(f"requesting today's MAB model file {bn}")
-        t = 5
+        lg.a(f"requesting today's MAB model file {os.path.basename(fg_mab)}")
         url = f'http://{addr_ddn_api}:{port_ddn_api}/mab?t={now}&deg={deg}'
         try:
             rsp = requests.get(url, timeout=t)
             rsp.raise_for_status()
             with open(fg_mab, 'wb') as f:
                 f.write(rsp.content)
-                got_mab = True
         except (Exception,) as err:
-            _el = int(time.perf_counter() - _el)
-            lg.a(f'error, MAB models request -> {err}, took {_el} seconds')
-    else:
-        got_mab = True
-        lg.a(f"re-using today's MAB forecast map file {bn}")
+            lg.a(f'error, MAB models request -> {err}')
+
+
+    # mark there might be models for GUI to display
+    r.set(RD_DDH_GUI_DISPLAY_MODELS, value=1)
+
+
+
+
+def gui_populate_models_tab(my_app):
+    deg = 'F'
+    fol = str(ddh_get_path_to_folder_gui_res())
+    now = str(datetime.datetime.now().strftime('%Y%m%d'))
+    fg_dtm = f"{fol}/{now}_{deg}_dtm.gif"
+    fg_gom = f"{fol}/{now}_{deg}_gom.gif"
+    fg_mab = f"{fol}/{now}_{deg}_mab.gif"
+    got_dtm = os.path.isfile(fg_dtm)
+    got_gom = os.path.isfile(fg_gom)
+    got_mab = os.path.isfile(fg_mab)
+
 
     # calculate how many good models we have
     my_app.n_good_models = int(got_dtm) + int(got_gom) + int(got_mab)
@@ -137,6 +142,7 @@ def gui_populate_models_tab(my_app):
             fp = fg_mab
         else:
             fp = f"{fol}/error_models.gif"
+
 
     # load the models picture
     a = my_app
