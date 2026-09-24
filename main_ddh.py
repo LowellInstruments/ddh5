@@ -329,68 +329,6 @@ def gui_setup_center_window(my_app):
 
 
 
-def _gui_tabs_populate_history_old(my_app):
-    """
-    fills history table on history tab
-    """
-
-    # clear the table
-    a = my_app
-    a.tbl_his.clear()
-    a.tbl_his.tableWidget = None
-    a.tbl_his.tableWidget = QTableWidget()
-    a.tbl_his.tableWidget.setRowCount(25)
-    a.tbl_his.tableWidget.setColumnCount(3)
-    a.tbl_his.tableWidget.setSortingEnabled(False)
-
-
-    # get the history database and order by most recent first
-    db = DbHis(ddh_get_path_to_db_history_file())
-    rows = db.get_all().values()
-    rows = sorted(rows, key=lambda x: x["ep_loc"], reverse=True)
-
-
-    # we will show just one entry per mac
-    fil_r = []
-    already = []
-    for i, h in enumerate(rows):
-        if h['mac'] not in already:
-            already.append(h['mac'])
-            fil_r.append(h)
-
-
-    # we only have one, the newest, history entry per mac
-    for i, h in enumerate(fil_r):
-        e = h["e"]
-        e = "success" if e == "ok" else e
-        try:
-            a.tbl_his.setItem(i, 0, QTableWidgetItem(str(h["SN"])))
-            lat = "{:+6.4f}".format(float(h["lat"]))
-            lon = "{:+6.4f}".format(float(h["lon"]))
-            dt = datetime.datetime.fromtimestamp(int(h["ep_loc"]))
-            t = dt.strftime("%b %d %H:%M")
-            a.tbl_his.setItem(i, 1, QTableWidgetItem(f"{e} {t} at {lat}, {lon}"))
-            a.tbl_his.setItem(i, 2, QTableWidgetItem(str(h['rerun'])))
-
-        except (Exception,) as ex:
-            lg.a(f"error, history frame {h} -> {ex}")
-
-
-    # redistribute columns width
-    a.tbl_his.horizontalHeader().resizeSection(0, 150)
-    a.tbl_his.horizontalHeader().resizeSection(1, 300)
-    a.tbl_his.horizontalHeader().setStretchLastSection(True)
-
-
-    # columns' title labels
-    labels = ["logger", t_str(STR_DESC_RESULT), "re-run"]
-    a.tbl_his.setHorizontalHeaderLabels(labels)
-
-    # show row numbers
-    a.tbl_his.verticalHeader().setVisible(True)
-
-
-
 def _gui_tabs_populate_history_new(my_app, index):
     t = my_app.tbl_his
     t.clear()
@@ -401,12 +339,7 @@ def _gui_tabs_populate_history_new(my_app, index):
 
 
 
-    # know which kind of table we want to show
-    text_dropdown_table = my_app.cbox_table_his.itemText(index)
-    ls_sn_done = []
-
-
-    # read new simpler HISTORY DATABASE
+    # read new HISTORY DATABASE
     ls_lines = []
     path_db = ddh_get_path_to_db_new_history_file()
     if os.path.exists(path_db):
@@ -414,11 +347,11 @@ def _gui_tabs_populate_history_new(my_app, index):
             ls_lines = f.readlines()
 
 
-    # do not use enumerate() or you will have blank rows
-    i = 0
-
 
     # logger, datetime, offload_result, restart, summary stats
+    i = 0
+    ls_sn_done = []
+    text_dropdown_table = my_app.cbox_table_his.itemText(index)
     for line in ls_lines:
         sn, dt_s, e, rr, stats_summary = line.replace('\n', '').split(',')
         if (sn in ls_sn_done) and text_dropdown_table == 'all':
@@ -458,6 +391,8 @@ def _gui_tabs_populate_history_new(my_app, index):
         _it = QTableWidgetItem(stats_summary)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 4, _it)
+
+        # do not use enumerate() or you will have blank rows
         i += 1
 
 
@@ -479,6 +414,7 @@ def _gui_tabs_populate_history_new(my_app, index):
 
 
 def _gui_tabs_populate_table_history(my_app):
+    # index of selection "all" or "single logger"
     index = my_app.cbox_table_his.currentIndex()
     _gui_tabs_populate_history_new(my_app, index)
 
@@ -487,19 +423,10 @@ def _gui_tabs_populate_table_history(my_app):
 
 def gui_tabs_populate_table_history_on_purge_history_db(my_app):
     _gui_tabs_populate_table_history(my_app)
-
-
-
 def gui_tabs_populate_table_history_on_dropdown_all_sn_changed(my_app):
     _gui_tabs_populate_table_history(my_app)
-
-
-
 def gui_tabs_populate_table_history_on_timer_refresh(my_app):
     _gui_tabs_populate_table_history(my_app)
-
-
-
 def gui_tabs_populate_table_history_at_boot(my_app):
     _gui_tabs_populate_table_history(my_app)
 
@@ -508,55 +435,27 @@ def gui_tabs_populate_table_history_at_boot(my_app):
 
 
 def gui_tabs_populate_note_dropdown(my_app):
-    """fills dropdown list in note tab"""
+    """fills dropdown list in NOTE tab"""
 
     a = my_app
     a.lst_macs_note_tab.clear()
-
     j = ddh_config_get_list_of_monitored_serial_numbers()
     for each in j:
         a.lst_macs_note_tab.addItem(each)
 
 
 
+
 def gui_tabs_populate_graph_dropdown_sn(my_app):
     """fills logger serial number dropdown list in graph tab"""
-
+    # Nick on 09/24/26 "I think it should only show active loggers"
+    # means not from history but from config file
     a = my_app
     a.cb_g_sn.clear()
-
-
-    # from HISTORY database, grab serial numbers, most recent first
-    db = DbHis(ddh_get_path_to_db_history_file())
-    rows = db.get_all().values()
-    rows = sorted(rows, key=lambda x: str(x["ep_loc"]), reverse=True)
-    h_sn = []
-    for h in rows:
-        if not h['SN']:
-            continue
-        if h['SN'] not in h_sn:
-            h_sn.append(h['SN'].lower())
-
-
-    # make them unique
-    h_sn = list(set(h_sn))
-
-
-    # from CONFIGURATION file, grab serial numbers
     c_sn = ddh_config_get_list_of_monitored_serial_numbers()
-
-
-    # version A) both serial numbers in history and config file
-    # for i in h_sn:
-    #     a.cb_g_sn.addItem(i)
-    # for i in c_sn:
-    #     if i not in h_sn:
-    #         a.cb_g_sn.addItem(i)
-
-
-    # version B) only serial numbers in config file
     for i in c_sn:
         a.cb_g_sn.addItem(i)
+
 
 
 
@@ -772,6 +671,11 @@ def gui_add_to_history_database(mac, e, lat, lon, ep_loc, ep_utc, rerun, u, info
     info = info.split('_')[0]
     if info == 'DO2':
         info = 'DO-2'
+
+    # -------------------------------------------------------
+    # we add to the old history file to keep DDD working
+    # BUT new history database is done in ddh_cnv, not here
+    # -------------------------------------------------------
     sn = ddh_config_get_logger_sn_from_mac(mac)
     db = DbHis(ddh_get_path_to_db_history_file())
     e = e + ' ' + info
@@ -1107,6 +1011,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             db = DbHis(p)
             lg.a(f"pressed btn_purge_dl_folder, path = {p}")
             db.delete_all()
+            path_db_new = ddh_get_path_to_db_new_history_file()
+            if os.path.exists(path_db_new):
+                os.unlink(path_db_new)
         gui_tabs_populate_table_history_on_purge_history_db(self)
 
 
