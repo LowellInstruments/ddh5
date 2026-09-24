@@ -260,3 +260,7 @@
 5.0.59      09/24/26
 
     run_ddh.sh -> added stopping linux wireplumber service
+
+5.0.60      09/24/26
+
+    threaded the models download at boot

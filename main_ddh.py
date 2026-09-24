@@ -1,3 +1,5 @@
+import threading
+
 import signal
 import sys
 from pathlib import Path
@@ -21,7 +23,6 @@ from ddh.preferences import preferences_set_models_index
 from ddh_gps import ddh_gps_get
 from ddh.buttons import ddh_create_thread_buttons
 from ddh.notifications_v2 import (
-    notify_via_sms,
     notify_ddh_alive,
     notify_error_sw_crash
 )
@@ -41,12 +42,13 @@ from utils.redis import (
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_LOW,
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_MID,
     RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP,
-    RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_REFRESH_MODELS,
+    RD_DDH_GUI_GRAPH_STATISTICS, RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS,
     RD_DDH_GUI_RV,
     RD_DDH_GPS_FIX_NUMBER_OF_SATELLITES,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
     RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST, RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
-    RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE
+    RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE, RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE,
+    RD_DDH_GUI_DISPLAY_MODELS
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -118,7 +120,7 @@ from ddh.preferences import (
     preferences_get_brightness_clicks,
     preferences_get_models_index, preferences_set_brightness_clicks
 )
-from ddh.utils_models import gui_populate_models_tab
+from ddh.utils_models import gui_populate_models_tab, th_gui_download_models_from_ddn
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 import subprocess as sp
 import pyqtgraph as pg
@@ -214,16 +216,13 @@ def _calc_app_uptime():
 
 
 def gui_init_redis():
-    for k in (
-            RD_DDH_GUI_PLOT_REASON,
-            RD_DDH_GUI_PLOT_FOLDER,
-            RD_DDH_BLE_SEMAPHORE,
-            RD_DDH_GUI_STATE_EVENT_ICON_LOCK,
-            RD_DDH_AWS_SYNC_PERIODIC_FLAG,
-            RD_DDH_GUI_PERIODIC_REFRESH_MODELS
-    ):
-        r.delete(k)
-
+    r.delete(RD_DDH_GUI_PLOT_REASON)
+    r.delete(RD_DDH_GUI_PLOT_FOLDER)
+    r.delete(RD_DDH_BLE_SEMAPHORE)
+    r.delete(RD_DDH_GUI_STATE_EVENT_ICON_LOCK)
+    r.delete(RD_DDH_AWS_SYNC_PERIODIC_FLAG)
+    r.delete(RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS)
+    r.delete(RD_DDH_GUI_DISPLAY_MODELS)
 
 
 
@@ -868,7 +867,7 @@ def gui_setup_brightness(a):
 
 
 def gui_get_my_current_wlan_ssid() -> str:
-    """gets connected wi-fi network name, if any"""
+    """gets connected Wi-Fi network name, if any"""
 
     if linux_is_rpi():
         c = "/usr/sbin/iwgetid -r"
@@ -1638,7 +1637,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         p_r = r.get(RD_DDH_GUI_PLOT_REASON)
         if p_r:
             # p_r: means plot_reason, can be 'ble', 'user', 'hauls_next', 'hauls_labels'
-            # BLE needs a FOLDER path written on another redis key
+            # BLE needs a FOLDER path written on another Redis key
             p_r = p_r.decode()
             lg.a(f"note, GUI received PLOT request with reason = {p_r}")
             graph_process_n_draw(self, reason=p_r)
@@ -1658,9 +1657,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # update MODELS tab, prevent freeze at boot, then, every 24 hours
-        if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_PERIODIC_REFRESH_MODELS):
+        # this Redis key is deleted at boot
+        if _calc_app_uptime() > 10 and not r.exists(RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS):
+            th = threading.Thread(target=th_gui_download_models_from_ddn, args=(r, ))
+            th.start()
+            r.set(RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS, value=1, ex=3600 * 24)
+        if r.exists(RD_DDH_GUI_DISPLAY_MODELS):
+            r.delete(RD_DDH_GUI_DISPLAY_MODELS)
             gui_populate_models_tab(self)
-            r.setex(RD_DDH_GUI_PERIODIC_REFRESH_MODELS, 3600 * 24, 1)
 
 
 
@@ -2019,7 +2023,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.timer_gui_sixty_seconds = QTimer()
         self.timer_six_hours = QTimer()
         # self.timer_gui_atcom = QTimer()
-        # timer that checks redis and power shields (j4h, sailorhat)
+        # timer that checks Redis and power shields (j4h, sailorhat)
         self.timer_gui_sixty_seconds.timeout.connect(self._cb_timer_gui_sixty_seconds)
         self.timer_gui_sixty_seconds.start(60 * 1000)
         # timer to generate DDH-alive notifications, first trigger at 10 s, then 6 h

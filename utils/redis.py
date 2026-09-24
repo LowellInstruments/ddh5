@@ -19,13 +19,13 @@ RD_DDH_GUI_RV = p + 'rv'
 RD_DDH_GUI_BEACON_FLAG = p + 'gui_beacon_flag'
 # personalized one
 RD_DDH_GUI_GRAPH_STATISTICS_TEMPLATE = p + 'graph_statistics:{}'
-
+RD_DDH_GUI_DISPLAY_MODELS = p + 'gui_display_models'
 
 
 
 p = 'ddh:gui:refresh:'
 RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE = p + 'history_table'
-RD_DDH_GUI_PERIODIC_REFRESH_MODELS = p + 'models_update'
+RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS = p + 'models_update'
 RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING = p + 'processes_present'
 RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE = p + 'ble_icon'
 RD_DDH_GUI_PERIODIC_CHECK_ICON_GPS = p + 'gps_icon'
