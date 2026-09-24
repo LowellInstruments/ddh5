@@ -256,3 +256,7 @@
 5.0.58      09/21/26
 
     reenabled atcom timer
+
+5.0.59      09/24/26
+
+    run_ddh.sh -> added stopping linux wireplumber service

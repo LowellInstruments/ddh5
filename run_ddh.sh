@@ -36,6 +36,7 @@ sudo rfkill unblock wlan
 
 _pb "    SYSTEMCTL - restarting bluetooth service"
 sudo systemctl restart bluetooth
+systemctl --user stop wireplumber
 sleep 2
 
 
