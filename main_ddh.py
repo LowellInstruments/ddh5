@@ -482,6 +482,7 @@ def gui_setup_buttons(my_app):
     a.btn_close_wo_save.clicked.connect(a.click_btn_edit_tab_close_wo_save)
     a.btn_dl_purge.clicked.connect(a.click_btn_purge_dl_folder)
     a.btn_his_purge.clicked.connect(a.click_btn_purge_his_db)
+    # lo: stands for look-out
     a.btn_adv_purge_lo.clicked.connect(a.click_btn_adv_purge_lo)
     # load current settings
     a.btn_load_current.clicked.connect(a.click_btn_load_current_json_file)
