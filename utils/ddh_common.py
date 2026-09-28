@@ -1058,6 +1058,9 @@ PATH_MAIN_GPS_HW_ERROR = f'{_p}/gps_err.png'
 PATH_MAIN_GPS_POWER_CYCLE = f'{_p}/gps_power_cycle.png'
 PATH_CLOUD_ICON_OK = f"{_p}/new_icon_cloud.png"
 PATH_CLOUD_ICON_ERROR = f"{_p}/new_icon_cloud_error.png"
+PATH_GUI_DDH_WAS_UPDATED = f"{_p}/updated.png"
+
+
 
 
 if __name__ == '__main__':

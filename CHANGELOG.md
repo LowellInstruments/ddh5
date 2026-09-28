@@ -239,7 +239,8 @@
     better x-temp plotting for TDO
 
 
-6.0.06  09/24/26
+6.0.07  09/24/26
 
     download models as thread
     button purge history database was not working
+    updated icon

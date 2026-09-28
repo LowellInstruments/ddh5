@@ -65,7 +65,7 @@ from utils.redis import (
     RD_DDH_AWS_SYNC_PERIODIC_FLAG,
     RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
     RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE,
-    RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_DISPLAY_MODELS
+    RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_DISPLAY_MODELS, RD_DDH_GUI_WAS_UPDATED
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -125,6 +125,7 @@ from utils.ddh_common import (
     exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
     PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
     exp_use_show_fish_website, ddh_get_path_to_db_new_history_file, LI_PATH_PLT_ALSO_OUT_OF_WATER,
+    PATH_GUI_DDH_WAS_UPDATED,
 )
 import datetime
 import os
@@ -1711,9 +1712,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-        # ------------------
-        # update MAIN icon
-        # ------------------
+        # -----------------------------
+        # map state code to main_icon
+        # -----------------------------
         code, text = app_state_get()
         code = code.decode() if code else ''
         text = text.decode() if text else ''
@@ -1789,7 +1790,18 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-        # update main icon or not
+        # special case for update
+        if r.exists(RD_DDH_GUI_WAS_UPDATED):
+            r.delete(RD_DDH_GUI_WAS_UPDATED)
+            pi = PATH_GUI_DDH_WAS_UPDATED
+            text = 'DDH updated!'
+            r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=5)
+
+
+
+        # ----------------------------
+        # display main icon and text
+        # ----------------------------
         k = RD_DDH_GUI_STATE_EVENT_ICON_LOCK
         lock_icon = 0 if not r.exists(k) else r.ttl(k)
         if code in (EV_BLE_SCAN, ) and lock_icon:
