@@ -264,3 +264,7 @@
 5.0.60      09/24/26
 
     threaded the models download at boot
+
+5.0.61      09/29/26
+
+    added DDC option gps_puck
