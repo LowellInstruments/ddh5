@@ -414,11 +414,10 @@ def _menu_cb_gps_signal_quality_puck():
     # get the USB ports
     p_gps, p_ctl, port_type = gps_find_any_usb_port()
     if not port_type:
-        _p_e('could not detect quectel USB ports to get GPS signal quality')
+        _p_e('could not detect PUCK USB ports to get GPS signal quality')
         time.sleep(3)
         return
     print('port_gps', p_gps)
-    print('port_ctrl', p_ctl)
 
 
     if port_type != 'puck':
