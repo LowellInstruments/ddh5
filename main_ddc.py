@@ -414,6 +414,120 @@ def _menu_cb_gps_signal_quality():
 
 
 
+def _menu_cb_gps_signal_quality_puck():
+
+
+    # get the USB ports
+    p_gps, p_ctl, port_type = gps_find_any_usb_port()
+    if not port_type:
+        _p_e('could not detect PUCK USB ports to get GPS signal quality')
+        time.sleep(3)
+        return
+    print('port_gps', p_gps)
+
+
+    if port_type != 'puck':
+        _p_e('could not detect PUCK USB ports to get GPS signal quality')
+        time.sleep(3)
+        return
+
+
+    # figure out the baudrate
+    br = 4800
+
+
+    # starts a PUCK GPS signal quality loop
+    while 1:
+
+        # get a lot of GPS bytes
+        os.system('clear')
+        print('GPS quality test running\n')
+        d_gps = {}
+        gps_hardware_read(p_gps, br, d_gps, debug=False)
+        bb = []
+        if 'bb' in d_gps.keys():
+            bb = d_gps['bb']
+
+
+
+        # we only keep GPRMC / GPGSV lines
+        ls_gps = bb.split(b'\r\n')
+        ls_rmc = [i for i in ls_gps if i and i.startswith(b'$GPRMC') and i[-3] == 42]
+        ls_gsv = [i for i in ls_gps if i and i.startswith(b'$GPGSV') and i[-3] == 42]
+        line_rmc = ''
+        if ls_rmc:
+            line_rmc = ls_rmc[-1].decode()
+        print(ls_rmc)
+        print(ls_gsv)
+
+
+
+        # parse line GPRMC
+        s = '\n'
+        if not line_rmc:
+            s += "RMC --> none\n"
+        else:
+            g = line_rmc.split(',')
+            # g: ['$GPRMC', '145557.00', 'A', '4136.603719', 'N', '07036.560277', 'W', ...]
+            if g[2] == 'A':
+                def to_deg(deg_s):
+                    deg_f = float(deg_s[:-7])
+                    deg_m = float(deg_s[-7:]) / 60
+                    return deg_f + deg_m
+
+                last_lat_lon = (to_deg(g[3]), g[4], to_deg(g[5]), g[6])
+                last_time = f'{g[1][0:2]}:{g[1][2:4]}:{g[1][4:6]}'
+                s += f'RMC --> {last_lat_lon}    {last_time}\n'
+            else:
+                s += "RMC --> ,,,,\n"
+
+        print(s, end='')
+        s = ''
+
+
+
+        # build GPGSV set
+        d = {}
+        for i in ls_gsv:
+            f = i.decode().split(',')
+            # 1    = Total number of messages of this type in this cycle
+            # 2    = Message number
+            # 3    = Total number of SVs in view
+            # 4    = SV PRN number
+            # 5    = Elevation in degrees, 90 maximum
+            # 6    = Azimuth, degrees from true north, 000 to 359
+            # 7    = SNR, 00-99 dB (null when not tracking)
+            # 8-11 = Information about second SV, same as field 4-7
+            # 12-15= Information about third SV, same as field 4-7
+            # 16-19= Information about fourth SV, same as field 4-7
+            for j in range(4, 17, 4):
+                try:
+                    s_id = f[j]
+                    s_snr = f[j + 3]
+                    d[s_id] = s_snr
+                except (Exception, ):
+                    pass
+
+        n = len(d)
+        if d:
+            # d: {'1': {'04': '26', '05': '35', '06': '34', '09': '32'},
+            #     '2': {'11': '30', '12': '35', '19': '30', '21': '34'},
+            #     '3': {'25': '30', '29': '30', '13': '', '17': ''}}
+            d = {k: v for k, v in d.items() if v}
+            m = len(d)
+            s += f'GSV --> {n} satellites, {n - m} of which reporting no SNR\n'
+            s += '\n[ id ] snr     (max 99)\n'
+            s += '-----------------------\n'
+            for k, v in d.items():
+                s += f'[ {k} ] snr {v} '
+                s += ('#' * int(v)) + '\n'
+
+        print(s)
+        time.sleep(6)
+
+
+
+
 
 def _menu_cb_test_buttons():
     try:
@@ -1085,9 +1199,10 @@ def main_ddc():
             '2': (f"2) set crontab       [{fcd}]", _menu_cb_toggle_crontab_ddh),
             '3': (f"3) check all keys    [{fdk}]", _menu_cb_print_check_all_keys),
             '4': (f"4) test GPS", _menu_cb_gps_signal_quality),
-            '5': (f"5) test side buttons", _menu_cb_test_buttons),
-            '6': (f"6) toggle display orientation", _menu_cb_toggle_display),
-            '7': (f"7) make wifis permanent", _menu_cb_copy_wifis),
+            '5': (f"5) test GPS puck", _menu_cb_gps_signal_quality_puck),
+            '6': (f"6) test side buttons", _menu_cb_test_buttons),
+            '7': (f"7) toggle display orientation", _menu_cb_toggle_display),
+            '8': (f"8) make wifis permanent", _menu_cb_copy_wifis),
             'r': (f"r) BLE range tool", _menu_cb_run_brt),
             'o': (f"o) deploy logger DOX", _menu_cb_run_deploy_dox),
             't': (f"t) deploy logger TDO", _menu_cb_run_deploy_tdo),
