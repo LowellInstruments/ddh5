@@ -4,7 +4,7 @@ import sys
 import time
 from os.path import exists
 import serial
-from gps.gps import gps_find_any_usb_port, gps_hardware_read
+from gps.gps import gps_find_any_usb_port, gps_hardware_read, _gps_parse_satellites_in_view, _gps_contain_sentence_type
 from gps.gps_adafruit import gps_adafruit_init
 from gps.gps_quectel import (
     gps_hat_detect_list_of_usb_ports,
@@ -414,6 +414,51 @@ def _menu_cb_gps_signal_quality():
 
 
 
+
+# to make this puck work with GSV frames, since it is SLOWER 4800 vs 115200
+def _gps_hardware_read_puck(up, baud_rate, d: dict, debug=True):
+
+    # up: '/dev/ttyUSB0'
+    ser = None
+    bb = bytes()
+
+    try:
+        ser = serial.Serial(up, baud_rate, timeout=0)
+
+        for _ in range(2):
+            time.sleep(5)
+            bb = ser.read(ser.in_waiting)
+            print('bb', bb)
+            bb_gsv = _gps_contain_sentence_type(bb, b'$GPGSV')
+            bb_rmc = _gps_contain_sentence_type(bb, b'$GPRMC')
+
+            # useful for power-cycling sixfab hub upon their bug
+            d['err_rmc_comma'] = (bb and b'$GPRMC,,V,,,,' in bb)
+            # d['err_rmc_comma'] = True
+
+            if debug:
+                for _ in bb.split(b'\r\n'):
+                    print(_)
+
+            if bb_gsv:
+                d['ns'] = _gps_parse_satellites_in_view(bb_gsv)
+
+            if bb_rmc or bb_gsv or bb_gga:
+                break
+
+    except (Exception,) as ex:
+        print(f'GPS: error gps_read -> {ex}')
+        time.sleep(1)
+        d['error_gps'] = 1
+
+    finally:
+        # bb: bytes
+        d['bb'] = bb
+        if ser:
+            ser.close()
+
+
+
 def _menu_cb_gps_signal_quality_puck():
 
 
@@ -443,7 +488,7 @@ def _menu_cb_gps_signal_quality_puck():
         os.system('clear')
         print('GPS quality test running\n')
         d_gps = {}
-        gps_hardware_read(p_gps, br, d_gps, debug=False)
+        _gps_hardware_read_puck(p_gps, br, d_gps, debug=False)
         bb = []
         if 'bb' in d_gps.keys():
             bb = d_gps['bb']
@@ -457,8 +502,8 @@ def _menu_cb_gps_signal_quality_puck():
         line_rmc = ''
         if ls_rmc:
             line_rmc = ls_rmc[-1].decode()
-        print(ls_rmc)
-        print(ls_gsv)
+        print('ls_rmc ->', ls_rmc)
+        print('ls_gsv ->', ls_gsv)
 
 
 
@@ -513,7 +558,7 @@ def _menu_cb_gps_signal_quality_puck():
             # d: {'1': {'04': '26', '05': '35', '06': '34', '09': '32'},
             #     '2': {'11': '30', '12': '35', '19': '30', '21': '34'},
             #     '3': {'25': '30', '29': '30', '13': '', '17': ''}}
-            d = {k: v for k, v in d.items() if v}
+            d = {k: v for k, v in d.items() if v and '*' not in v}
             m = len(d)
             s += f'GSV --> {n} satellites, {n - m} of which reporting no SNR\n'
             s += '\n[ id ] snr     (max 99)\n'
