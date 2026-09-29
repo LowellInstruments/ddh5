@@ -428,7 +428,6 @@ def _gps_hardware_read_puck(up, baud_rate, d: dict, debug=True):
         for _ in range(2):
             time.sleep(5)
             bb = ser.read(ser.in_waiting)
-            print('bb', bb)
             bb_gsv = _gps_contain_sentence_type(bb, b'$GPGSV')
             bb_rmc = _gps_contain_sentence_type(bb, b'$GPRMC')
 
