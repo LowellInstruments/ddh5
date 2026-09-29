@@ -443,7 +443,7 @@ def _gps_hardware_read_puck(up, baud_rate, d: dict, debug=True):
             if bb_gsv:
                 d['ns'] = _gps_parse_satellites_in_view(bb_gsv)
 
-            if bb_rmc or bb_gsv or bb_gga:
+            if bb_rmc or bb_gsv:
                 break
 
     except (Exception,) as ex:
