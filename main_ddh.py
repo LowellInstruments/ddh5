@@ -65,7 +65,7 @@ from utils.redis import (
     RD_DDH_AWS_SYNC_PERIODIC_FLAG,
     RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
     RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE,
-    RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_DISPLAY_MODELS, RD_DDH_GUI_WAS_UPDATED
+    RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_DISPLAY_MODELS, RD_DDH_GUI_WAS_UPDATED, RD_DDH_GUI_SHOW_UPDATED
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -1793,9 +1793,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # special case for update
         if r.exists(RD_DDH_GUI_WAS_UPDATED):
             r.delete(RD_DDH_GUI_WAS_UPDATED)
-            pi = PATH_GUI_DDH_WAS_UPDATED
-            text = 'DDH updated!'
             r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=5)
+            r.set(RD_DDH_GUI_SHOW_UPDATED, value=1, ex=5)
 
 
 
@@ -1805,13 +1804,19 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         k = RD_DDH_GUI_STATE_EVENT_ICON_LOCK
         lock_icon = 0 if not r.exists(k) else r.ttl(k)
         if code in (EV_BLE_SCAN, ) and lock_icon:
+            # BLE SCAN has the LESS priority of them all
             pass
         else:
+            # let the STAR icon be shown
+            if r.ttl(RD_DDH_GUI_SHOW_UPDATED) > 0:
+                pi = PATH_GUI_DDH_WAS_UPDATED
+                text = 'DDH updated!'
             self.lbl_main_txt.setText(text)
             if pi:
                 self.lbl_main_img.setPixmap(QPixmap(pi))
             else:
                 print('*2* unknown path_image', pi)
+
 
 
         # show or not STATISTICS box
