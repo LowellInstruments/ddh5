@@ -19,6 +19,7 @@ RD_DDH_GUI_RV = p + 'rv'
 RD_DDH_GUI_BEACON_FLAG = p + 'gui_beacon_flag'
 RD_DDH_GUI_DISPLAY_MODELS = p + 'gui_display_models'
 RD_DDH_GUI_WAS_UPDATED = p + 'gui_was_updated'
+RD_DDH_GUI_SHOW_UPDATED = p + 'gui_show_updated_icon'
 
 
 
