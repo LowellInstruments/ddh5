@@ -529,7 +529,8 @@ def _graph_process_n_draw_non_ctd(
         raise GraphException(e)
     mac = mac.replace(':', '-')
     if not _graph_check_mac_has_dl_files(mac, fol_ls):
-        raise GraphException(f'error, no files for SN {sn} mac {mac}')
+        lg.a(f'note, no files for logger {sn} (mac {mac})')
+        raise GraphException(f'error, no files for logger {sn}')
     lg.a(f'selected dropdown SN {sn} / mac {mac}')
     fol = str(calculate_path_to_folder_within_dl_files_from_mac_address(mac))
 
@@ -542,8 +543,8 @@ def _graph_process_n_draw_non_ctd(
     lg.a(f'found {nh} hauls in dl_files/{bn_fol}')
     if nh == 0:
         bn_fol = os.path.basename(fol)
-        lg.a(f'note, no hauls for {bn_fol}, we will show NO statistics box')
-        raise GraphException(f'error, no hauls for {bn_fol}')
+        lg.a(f'note, no hauls for logger {sn} (mac {bn_fol}), show NO statistics box')
+        raise GraphException(f'error, no hauls for logger {sn}')
 
 
     # reason = user changed the single file to plot with '<' button

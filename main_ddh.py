@@ -374,13 +374,13 @@ def _gui_tabs_populate_history_new(my_app, index):
         if 'error' in e.lower():
             e = e.replace('error', '❌')
         if 'ok' in e.lower():
-            e = '✅'
+            e = '✔️'
         _it = QTableWidgetItem(e)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 2, _it)
         # row items, re-run
         if 'True' in rr:
-            rr = '✅'
+            rr = '✔️'
         else:
             rr = '❌'
 
