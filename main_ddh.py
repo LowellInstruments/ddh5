@@ -357,17 +357,18 @@ def _gui_tabs_populate_history_new(my_app, index):
     for line in ls_lines:
         sn_line, dt_s, e, rr, stats_summary = line.replace('\n', '').split(',')
 
+
+        # when SN from file does NOT match the dropdown
+        if sn_dropdown_table != 'all':
+            if sn_dropdown_table.lower() != sn_line.lower():
+                continue
+
         if sn_dropdown_table == 'all':
             # quit after exactly ONE entry per logger when ALL
             if len(ls_sn_done) == len(ls_macs_cfg):
                 break
             if sn_line in ls_sn_done:
                 # do NOT repeat rows when ALL, only repeat them when NOT all
-                continue
-
-        # when SN from file does NOT match the dropdown
-        if sn_dropdown_table != 'all':
-            if sn_dropdown_table.lower() != sn_line.lower():
                 continue
 
 
