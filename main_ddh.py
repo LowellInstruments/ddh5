@@ -350,20 +350,29 @@ def _gui_tabs_populate_history_new(my_app, index):
 
 
     # logger, datetime, offload_result, restart, summary stats
+    ls_macs_cfg = ddh_config_get_list_of_monitored_macs()
     i = 0
     ls_sn_done = []
-    text_dropdown_table = my_app.cbox_table_his.itemText(index)
+    sn_dropdown_table = my_app.cbox_table_his.itemText(index)
     for line in ls_lines:
-        sn, dt_s, e, rr, stats_summary = line.replace('\n', '').split(',')
-        if (sn in ls_sn_done) and text_dropdown_table == 'all':
-            # do NOT repeat rows when ALL, repeat them when not all
-            continue
-        if sn not in ls_sn_done:
-            ls_sn_done.append(sn)
+        sn_line, dt_s, e, rr, stats_summary = line.replace('\n', '').split(',')
+
+        if sn_dropdown_table == 'all':
+            # quit after exactly ONE entry per logger when ALL
+            if len(ls_sn_done) == len(ls_macs_cfg):
+                break
+            if sn_line in ls_sn_done:
+                # do NOT repeat rows when ALL, only repeat them when NOT all
+                continue
+
+        # when SN from file does NOT match the dropdown
+        if sn_dropdown_table != 'all':
+            if sn_dropdown_table.lower() != sn_line.lower():
+                continue
 
 
         # row items, serial number
-        _it = QTableWidgetItem(sn)
+        _it = QTableWidgetItem(sn_line)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 0, _it)
         # row items, datetime
@@ -395,6 +404,11 @@ def _gui_tabs_populate_history_new(my_app, index):
 
         # do not use enumerate() or you will have blank rows
         i += 1
+
+        # add to loggers_done list, used for 'all'
+        if sn_line not in ls_sn_done:
+            ls_sn_done.append(sn_line)
+
 
 
     # table column widths
