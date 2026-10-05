@@ -244,3 +244,10 @@
     download models as thread
     button purge history database was not working
     updated icon
+
+
+6.0.08  10/05/26
+
+    done CSF conversion once upon boot
+
+
