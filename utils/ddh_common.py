@@ -639,12 +639,12 @@ def ddh_write_timestamp_aws_sqs(
 
 
 
-def ddh_summarize_csv_file_for_history_table(
+def ddh_calc_stats_of_csv_file_for_history_table(
         path_csv
 ) -> str:
 
     bn_csv = os.path.basename(path_csv)
-    summary = f''
+    stats = f''
     df = pd.read_csv(path_csv)
 
 
@@ -656,7 +656,7 @@ def ddh_summarize_csv_file_for_history_table(
 
 
     # ------------------------------------------
-    # calculate summary ONLY for data IN-WATER
+    # calculate stats ONLY for data IN-WATER
     # ------------------------------------------
     # TDO
     if '_TDO' in bn_csv:
@@ -669,7 +669,7 @@ def ddh_summarize_csv_file_for_history_table(
                 ls_p_filtered.append(ls_p[i])
 
     elif '_CTD' in bn_csv:
-        summary = 'implement soon'
+        stats = 'implement soon'
 
     elif '_DissolvedOxygen' in bn_csv:
         ls_dot = list(df['DO Temperature (C)'])
@@ -687,44 +687,51 @@ def ddh_summarize_csv_file_for_history_table(
 
 
     # build the summary statistics METRIC string for the table
-    if ls_t_filtered:
-        vt_filtered = np.nanmean(ls_t_filtered)
-        summary += f'{vt_filtered:.2f} °C_'
-    if ls_p_filtered:
-        vp_filtered = np.nanmean(ls_p_filtered)
-        summary += f'{vp_filtered:.2f} dbar'
-    if ls_dot_filtered:
-        vdot_filtered = np.nanmean(ls_dot_filtered)
-        summary += f'{vdot_filtered:.2f} °C_'
-    if ls_doc_filtered:
-        vdoc_filtered = np.nanmean(ls_doc_filtered)
-        summary += f'{vdoc_filtered:.2f} mg/l'
-
-
+    try:
+        if ls_t_filtered:
+            vt_filtered = np.nanmean(ls_t_filtered)
+            stats += f'{vt_filtered:.2f} °C_'
+        if ls_p_filtered:
+            vp_filtered = np.nanmean(ls_p_filtered)
+            stats += f'{vp_filtered:.2f} dbar'
+        if ls_dot_filtered:
+            vdot_filtered = np.nanmean(ls_dot_filtered)
+            stats += f'{vdot_filtered:.2f} °C_'
+        if ls_doc_filtered:
+            vdoc_filtered = np.nanmean(ls_doc_filtered)
+            stats += f'{vdoc_filtered:.2f} mg/l'
+    except (Exception, ) as e:
+        print(f'error generating data metric statistics -> {e}')
+        stats = 'error stats M'
 
     # build the summary statistics IMPERIAL string for the table
-    if ls_t_filtered:
-        vt_filtered = np.nanmean(ls_t_filtered)
-        vt_f = float(str((vt_filtered * 9/5) + 32))
-        summary += f'${vt_f:.2f} °F_'
-    if ls_p_filtered:
-        vp_filtered = np.nanmean(ls_p_filtered)
-        vp_f =  float(str(vp_filtered * 0.5468))
-        summary += f'{vp_f:.2f} ftm'
-    if ls_dot_filtered:
-        vdot_filtered = np.nanmean(ls_dot_filtered)
-        vt_f = float(str((vdot_filtered * 9/5) + 32))
-        summary += f'${vt_f:.2f} °F_'
-    if ls_doc_filtered:
-        vdoc_filtered = np.nanmean(ls_doc_filtered)
-        summary += f'{vdoc_filtered:.2f} mg/l'
+    try:
+        if ls_t_filtered:
+            vt_filtered = np.nanmean(ls_t_filtered)
+            vt_f = float(str((vt_filtered * 9/5) + 32))
+            stats += f'${vt_f:.2f} °F_'
+        if ls_p_filtered:
+            vp_filtered = np.nanmean(ls_p_filtered)
+            vp_f =  float(str(vp_filtered * 0.5468))
+            stats += f'{vp_f:.2f} ftm'
+        if ls_dot_filtered:
+            vdot_filtered = np.nanmean(ls_dot_filtered)
+            vt_f = float(str((vdot_filtered * 9/5) + 32))
+            stats += f'${vt_f:.2f} °F_'
+        if ls_doc_filtered:
+            vdoc_filtered = np.nanmean(ls_doc_filtered)
+            stats += f'{vdoc_filtered:.2f} mg/l'
+    except (Exception, ) as e:
+        print(f'error generating data imperial statistics -> {e}')
+        stats = 'error stats I'
 
 
-    if summary == "":
-        summary = 'no data in-water'
+
+    if stats == "":
+        stats = 'no data in-water'
 
 
-    return summary
+    return stats
 
 
 

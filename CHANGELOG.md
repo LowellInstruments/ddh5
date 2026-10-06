@@ -253,5 +253,6 @@
 
 6.0.09  10/05/26
 
-    done CSF conversion once upon DDU
-    support metric / imperial units in new table
+    main_ddh.py -> support metric / imperial units in new table
+    pop_ddh.sh ->  done CSF conversion once upon DDU
+    run_ddh.sh ->  check starlink upon boot and stop ppp service if so
