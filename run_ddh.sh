@@ -26,13 +26,13 @@ fi
 
 
 
-_pb " ==============="
-_pb "  Deck Data Hub"
-_pb " ==============="
+_pb " =============================="
+_pb "        Deck Data Hub"
+_pb " =============================="
 echo
 
 
-_pb " LINUX - rfkill + bluetooth services, cache and interfaces"
+_pb " LINUX - BLE service, cache and interfaces"
 sudo rfkill unblock bluetooth
 sudo rfkill unblock wlan
 sudo systemctl restart bluetooth
@@ -71,7 +71,7 @@ echo '300' | sudo tee /sys/kernel/debug/bluetooth/hci1/supervision_timeout 2> /d
 
 
 
-_pb " LINUX - permissions 'date' and 'ifmetric' + detect USB sixfab ports"
+_pb " LINUX - tools date, ifmetric, detect USB sixfab ports"
 sudo setcap CAP_SYS_TIME+ep /bin/date
 sudo setcap 'cap_net_raw,cap_net_admin+eip' /usr/sbin/ifmetric
 cd "$FOL_DDH" && "$FOL_VEN"/bin/python main_qus.py
@@ -115,11 +115,10 @@ fi
 
 
 
-_pb " LINUX - detect starlink and stop cell service if so"
 (curl --silent --connect-timeout 1 --max-time 1 192.168.100.1 | grep Starlink) > /dev/null
 RV=$?
 if [ $RV -eq 0 ]; then
-    _pb "   DDH - starlink detected, stopping PPP service"
+    _pb " LINUX - starlink detected, stopping PPP service"
     # stop ppp service
     sudo systemctl stop ppp_connection_manager.service
 else
@@ -127,7 +126,7 @@ else
     (systemctl is-active ppp_connection_manager.service | grep -w active) > /dev/null
     RV=$?
     if [ $RV -ne 0 ]; then
-        _py "   DDH - no starlink, restarting PPP service"
+        _py " LINUX - no starlink, restarting PPP service"
         sudo systemctl restart ppp_connection_manager.service
     fi
 fi
@@ -142,7 +141,9 @@ export DISPLAY=:0
 
 
 
-echo && echo
+echo
+_pb " =============================="
+echo
 
 
 
