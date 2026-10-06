@@ -24,7 +24,7 @@ from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
     ddh_get_path_to_root_application_folder,
     ddh_get_path_to_db_new_history_file,
-    ddh_summarize_csv_file_for_history_table, ddh_do_we_graph_out_of_water_data
+    ddh_calc_stats_of_csv_file_for_history_table, ddh_do_we_graph_out_of_water_data
 )
 from ddh_log import lg_cnv as lg
 
@@ -184,26 +184,26 @@ def _ddh_cnv():
             e = ''
             rr = ''
             if '&' in p:
+                # SN filled at BLE download
                 p, sn, dt_s, e, rr = p.split('&')
                 lg.a(f'dequeuing file {bn} upon BLE download')
             else:
+                # SN empty at CNV / DDH booting
                 lg.a(f'dequeuing file {bn} upon DDH booting')
 
 
             # --------------------------------
             # convert LID file from queue
-            # 1) at CNV booting  (SN empty)
-            # 2) at BLE download (SN filled)
             # --------------------------------
 
             rv, path_csv = _convert_lid_file(p)
             if rv == 0:
                 ls_converted_files.append(p)
                 if sn and 'ok' in e.lower():
-                    # this is a conversion request from BLE, add it to history table
+                    # conversion request from BLE, add it to history table
                     try:
                         lg.a(f'summarizing file {os.path.basename(path_csv)} for history table')
-                        summary = ddh_summarize_csv_file_for_history_table(path_csv)
+                        summary = ddh_calc_stats_of_csv_file_for_history_table(path_csv)
 
                         # BLE download as OK to history
                         # search for 'download BLE ERR to history'

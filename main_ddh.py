@@ -452,7 +452,8 @@ def gui_tabs_populate_table_history_on_timer_refresh(my_app):
     _gui_tabs_populate_table_history(my_app)
 def gui_tabs_populate_table_history_at_boot(my_app):
     _gui_tabs_populate_table_history(my_app)
-
+def gui_tabs_populate_table_history_upon_units_change(my_app):
+    _gui_tabs_populate_table_history(my_app)
 
 
 
@@ -1378,6 +1379,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             s = "Imperial"
         self.btn_plt_units.setText(s)
         graph_request(reason='user')
+        gui_tabs_populate_table_history_upon_units_change(self)
+
 
 
 

@@ -71,7 +71,7 @@ echo '300' | sudo tee /sys/kernel/debug/bluetooth/hci1/supervision_timeout 2> /d
 
 
 
-_pb " LINUX - permissions 'date' and 'ifmetric' + auto-detect USB ports"
+_pb " LINUX - permissions 'date' and 'ifmetric' + detect USB sixfab ports"
 sudo setcap CAP_SYS_TIME+ep /bin/date
 sudo setcap 'cap_net_raw,cap_net_admin+eip' /usr/sbin/ifmetric
 cd "$FOL_DDH" && "$FOL_VEN"/bin/python main_qus.py
@@ -111,6 +111,27 @@ RV=$?
 if [[ $RV -ne 0 || $WC_ID -ne 31 ]]; then
     _py "   DDH - sim card file NOT OK"
 fi
+
+
+
+
+_pb " LINUX - detect starlink and stop cell service if so"
+(curl --silent --connect-timeout 1 --max-time 1 192.168.100.1 | grep Starlink) > /dev/null
+RV=$?
+if [ $RV -eq 0 ]; then
+    _pb "   DDH - starlink detected, stopping PPP service"
+    # stop ppp service
+    sudo systemctl stop ppp_connection_manager.service
+else
+    # grep EXACTLY the 'active' answer
+    (systemctl is-active ppp_connection_manager.service | grep -w active) > /dev/null
+    RV=$?
+    if [ $RV -ne 0 ]; then
+        _py "   DDH - no starlink, restarting PPP service"
+        sudo systemctl restart ppp_connection_manager.service
+    fi
+fi
+
 
 
 
