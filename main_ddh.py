@@ -399,6 +399,12 @@ def _gui_tabs_populate_history_new(my_app, index):
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         t.setItem(i, 3, _it)
         # row items, summary
+        if '$' in stats_summary:
+            # W °C_X dbar$Y °F_Z ftm
+            if my_app.btn_plt_units.text() == 'Metric':
+                stats_summary = stats_summary.split('$')[0]
+            else:
+                stats_summary = stats_summary.split('$')[1]
         stats_summary = stats_summary.replace('_', ', ')
         _it = QTableWidgetItem(stats_summary)
         _it.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
