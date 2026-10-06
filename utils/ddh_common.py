@@ -686,21 +686,38 @@ def ddh_summarize_csv_file_for_history_table(
             ls_doc_filtered = ls_doc
 
 
-    # build the summary statistics string for the table
+    # build the summary statistics METRIC string for the table
     if ls_t_filtered:
         vt_filtered = np.nanmean(ls_t_filtered)
         summary += f'{vt_filtered:.2f} °C_'
     if ls_p_filtered:
         vp_filtered = np.nanmean(ls_p_filtered)
-        summary += f'{vp_filtered:.2f} dbar_'
+        summary += f'{vp_filtered:.2f} dbar'
     if ls_dot_filtered:
         vdot_filtered = np.nanmean(ls_dot_filtered)
         summary += f'{vdot_filtered:.2f} °C_'
     if ls_doc_filtered:
         vdoc_filtered = np.nanmean(ls_doc_filtered)
         summary += f'{vdoc_filtered:.2f} mg/l'
-    if summary.endswith('_'):
-        summary = summary[:-1]
+
+
+
+    # build the summary statistics IMPERIAL string for the table
+    if ls_t_filtered:
+        vt_filtered = np.nanmean(ls_t_filtered)
+        vt_f = float(str((vt_filtered * 9/5) + 32))
+        summary += f'${vt_f:.2f} °F_'
+    if ls_p_filtered:
+        vp_filtered = np.nanmean(ls_p_filtered)
+        vp_f =  float(str(vp_filtered * 0.5468))
+        summary += f'{vp_f:.2f} ftm'
+    if ls_dot_filtered:
+        vdot_filtered = np.nanmean(ls_dot_filtered)
+        vt_f = float(str((vdot_filtered * 9/5) + 32))
+        summary += f'${vt_f:.2f} °F_'
+    if ls_doc_filtered:
+        vdoc_filtered = np.nanmean(ls_doc_filtered)
+        summary += f'{vdoc_filtered:.2f} mg/l'
 
 
     if summary == "":

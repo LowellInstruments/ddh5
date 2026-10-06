@@ -254,3 +254,4 @@
 6.0.09  10/05/26
 
     done CSF conversion once upon DDU
+    support metric / imperial units in new table
