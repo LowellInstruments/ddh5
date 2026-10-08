@@ -3,6 +3,7 @@ dl_files/*
 upload/*
 logs/*
 .idea/
+.venv/
 
 
 # databases
