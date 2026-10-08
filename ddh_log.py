@@ -59,6 +59,8 @@ lg_emo = LogDDHByModule("emo")
 lg_gra = LogDDHByModule("gra")
 lg_trk = LogDDHByModule("trk")
 lg_tst = LogDDHByModule("tst")
+lg_wss = LogDDHByModule("wss")
+
 
 
 

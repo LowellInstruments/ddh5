@@ -31,7 +31,7 @@ NAME_EXE_DDH = "ddh_main"
 NAME_EXE_AWS = 'ddh_aws'
 NAME_EXE_GPS = 'ddh_gps'
 NAME_EXE_BLE = 'ddh_ble'
-NAME_EXE_BTN = 'ddh_btn'
+NAME_EXE_WSS = 'ddh_wss'
 NAME_EXE_API = "main_api"
 NAME_EXE_BRT = "main_brt"
 DDN_API_IP = 'ddn.lowellinstruments.com'
@@ -386,6 +386,12 @@ def ddh_config_get_list_of_monitored_serial_numbers():
 def ddh_config_get_list_of_monitored_macs():
     ls = list(cfg['monitored_macs'].keys())
     return [i.upper() for i in ls]
+
+
+
+def ddh_config_get_dict_of_monitored_sondes():
+    k = 'monitored_sondes'
+    return cfg[k] if k in cfg.keys() else {}
 
 
 

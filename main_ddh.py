@@ -126,7 +126,7 @@ from utils.ddh_common import (
     exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
     PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
     exp_use_show_fish_website, ddh_get_path_to_db_new_history_file, LI_PATH_PLT_ALSO_OUT_OF_WATER,
-    PATH_GUI_DDH_WAS_UPDATED,
+    PATH_GUI_DDH_WAS_UPDATED, NAME_EXE_WSS,
 )
 import datetime
 import os
@@ -840,9 +840,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def handle_stdout_gps(self):
         self._ho(self.d_processes[NAME_EXE_GPS].readAllStandardOutput())
 
+    def handle_stdout_wss(self):
+        self._ho(self.d_processes[NAME_EXE_WSS].readAllStandardOutput())
 
     def handle_state_ble(self, state):
         self.process_state_ble = d_process_states[state]
+
+    def handle_state_wss(self, state):
+        self.process_state_wss = d_process_states[state]
 
 
     def _cb_timer_six_hours(self):
@@ -1886,15 +1891,19 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.d_processes[NAME_EXE_AWS] = QProcess()
         self.d_processes[NAME_EXE_BLE] = QProcess()
         self.d_processes[NAME_EXE_GPS] = QProcess()
+        self.d_processes[NAME_EXE_WSS] = QProcess()
 
         # prints of subprocesses are handled by pyqt
         self.d_processes[NAME_EXE_AWS].readyReadStandardOutput.connect(self.handle_stdout_aws)
         self.d_processes[NAME_EXE_BLE].readyReadStandardOutput.connect(self.handle_stdout_ble)
         self.d_processes[NAME_EXE_GPS].readyReadStandardOutput.connect(self.handle_stdout_gps)
-        self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
+        self.d_processes[NAME_EXE_WSS].readyReadStandardOutput.connect(self.handle_stdout_wss)
         self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
-        self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
         self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
+        self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
+        self.d_processes[NAME_EXE_WSS].start('python3', [f'{NAME_EXE_WSS}.py'])
+        self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
+        self.d_processes[NAME_EXE_WSS].stateChanged.connect(self.handle_state_wss)
 
 
         # GUI threads
@@ -1909,6 +1918,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
         # create variables
         self.process_state_ble = ''
+        self.process_state_wss = ''
         self.bright_idx = 2
         self.tab_edit_hide = True
         self.tab_advanced_hide = True
