@@ -25,7 +25,7 @@ from utils.ddh_common import (
     ddh_config_get_logger_mac_from_sn, linux_is_rpi,
     STR_ERROR_GRAPH_SN_NOT_IN_CONFIG, t_str,
     calculate_mac_address_from_folder_within_dl_files,
-    ddh_config_get_logger_sn_from_mac, ddh_do_we_graph_out_of_water_data
+    ddh_config_get_logger_sn_from_mac, ddh_do_we_graph_out_of_water_data, ddh_get_path_to_folder_dl_files_sondes
 )
 from ddh_log import lg_gra as lg
 
@@ -181,6 +181,19 @@ def _graph_sondes_clear():
 
 
 
+def _sondes_fetch_csv_data(fol, what) -> dict:
+    # build output dictionary to graph
+    return {}
+    # return {
+    #     'metric': what,
+    #     'ISO 8601 Time': x,
+    #     'Temperature (C)': t,
+    #     'Temperature (F)': tf,
+    # }
+
+
+
+
 
 def _graph_sondes_process_n_draw_non_ctd(
         a):
@@ -200,18 +213,19 @@ def _graph_sondes_process_n_draw_non_ctd(
 
 
     # get the sonde SN
-    sn = a.cb_g_sondes_who.currentText()
-    if not sn:
+    who = a.cb_g_sondes_who.currentText()
+    if not who:
         e = 'error, no one asked for SONDES graph?'
         lg.a(e)
         raise GraphException(e)
+    fol = f'{ddh_get_path_to_folder_dl_files_sondes()}/{who}'
     what = a.cb_g_sondes_what.currentText()
-    # todo: implement we have the "WHAT" type of graph for this "WHO" (SN) sonde
-    # if not _graph_check_mac_has_dl_files(mac, fol_ls):
-    #     lg.a(f'note, no files for logger {sn} (mac {mac})')
-    #     raise GraphException(f'error, no files for logger {sn}')
-    lg.a(f'selected dropdown sonde SN {sn}')
-    # fol = str(calculate_path_to_folder_within_dl_files_from_mac_address(mac))
+    mask = f'{who}/{what}.csv'
+    ls = glob.glob(f'{fol}/{mask}')
+    if not ls:
+        lg.a(f'note, no SONDE files for sonde {who} and metric {what}')
+        raise GraphException(f'error, no SONDE files for sonde {who} and metric {what}')
+    lg.a(f'selected dropdown sonde {who}')
     a.lay_g_h2_5.addWidget(pw)
 
 

@@ -139,6 +139,11 @@ def ddh_get_path_to_folder_dl_files() -> Path:
 
 
 
+def ddh_get_path_to_folder_dl_files_sondes() -> Path:
+    p = str(ddh_get_path_to_root_application_folder())
+    return Path(f"{p}/dl_files_sondes")
+
+
 def ddh_get_path_to_folder_logs() -> Path:
     p = str(ddh_get_path_to_root_application_folder())
     return Path(p) / "logs"
