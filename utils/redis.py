@@ -6,6 +6,7 @@ RD_DDH_GUI_STATE_EVENT_TEXT = p + 'state_gui_event_text'
 RD_DDH_GUI_STATE_EVENT_ICON_LOCK = p + 'state_gui_event_icon_lock'
 # why are we plotting and which folder
 RD_DDH_GUI_PLOT_REASON = p + 'plot_reason'
+RD_DDH_GUI_PLOT_REASON_SONDES = p + 'plot_reason_sondes'
 RD_DDH_GUI_PLOT_FOLDER = p + 'plot_folder'
 # flags for hardware buttons outside DDH box
 RD_DDH_GUI_NO_EXPIRES_BOX_SIDE_BUTTON_TOP = p + 'side_button_top'

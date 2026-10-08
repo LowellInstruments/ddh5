@@ -29,6 +29,7 @@ from ddh.signals import (
 )
 from ddh.graph_draw import graph_request
 from ddh.preferences import preferences_set_models_index
+from ddh.sondes_draw import sondes_graph_request, sondes_graph_process_n_draw
 from ddh_cnv import main_ddh_cnv
 from ddh_gps import ddh_gps_get
 from ddh.buttons import ddh_create_thread_buttons
@@ -66,7 +67,8 @@ from utils.redis import (
     RD_DDH_AWS_SYNC_PERIODIC_FLAG,
     RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
     RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE,
-    RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_DISPLAY_MODELS, RD_DDH_GUI_WAS_UPDATED, RD_DDH_GUI_SHOW_UPDATED
+    RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_DISPLAY_MODELS, RD_DDH_GUI_WAS_UPDATED, RD_DDH_GUI_SHOW_UPDATED,
+    RD_DDH_GUI_PLOT_REASON_SONDES
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -126,7 +128,7 @@ from utils.ddh_common import (
     exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
     PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
     exp_use_show_fish_website, ddh_get_path_to_db_new_history_file, LI_PATH_PLT_ALSO_OUT_OF_WATER,
-    PATH_GUI_DDH_WAS_UPDATED, NAME_EXE_WSS,
+    PATH_GUI_DDH_WAS_UPDATED, NAME_EXE_WSS, ddh_config_get_dict_of_monitored_sondes,
 )
 import datetime
 import os
@@ -236,6 +238,8 @@ def gui_setup_view(my_win):
     a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_waves.png"))
     i = gui_tabs_get_index('tab_maps_new')
     a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_maps.png"))
+    i = gui_tabs_get_index('tab_sondes')
+    a.tabs.setTabIcon(i, QIcon("ddh/gui/res/icon_sonde.png"))
     a.setWindowIcon(QIcon("ddh/gui/res/icon_lowell.ico"))
 
 
@@ -303,6 +307,11 @@ def gui_setup_view(my_win):
 
     # advanced tab graphs choice to include out of water data
     a.chk_ow.setChecked(os.path.exists(LI_PATH_PLT_ALSO_OUT_OF_WATER))
+
+
+    # show or not tab sondes
+    i = gui_tabs_get_index('tab_sondes')
+    a.tabs.setTabVisible(i, len(ddh_config_get_dict_of_monitored_sondes()))
 
     return a
 
@@ -482,6 +491,18 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
 
 
 
+def gui_tabs_populate_sondes_dropdown(my_app):
+    """fills logger serial number dropdown list in SONDES tab"""
+    a = my_app
+    a.cb_g_sondes_who.clear()
+    for i in list(ddh_config_get_dict_of_monitored_sondes().keys()):
+        a.cb_g_sondes_who.addItem(i)
+    # todo: dynamically populate with metrics found for this sn
+    a.cb_g_sondes_who.addItems(['RDO', 'Whatever'])
+
+
+
+
 
 def gui_setup_buttons(my_app):
     """link buttons and labels clicks and signals"""
@@ -531,6 +552,12 @@ def gui_setup_buttons(my_app):
     a.cb_g_cycle_haul.activated.connect(a.click_graph_lbl_haul_types)
     a.cb_g_switch_tp.activated.connect(a.click_graph_cb_switch_tp)
     a.btn_plt_units.clicked.connect(a.click_btn_plt_units)
+
+
+    # sondes stuff, they go to the same place
+    a.cb_g_sondes_who.activated.connect(a.click_sondes_who)
+    a.cb_g_sondes_what.activated.connect(a.click_sondes_who)
+
 
 
 
@@ -1388,6 +1415,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
+    @staticmethod
+    def click_sondes_who(_):
+        sondes_graph_request(reason='user')
+
 
     @staticmethod
     def click_graph_listview_logger_sn( _):
@@ -1575,6 +1606,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             lg.a(f"note, GUI received PLOT request with reason = {p_r}")
             graph_process_n_draw(self, plot_reason=p_r)
             r.delete(RD_DDH_GUI_PLOT_REASON)
+
+        p_r_s = r.get(RD_DDH_GUI_PLOT_REASON_SONDES)
+        if p_r_s:
+            p_r_s = p_r_s.decode()
+            lg.a(f"note, GUI received SONDES PLOT request with reason = {p_r_s}")
+            sondes_graph_process_n_draw(self)
+            r.delete(RD_DDH_GUI_PLOT_REASON_SONDES)
 
 
         # update DATE and UPTIME fields, also a COUNTER for incremental stuff
@@ -1979,6 +2017,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         gui_tabs_hide_models_next_btn(self)
         gui_tabs_populate_note_dropdown(self)
         gui_tabs_populate_graph_dropdown_sn(self)
+        gui_tabs_populate_sondes_dropdown(self)
 
 
 
@@ -1987,6 +2026,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.pw_ctd = None
         self.lay_g_h2.addWidget(self.pw)
         self.pw.setBackground('w')
+        self.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
+        self.lay_g_h2_5.addWidget(self.pw_sondes)
         self.btn_g_next_haul.setEnabled(False)
         self.btn_g_next_haul.setVisible(False)
         self.lbl_graph_busy.setVisible(False)
