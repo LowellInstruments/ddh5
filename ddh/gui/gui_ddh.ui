@@ -1877,17 +1877,27 @@ font: 19pt &quot;DejaVu Sans&quot;;</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_26">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_25">
+         <layout class="QVBoxLayout" name="verticalLayout_25" stretch="1,1,1,8">
           <item>
-           <layout class="QHBoxLayout" name="lay_g_h1_7" stretch="1,1">
+           <layout class="QHBoxLayout" name="lay_g_h1_7" stretch="1,1,1">
             <property name="spacing">
-             <number>0</number>
+             <number>6</number>
             </property>
             <item>
              <widget class="QComboBox" name="cb_g_sondes_who"/>
             </item>
             <item>
              <widget class="QComboBox" name="cb_g_sondes_what">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cb_g_sondes_when">
               <property name="maximumSize">
                <size>
                 <width>16777215</width>
