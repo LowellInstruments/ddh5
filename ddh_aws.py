@@ -30,7 +30,9 @@ from utils.ddh_common import (
     ddh_config_get_one_aws_credential_value,
     LI_PATH_LAST_YEAR_AWS_TEMPLATE,
     ddh_this_process_needs_to_quit, linux_is_rpi,
-    ddh_get_path_to_root_application_folder, ddh_write_timestamp_aws_sqs)
+    ddh_get_path_to_root_application_folder,
+    ddh_write_timestamp_aws_sqs
+)
 from ddh_log import lg_aws as lg
 
 

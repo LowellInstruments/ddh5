@@ -1,5 +1,8 @@
 import os
 import glob
+from functools import lru_cache
+
+import pandas as pd
 import redis
 import math
 import time
@@ -180,24 +183,35 @@ def _graph_sondes_clear():
 
 
 
+@lru_cache
+def sonde_get_df_from_csv_files(filename_csv):
+    df = pd.read_csv(filename_csv)
+    metric = ''
+    df_dot = None
+    df_doc = None
+    if 'RDO' in filename_csv:
+        metric = 'RDO'
+        # head = index   timestamp  serial_id  modbus_id  param       value  quality  units
+        df_dot = df[df['units'] == 1]
+        df_doc = df[df['units'] == 117]
+        print(df_dot.head())
+        print(df_doc.head())
 
-def _sondes_fetch_csv_data(fol, what) -> dict:
+
     # build output dictionary to graph
-    return {}
-    # return {
-    #     'metric': what,
-    #     'ISO 8601 Time': x,
-    #     'Temperature (C)': t,
-    #     'Temperature (F)': tf,
-    # }
+    return {
+        'metric': metric,
+        'DOC': df_doc,
+        'DOT': df_dot,
+        'error': ''
+    }
 
 
 
-
-
-def _graph_sondes_process_n_draw_non_ctd(
+def _graph_sondes_process_n_draw(
         a):
 
+    print('PLOTTING SONDE')
 
     # CLEAR graph LAYOUT of any plot widget
     for i in reversed(range(a.lay_g_h2_5.count())):
@@ -212,21 +226,27 @@ def _graph_sondes_process_n_draw_non_ctd(
 
 
 
-    # get the sonde SN
-    who = a.cb_g_sondes_who.currentText()
-    if not who:
-        e = 'error, no one asked for SONDES graph?'
-        lg.a(e)
-        raise GraphException(e)
-    fol = f'{ddh_get_path_to_folder_dl_files_sondes()}/{who}'
-    what = a.cb_g_sondes_what.currentText()
-    mask = f'{who}/{what}.csv'
-    ls = glob.glob(f'{fol}/{mask}')
-    if not ls:
-        lg.a(f'note, no SONDE files for sonde {who} and metric {what}')
-        raise GraphException(f'error, no SONDE files for sonde {who} and metric {what}')
-    lg.a(f'selected dropdown sonde {who}')
+    # build the sonde file CSV to plot
+    # who = a.cb_g_sondes_who.currentText()
+    # if not who:
+    #     e = 'error, no one asked for SONDES graph?'
+    #     lg.a(e)
+    #     raise GraphException(e)
+    # fol = f'{ddh_get_path_to_folder_dl_files_sondes()}/{who}'
+    # what = a.cb_g_sondes_what.currentText()
+    # mask = f'{who}/{what}.csv'
+    # ls = glob.glob(f'{fol}/{mask}')
+    # if not ls:
+    #     lg.a(f'note, no SONDE files for sonde {who} and metric {what}')
+    #     raise GraphException(f'error, no SONDE files for sonde {who} and metric {what}')
+    # lg.a(f'selected dropdown sonde {who}')
+
+
+
+    # add the plot widget to the layout
     a.lay_g_h2_5.addWidget(pw)
+    pw.setBackground('w')
+
 
 
 
@@ -253,7 +273,7 @@ def _graph_sondes_process_n_draw_non_ctd(
 
     # patch for bottom ticks, x are floats meaning timestamps
     # solves the problem of the x-axis ticks changing
-    pw.setAxisItems({"bottom": pg.DateAxisItem()})
+    # pw.setAxisItems({"bottom": pg.DateAxisItem()})
 
     # grid or not
     pw.showGrid(x=True, y=True)
@@ -289,70 +309,41 @@ def _graph_sondes_process_n_draw_non_ctd(
     # ==========================
     # PROCESS folder's CSV data
     # ==========================
-    # todo: get the DF for this WHAT and WHO
-    # todo: cache it
-    fol = 'definethis_some_sort_of_dl_files/{bn}'
-    data = sonde_get_df_from_csv_files(fol, what)
+    csv_sonde_file = '/Users/kaz/PycharmProjects/ddh/dl_files_sondes/SENS_1_1_RDO.csv'
+    data = sonde_get_df_from_csv_files(csv_sonde_file)
+    bn = os.path.basename(csv_sonde_file)
     if not data:
-        lg.a(f'warning, no SONDES data to plot in folder {fol}')
+        lg.a(f'warning, no SONDES data to plot in file {bn}')
         raise GraphException(f'no data to plot')
-    if 'error' in data.keys():
-        raise GraphException(f'{data["error"]}')
-    if 'ISO 8601 Time' not in data.keys():
-        raise GraphException(f'error, no time data for {fol}')
+    if data['error']:
+        e = data['error']
+        lg.a(f'error, plotting SONDEs in file {bn} -> {e}')
+        raise GraphException(f'plot error {e}')
 
 
     # x: time
-    x = data['ISO 8601 Time']
-    met = data['metric']
+    x_doc = list(data['DOC']['timestamp'])
+    x_dot = list(data['DOT']['timestamp'])
+    y_doc = list(data['DOC']['value'])
+    y_dot = list(data['DOT']['value'])
+
+
+    # time in ms -> time in seconds (I think)
+    # todo: ask this
+    x_doc = [i / 1000000 for i in x_doc]
+    x_dot = [i / 1000000 for i in x_dot]
+
 
 
     # ----------
-    # the title
-    # ----------
-    fmt = '%b %d %Y %H:%M'
-    # choose utcfromtimestamp() / fromtimestamp()
-    t1 = datetime.fromtimestamp(x[0]).strftime(fmt)
-    t2 = datetime.fromtimestamp(x[-1]).strftime(fmt)
-    title = f'{t1} to {t2}'
-
-
-    # --------------
-    # metric labels
-    # --------------
-    lbl1, lbl2, lbl3 = '', '', ''
-    # grab the data
-    y1 = data[lbl1]
-    y2 = data[lbl2]
-
-
-
-    # see if we need Depth-axis inverted
-    pw_it.invertY('Depth' in lbl1)
-
     # colors
-    lbl1 = lbl1.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
-    lbl1 = lbl1.replace(' PH', '')
-    lbl2 = lbl2.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
-    lbl2 = lbl2.replace(' PH', '')
-    lbl3 = lbl3.replace(' TP', '').replace(' DO', '').replace(' TDO', '')
-    lbl3 = lbl3.replace(' PH', '')
-    clr_1 = _graph_sondes_get_color_by_label(lbl1)
-    clr_2 = _graph_sondes_get_color_by_label(lbl2)
-    clr_3 = _graph_sondes_get_color_by_label(lbl3)
-    clr_4 = 'magenta'
-    clr_0 = 'black'
-    lbl1 = lbl1 + ' ─'
-    lbl2 = lbl2 + ' - -'
-    lbl3 = lbl3 + ' ─'
+    # ----------
+    clr_0 = 'blue'
+    clr_1 = 'red'
     pen0 = pg.mkPen(color=clr_0, width=2)
-    pen1 = pg.mkPen(color=clr_1, width=2)
-    pen2 = pg.mkPen(color=clr_2, width=2)
-    pen3 = pg.mkPen(color=clr_3, width=1)
-    pen4 = pg.mkPen(color=clr_4, width=2)
-    pen5 = pg.mkPen(color=clr_2, width=2, style=Qt.PenStyle.DotLine)
-    pw_it.getAxis('left').setTextPen(clr_1)
-    pw_it.getAxis('right').setTextPen(clr_2)
+    pen1 = pg.mkPen(color=clr_1, width=2, style=Qt.PenStyle.DotLine)
+    pw_it.getAxis('left').setTextPen(clr_0)
+    pw_it.getAxis('right').setTextPen(clr_1)
     pw_it.getAxis('bottom').setTextPen('black')
 
     # avoids small glitch when re-zooming
@@ -363,23 +354,24 @@ def _graph_sondes_process_n_draw_non_ctd(
     # -------------------
     # graph DOX loggers
     # -------------------
-    if met == 'DO':
+    if data['metric'] == 'RDO':
         # draw DO (y1) and T (y2) lines
-        pw_it.setLabel("left", lbl1, **_sty(clr_1))
-        pw_it.getAxis('right').setLabel(lbl2, **_sty(clr_2))
-        pw_it.plot(x, y1, pen=pen1, hoverable=True)
-        pw_vb.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True, connect='finite'))
+        pw_it.setLabel("left", 'mg/l', **_sty(clr_0))
+        pw_it.getAxis('right').setLabel('celsius', **_sty(clr_1))
+        pw_it.plot(x_doc, y_doc, pen=pen0, hoverable=True)
+        pw_vb.addItem(pg.PlotCurveItem(x_dot, y_dot, pen=pen1, hoverable=True, connect='finite'))
 
         # dynamic upper top of DOX graphs
         upper_top_do = 10
-        if np.nanmax(y1) > upper_top_do:
-            upper_top_do = np.nanmax(y1) + 1
+        if np.nanmax(y_dot) > upper_top_do:
+            upper_top_do = np.nanmax(y_dot) + 1
         upper_top_do = int(ceil(upper_top_do))
+
 
         # y-axis DOX ranges, bottom-axis label
         pw_it.setYRange(0, upper_top_do, padding=0)
-        pw_vb.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
-        pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
+        pw_vb.setYRange(np.nanmin(y_dot), np.nanmax(y_dot), padding=0)
+        pw_it.getAxis('bottom').setLabel('my title', **_sty('black'))
 
         # alpha, for zones, the lower, the more transparent
         alpha = 85
@@ -404,31 +396,28 @@ def _graph_sondes_process_n_draw_non_ctd(
                                          brush=(176, 255, 66, alpha),
                                          movable=False))
 
-    # ------------------
-    # graph PH loggers
-    # ------------------
-    if met == 'PH':
-        a.cb_g_switch_tp.setVisible(False)
-
-        # draw pH (y1) and T (y2) lines
-        pw_it.setLabel("left", lbl1, **_sty(clr_1))
-        pw_it.getAxis('right').setLabel(lbl2, **_sty(clr_2))
-        pw_it.plot(x, y1, pen=pen1, hoverable=True)
-        pw_vb.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True, connect='finite'))
-
-        # dynamic upper top of PH graphs
-        upper_top_ph = 12
-
-        # y-axis DOX ranges, bottom-axis label
-        pw_it.setYRange(0, upper_top_ph, padding=0)
-        pw_vb.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
-        pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
+    # if met == 'PH':
+    #     a.cb_g_switch_tp.setVisible(False)
+    #
+    #     # draw pH (y1) and T (y2) lines
+    #     pw_it.setLabel("left", lbl1, **_sty(clr_1))
+    #     pw_it.getAxis('right').setLabel(lbl2, **_sty(clr_2))
+    #     pw_it.plot(x, y1, pen=pen1, hoverable=True)
+    #     pw_vb.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True, connect='finite'))
+    #
+    #     # dynamic upper top of PH graphs
+    #     upper_top_ph = 12
+    #
+    #     # y-axis DOX ranges, bottom-axis label
+    #     pw_it.setYRange(0, upper_top_ph, padding=0)
+    #     pw_vb.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
+    #     pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
 
 
     # statistics: benchmark and number of points
     end_ts = time.perf_counter()
     el_ts = int((end_ts - start_ts) * 1000)
-    lg.a(f'took {el_ts} ms to DISPLAY {len(x)} {met} data points')
+    lg.a(f"took {el_ts} ms to DISPLAY {len(data)} {data['metric']} data points")
 
 
 
@@ -441,7 +430,7 @@ def sondes_graph_process_n_draw(
         app.lbl_graph_err_sondes.setVisible(False)
         app.lbl_graph_busy_sondes.setVisible(True)
         QCoreApplication.processEvents()
-        _graph_sondes_process_n_draw_non_ctd(app, plot_reason)
+        _graph_sondes_process_n_draw(app)
         # remove any past error
         app.pw_sondes.setTitle('')
 

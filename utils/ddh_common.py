@@ -151,6 +151,7 @@ def ddh_get_path_to_folder_dl_files_sondes() -> Path:
     return Path(f"{p}/dl_files_sondes")
 
 
+
 def ddh_get_path_to_folder_logs() -> Path:
     p = str(ddh_get_path_to_root_application_folder())
     return Path(p) / "logs"
@@ -422,7 +423,8 @@ def ddh_create_needed_folders():
     os.makedirs(fol, exist_ok=True)
     fol = ddh_get_path_to_folder_logs()
     os.makedirs(fol, exist_ok=True)
-
+    fol = ddh_get_path_to_folder_dl_files_sondes()
+    os.makedirs(fol, exist_ok=True)
 
 
 def ddh_config_get_monitored_pairs():

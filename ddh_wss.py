@@ -20,9 +20,9 @@ from utils.ddh_common import (
 
 
 
-# r = redis.Redis('localhost', port=6379)
-# p_name = NAME_EXE_WSS
-# g_d_sondes = ddh_config_get_dict_of_monitored_sondes()
+r = redis.Redis('localhost', port=6379)
+p_name = NAME_EXE_WSS
+g_d_sondes = ddh_config_get_dict_of_monitored_sondes()
 
 
 
@@ -56,8 +56,7 @@ def main_ddh_wss(ignore_gui=False):
 
     while 1:
         try:
-            # _ddh_wss(ignore_gui)
-            time.sleep(1)
+            _ddh_wss(ignore_gui)
         except (Exception, ) as ex:
             lg.a(f"error, process '{p_name}' restarting after crash -> {ex}")
 

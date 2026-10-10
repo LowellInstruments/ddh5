@@ -5,7 +5,7 @@ import time
 from utils.ddh_common import (
     NAME_EXE_AWS,
     NAME_EXE_BLE,
-    NAME_EXE_GPS,
+    NAME_EXE_GPS, NAME_EXE_WSS,
 )
 
 
@@ -15,6 +15,7 @@ d_processes = {
     NAME_EXE_AWS: None,
     NAME_EXE_BLE: None,
     NAME_EXE_GPS: None,
+    NAME_EXE_WSS: None
 }
 
 

@@ -1,3 +1,4 @@
+import platform
 import threading
 
 import signal
@@ -498,8 +499,10 @@ def gui_tabs_populate_sondes_dropdown(my_app):
     a.cb_g_sondes_who.clear()
     for i in list(ddh_config_get_dict_of_monitored_sondes().keys()):
         a.cb_g_sondes_who.addItem(i)
+    # the name of a file is p.e. "sonde1_ts_RSO_1_3.csv"
     # todo: dynamically populate with metrics found for this sn
-    a.cb_g_sondes_who.addItems(['RDO', 'Whatever'])
+    a.cb_g_sondes_what.addItems(['RDO', 'Whatever'])
+    a.cb_g_sondes_when.addItems(['now', 'later'])
 
 
 
@@ -557,7 +560,8 @@ def gui_setup_buttons(my_app):
 
     # sondes stuff, they go to the same place
     a.cb_g_sondes_who.activated.connect(a.click_sondes_who)
-    a.cb_g_sondes_what.activated.connect(a.click_sondes_who)
+    a.cb_g_sondes_what.activated.connect(a.click_sondes_what)
+    a.cb_g_sondes_when.activated.connect(a.click_sondes_when)
 
 
 
@@ -870,11 +874,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def handle_stdout_gps(self):
         self._ho(self.d_processes[NAME_EXE_GPS].readAllStandardOutput())
 
+
     def handle_stdout_wss(self):
         self._ho(self.d_processes[NAME_EXE_WSS].readAllStandardOutput())
 
+
     def handle_state_ble(self, state):
         self.process_state_ble = d_process_states[state]
+
 
     def handle_state_wss(self, state):
         self.process_state_wss = d_process_states[state]
@@ -1418,8 +1425,19 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
+    def click_sondes_who(self):
+        # unselects
+        self.cb_g_sondes_what.setCurrentIndex(-1)
+        self.cb_g_sondes_when.setCurrentIndex(-1)
+
+
+    def click_sondes_what(self):
+        self.cb_g_sondes_when.setCurrentIndex(-1)
+
+
     @staticmethod
-    def click_sondes_who(_):
+    def click_sondes_when(_):
+        # we have 3 things for sondes, lets try to plot
         sondes_graph_request(reason='user')
 
 
@@ -1941,10 +1959,11 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.d_processes[NAME_EXE_WSS].readyReadStandardOutput.connect(self.handle_stdout_wss)
         self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
         self.d_processes[NAME_EXE_WSS].stateChanged.connect(self.handle_state_wss)
-        self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
-        self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
-        self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
-        self.d_processes[NAME_EXE_WSS].start('python3', [f'{NAME_EXE_WSS}.py'])
+        if platform.system == 'Linux':
+            self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
+            self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
+            self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
+            self.d_processes[NAME_EXE_WSS].start('python3', [f'{NAME_EXE_WSS}.py'])
 
 
 
