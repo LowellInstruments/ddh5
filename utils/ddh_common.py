@@ -46,7 +46,14 @@ PATH_FLAG_DDH_GPS_ERR = '/tmp/.ddh_gps_err'
 
 _sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 r = redis.Redis('localhost')
-ael = asyncio.get_event_loop()
+
+
+try:
+    ael = asyncio.get_running_loop()
+except RuntimeError:
+    ael = asyncio.new_event_loop()
+    asyncio.set_event_loop(ael)
+
 
 
 

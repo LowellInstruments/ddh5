@@ -311,7 +311,8 @@ def gui_setup_view(my_win):
 
     # show or not tab sondes
     i = gui_tabs_get_index('tab_sondes')
-    a.tabs.setTabVisible(i, len(ddh_config_get_dict_of_monitored_sondes()))
+    d = ddh_config_get_dict_of_monitored_sondes()
+    a.tabs.setTabVisible(i, len(d) > 0)
 
     return a
 
@@ -571,8 +572,10 @@ def gui_tabs_get_index(s):
         'tab_more_info': 3,
         'tab_advanced': 4,
         'tab_graph': 5,
-        'tab_map': 6,
-        'tab_maps_new': 7
+        'tab_sondes': 6,
+        'tab_map': 7,
+        'tab_maps_new': 8,
+
     }
     return d[s]
 
@@ -1936,12 +1939,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.d_processes[NAME_EXE_BLE].readyReadStandardOutput.connect(self.handle_stdout_ble)
         self.d_processes[NAME_EXE_GPS].readyReadStandardOutput.connect(self.handle_stdout_gps)
         self.d_processes[NAME_EXE_WSS].readyReadStandardOutput.connect(self.handle_stdout_wss)
+        self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
+        self.d_processes[NAME_EXE_WSS].stateChanged.connect(self.handle_state_wss)
         self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
         self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
         self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
         self.d_processes[NAME_EXE_WSS].start('python3', [f'{NAME_EXE_WSS}.py'])
-        self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
-        self.d_processes[NAME_EXE_WSS].stateChanged.connect(self.handle_state_wss)
+
 
 
         # GUI threads

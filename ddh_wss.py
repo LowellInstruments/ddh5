@@ -20,9 +20,9 @@ from utils.ddh_common import (
 
 
 
-r = redis.Redis('localhost', port=6379)
-p_name = NAME_EXE_WSS
-g_d_sondes = ddh_config_get_dict_of_monitored_sondes()
+# r = redis.Redis('localhost', port=6379)
+# p_name = NAME_EXE_WSS
+# g_d_sondes = ddh_config_get_dict_of_monitored_sondes()
 
 
 
@@ -44,11 +44,11 @@ def _ddh_wss(ignore_gui):
         time.sleep(1)
 
 
-        for sn, ip in g_d_sondes.items():
-            wss = WSS(ip)
-            p = wss.send_cmd_get_filename_to_be_sent()
-            print(f'{sn} ({ip}) has file {p} to send to DDH')
-            time.sleep(10)
+        # for sn, ip in g_d_sondes.items():
+        #     wss = WSS(ip)
+        #     p = wss.send_cmd_get_filename_to_be_sent()
+        #     print(f'{sn} ({ip}) has file {p} to send to DDH')
+        #     time.sleep(10)
 
 
 
@@ -56,9 +56,10 @@ def main_ddh_wss(ignore_gui=False):
 
     while 1:
         try:
-            _ddh_wss(ignore_gui)
+            # _ddh_wss(ignore_gui)
+            time.sleep(1)
         except (Exception, ) as ex:
-            lg.a(f"WSS: error, process '{p_name}' restarting after crash -> {ex}")
+            lg.a(f"error, process '{p_name}' restarting after crash -> {ex}")
 
 
 
@@ -66,7 +67,7 @@ def main_ddh_wss(ignore_gui=False):
 if __name__ == '__main__':
 
     # normal run
-    # main_ddh_wss(ignore_gui=False)
+    main_ddh_wss(ignore_gui=False)
 
     # for debug on pycharm
-    main_ddh_wss(ignore_gui=True)
+    # main_ddh_wss(ignore_gui=True)
