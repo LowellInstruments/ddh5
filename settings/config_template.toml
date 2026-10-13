@@ -23,6 +23,11 @@ fake_gps_position = [ 0, -0,]
 # "F0:5E:CD:25:A0:3D" = "2699991"
 
 
+[monitored_sondes]
+# example
+#  "sonde1" = "192.168.9.11"
+
+
 
 [flags]
 # upload of files to AWS
