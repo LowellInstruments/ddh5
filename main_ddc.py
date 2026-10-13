@@ -41,6 +41,12 @@ def sho(c):
 
 
 
+def is_linux_overlay_active():
+    c = 'df -h | grep overlayroot'
+    return sh(c) == 0
+
+
+
 # cwd() is ddh folder here
 h = str(pathlib.Path.home())
 p = 'li/ddh' if is_rpi() else 'PycharmProjects/ddh'
@@ -678,6 +684,12 @@ def _menu_cb_toggle_display():
 
 
 def _menu_cb_copy_wifis():
+
+    # check we should do this or not
+    if not is_linux_overlay_active():
+        p_e('this DDH has not been partitioned RO-only yet')
+        input()
+        return
 
     # simple check for local folder containing wifi connection files
     fol_wifis = '/etc/NetworkManager/system-connections'
