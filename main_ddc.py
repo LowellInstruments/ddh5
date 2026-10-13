@@ -30,14 +30,23 @@ def is_rpi():
 
 
 
+
 def sh(c):
     rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     return rv.returncode
 
 
+
 def sho(c):
     rv = sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     return rv.returncode, rv.stdout.decode()
+
+
+
+def is_linux_overlay_active():
+    c = 'df -h | grep overlayroot'
+    return sh(c) == 0
+
 
 
 
@@ -642,6 +651,13 @@ def _check_aws_run(f):
 
 
 def _menu_cb_copy_wifis():
+
+    # check we should do this or not
+    if not is_linux_overlay_active():
+        p_e('this DDH has not been partitioned RO-only yet')
+        input()
+        return
+
 
     # simple check for local folder containing wifi connection files
     fol_wifis = '/etc/NetworkManager/system-connections'
