@@ -499,10 +499,9 @@ def gui_tabs_populate_sondes_dropdown(my_app):
     a.cb_g_sondes_who.clear()
     for i in list(ddh_config_get_dict_of_monitored_sondes().keys()):
         a.cb_g_sondes_who.addItem(i)
-    # the name of a file is p.e. "sonde1_ts_RSO_1_3.csv"
-    # todo: dynamically populate with metrics found for this sn
-    a.cb_g_sondes_what.addItems(['RDO', 'Whatever'])
-    a.cb_g_sondes_when.addItems(['now', 'later'])
+    a.cb_g_sondes_what.addItems(['RDO'])
+    # dynamically populated once the other 2 are selected
+    a.cb_g_sondes_when.addItems(['click'])
 
 
 

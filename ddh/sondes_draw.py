@@ -227,12 +227,27 @@ def _graph_sondes_process_n_draw(
 
 
     # build the sonde file CSV to plot
-    # who = a.cb_g_sondes_who.currentText()
-    # if not who:
-    #     e = 'error, no one asked for SONDES graph?'
-    #     lg.a(e)
-    #     raise GraphException(e)
-    # fol = f'{ddh_get_path_to_folder_dl_files_sondes()}/{who}'
+    who = a.cb_g_sondes_who.currentText()
+    if not who:
+        e = 'error, no one asked for SONDES graph?'
+        lg.a(e)
+        raise GraphException(e)
+
+    fol = ddh_get_path_to_folder_dl_files_sondes()
+    mask_who = f'{fol}/{who}*.csv'
+    ls_what = glob.glob(mask_who, recursive=True)
+    # ls_what: ['/home/kaz/PycharmProjects/ddh/dl_files_sondes/sonde1_SENS_1_1_RDO.csv']
+    # todo: move this to the CLICKING section
+    # todo: generate the file name here
+    ls_what_short = [i.split('_')[-1].replace('.csv', '') for i in ls_what]
+    ls_what_short = list(set(ls_what))
+    ls_when = []
+    for i in ls_what:
+        bn = os.path.basename(i)
+        print('bn', bn)
+        v = f'{bn.split('_')[2]}_{bn.split('_')[3]}
+        ls_when.append(v)
+
     # what = a.cb_g_sondes_what.currentText()
     # mask = f'{who}/{what}.csv'
     # ls = glob.glob(f'{fol}/{mask}')
