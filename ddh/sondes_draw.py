@@ -177,6 +177,10 @@ def sonde_get_df_from_csv_files(filename_csv, data):
         data['df_dot'] = df[df['units'] == 1]
         data['df_doc'] = df[df['units'] == 117]
         data['ls_metrics'].append('RDO')
+    if 'ATLAS' in bn:
+        # C (0) / pH (1) / DO (2) / T (4)
+        data['df_ph'] = df[df['sensor_type'] == 1]
+        data['ls_metrics'].append('ph')
 
 
 
@@ -203,6 +207,10 @@ def plot_sondes(app):
     ls_pts = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_External_PTS_Bar30.csv')]
     if ls_pts:
         p = ls_pts[0]
+        sonde_get_df_from_csv_files(p, data)
+    ls_cond = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_ATLAS.csv')]
+    if ls_cond:
+        p = ls_cond[0]
         sonde_get_df_from_csv_files(p, data)
 
 
@@ -302,20 +310,38 @@ def plot_sondes(app):
 
 
     if 'RDO' in data['ls_metrics']:
+        # green pistaccio
+        color = '#a3c41b'
         d = data['df_doc'].reset_index(drop=True)
         p_di = pg.PlotDataItem(
             list(d['timestamp']),
             list(d['value']),
-            symbol='o', pen=None, size=1, symbolPen='green',
-            symbolSize=5, symbolBrush='green', name='DOC (mg/l)'
+            symbol='o', pen=None, size=1, symbolPen=color,
+            symbolSize=5, symbolBrush=color, name='DOC (mg/l)'
         )
         vb_r2.addItem(p_di)
         legend.addItem(p_di, name='DOC (mg/l)')
-        # row 2, column 3
         ax_r2.linkToView(vb_r2)
-        ax_r2.setLabel('DOC (mg/l)', color='green')
+        ax_r2.setLabel('DOC (mg/l)', color=color)
         # row 2, column 4
         p1.layout.addItem(ax_r2, 2, 4)
+
+
+    if 'ph' in data['ls_metrics']:
+        color = '#f1b929'
+        d = data['df_ph'].reset_index(drop=True)
+        p_di = pg.PlotDataItem(
+            list(d['timestamp']),
+            list(d['sensor_val']),
+            symbol='o', pen=None, size=1, symbolPen=color,
+            symbolSize=5, symbolBrush=color, name='pH'
+        )
+        vb_r3.addItem(p_di)
+        legend.addItem(p_di, name='pH')
+        ax_r3.linkToView(vb_r3)
+        ax_r3.setLabel('pH', color=color)
+        # row 2, column 5
+        p1.layout.addItem(ax_r3, 2, 5)
 
 
 
