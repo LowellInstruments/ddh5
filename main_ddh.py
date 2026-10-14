@@ -30,7 +30,7 @@ from ddh.signals import (
 )
 from ddh.graph_draw import graph_request
 from ddh.preferences import preferences_set_models_index
-from ddh.sondes_draw import sondes_graph_request, sondes_graph_process_n_draw
+from ddh.sondes_draw import sondes_graph_request, sondes_serve_graph_request
 from ddh_cnv import main_ddh_cnv
 from ddh_gps import ddh_gps_get
 from ddh.buttons import ddh_create_thread_buttons
@@ -499,9 +499,7 @@ def gui_tabs_populate_sondes_dropdown(my_app):
     a.cb_g_sondes_who.clear()
     for i in list(ddh_config_get_dict_of_monitored_sondes().keys()):
         a.cb_g_sondes_who.addItem(i)
-    a.cb_g_sondes_what.addItems(['RDO'])
-    # dynamically populated once the other 2 are selected
-    a.cb_g_sondes_when.addItems(['click'])
+    a.cb_g_sondes_who.setCurrentIndex(-1)
 
 
 
@@ -559,8 +557,8 @@ def gui_setup_buttons(my_app):
 
     # sondes stuff, they go to the same place
     a.cb_g_sondes_who.activated.connect(a.click_sondes_who)
-    a.cb_g_sondes_what.activated.connect(a.click_sondes_what)
     a.cb_g_sondes_when.activated.connect(a.click_sondes_when)
+    a.cb_g_sondes_plot.clicked.connect(a.click_sondes_aux_button)
 
 
 
@@ -1425,18 +1423,19 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_sondes_who(self):
-        # unselects
-        self.cb_g_sondes_what.setCurrentIndex(-1)
-        self.cb_g_sondes_when.setCurrentIndex(-1)
-
-
-    def click_sondes_what(self):
         self.cb_g_sondes_when.setCurrentIndex(-1)
 
 
     @staticmethod
     def click_sondes_when(_):
         # we have 3 things for sondes, lets try to plot
+        # sondes_graph_request(reason='user')
+        pass
+
+
+
+    @staticmethod
+    def click_sondes_aux_button(self):
         sondes_graph_request(reason='user')
 
 
@@ -1631,7 +1630,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         if p_r_s:
             p_r_s = p_r_s.decode()
             lg.a(f"note, GUI received SONDES PLOT request with reason = {p_r_s}")
-            sondes_graph_process_n_draw(self)
+            sondes_serve_graph_request(self)
             r.delete(RD_DDH_GUI_PLOT_REASON_SONDES)
 
 
@@ -2049,7 +2048,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.lay_g_h2.addWidget(self.pw)
         self.pw.setBackground('w')
         self.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
-        self.lay_g_h2_5.addWidget(self.pw_sondes)
+        # self.lay_g_h2_5.addWidget(self.pw_sondes)
         self.btn_g_next_haul.setEnabled(False)
         self.btn_g_next_haul.setVisible(False)
         self.lbl_graph_busy.setVisible(False)

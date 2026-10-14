@@ -161,293 +161,179 @@ class FiniteLinearRegionItem(LinearRegionItem):
 
 
 
-def _graph_sondes_update_views():
-    # used when resizing
-    global pw_it, pw_vb
-    # for the second line
-    pw_vb.setGeometry(pw_it.vb.sceneBoundingRect())
-    pw_vb.linkedViewChanged(pw_it.vb, pw_vb.XAxis)
-
-
-
-def _graph_sondes_clear():
-    global pw_it
-    global pw_vb
-    if pw_it:
-        pw_it.getAxis('right').setVisible(False)
-        pw_it.getAxis('left').setVisible(False)
-        pw_it.getAxis('bottom').setVisible(False)
-        pw_it.clear()
-    if pw_vb:
-        pw_vb.clear()
-
-
-
 @lru_cache
-def sonde_get_df_from_csv_files(filename_csv):
-    df = pd.read_csv(filename_csv)
-    metric = ''
-    df_dot = None
-    df_doc = None
-    if 'RDO' in filename_csv:
-        metric = 'RDO'
-        # head = index   timestamp  serial_id  modbus_id  param       value  quality  units
-        df_dot = df[df['units'] == 1]
-        df_doc = df[df['units'] == 117]
-        print(df_dot.head())
-        print(df_doc.head())
-
-
-    # build output dictionary to graph
-    return {
-        'metric': metric,
-        'DOC': df_doc,
-        'DOT': df_dot,
-        'error': ''
-    }
+def _cache_read_csv(filename_csv):
+    return pd.read_csv(filename_csv)
 
 
 
-def _graph_sondes_process_n_draw(
-        a):
+def sonde_get_df_from_csv_files(filename_csv, data):
+    df = _cache_read_csv(filename_csv)
+    bn = os.path.basename(filename_csv)
+    if 'PTS_Bar30' in bn:
+        data['df_pts_30'] = df
+        data['ls_metrics'].append('PTS_Bar30')
+    if 'RDO' in bn:
+        data['df_dot'] = df[df['units'] == 1]
+        data['df_doc'] = df[df['units'] == 117]
+        data['ls_metrics'].append('RDO')
 
-    print('PLOTTING SONDE')
-
-    # CLEAR graph LAYOUT of any plot widget
-    for i in reversed(range(a.lay_g_h2_5.count())):
-        a.lay_g_h2_5.itemAt(i).widget().setParent(None)
 
 
-
-    # get graph from passed app
-    pw = a.pw_sondes
-    start_ts = time.perf_counter()
+def sondes_graph_request(reason='user'):
+    lg.a(f"note, requesting PLOT_SONDES to GUI with reason = {reason}")
+    r.set(RD_DDH_GUI_PLOT_REASON_SONDES, reason)
 
 
 
 
-    # build the sonde file CSV to plot
-    who = a.cb_g_sondes_who.currentText()
-    if not who:
-        e = 'error, no one asked for SONDES graph?'
-        lg.a(e)
-        raise GraphException(e)
+def plot_sondes(app):
 
+    # build the dataframe
+    data = dict()
+    data['ls_metrics'] = []
+    # todo: grab WHEN from GUI dropdown and WHO too
+    who = app.cb_g_sondes_who.currentText() or 'sonde1'
+    when = app.cb_g_sondes_when.currentText() or '1_1'
     fol = ddh_get_path_to_folder_dl_files_sondes()
-    mask_who = f'{fol}/{who}*.csv'
-    ls_what = glob.glob(mask_who, recursive=True)
-    # ls_what: ['/home/kaz/PycharmProjects/ddh/dl_files_sondes/sonde1_SENS_1_1_RDO.csv']
-    # todo: move this to the CLICKING section
-    # todo: generate the file name here
-    ls_what_short = [i.split('_')[-1].replace('.csv', '') for i in ls_what]
-    ls_what_short = list(set(ls_what))
-    ls_when = []
-    for i in ls_what:
-        bn = os.path.basename(i)
-        print('bn', bn)
-        v = f'{bn.split('_')[2]}_{bn.split('_')[3]}
-        ls_when.append(v)
-
-    # what = a.cb_g_sondes_what.currentText()
-    # mask = f'{who}/{what}.csv'
-    # ls = glob.glob(f'{fol}/{mask}')
-    # if not ls:
-    #     lg.a(f'note, no SONDE files for sonde {who} and metric {what}')
-    #     raise GraphException(f'error, no SONDE files for sonde {who} and metric {what}')
-    # lg.a(f'selected dropdown sonde {who}')
+    ls_do = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_RDO.csv')]
+    if ls_do:
+        p = ls_do[0]
+        sonde_get_df_from_csv_files(p, data)
+    ls_pts = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_External_PTS_Bar30.csv')]
+    if ls_pts:
+        p = ls_pts[0]
+        sonde_get_df_from_csv_files(p, data)
 
 
 
-    # add the plot widget to the layout
-    a.lay_g_h2_5.addWidget(pw)
-    pw.setBackground('w')
+    # get plot layout, create MAIN plot item and main view_box
+    p_l = pg.GraphicsLayout()
+    pw = app.pw_sondes
+    pw.setCentralWidget(p_l)
+    p1 = pw.plotItem
+    # row is 2 because 0 and 1 are plot labels
+    # column is 1 because 0 is left-axis label
+    p_l.addItem(p1, row=2, col=1, rowspan=1, colspan=1)
+    vb_l1 = p1.vb
+
+
+
+    # create additional y-axis and view_boxes
+    ax_r1 = pg.AxisItem("right")
+    ax_r2 = pg.AxisItem("right")
+    ax_r3 = pg.AxisItem("right")
+    vb_r1 = pg.ViewBox()
+    vb_r2 = pg.ViewBox()
+    vb_r3 = pg.ViewBox()
+    # add view_boxes to layout
+    p_l.scene().addItem(vb_r1)
+    p_l.scene().addItem(vb_r2)
+    p_l.scene().addItem(vb_r3)
+    # link y-axis to view_boxes
+    ax_r1.linkToView(vb_r1)
+    ax_r2.linkToView(vb_r2)
+    ax_r3.linkToView(vb_r3)
+    # link x-axis of all of them
+    vb_r1.setXLink(vb_l1)
+    vb_r2.setXLink(vb_l1)
+    vb_r3.setXLink(vb_l1)
+
+
+    # re-plot
+    def update_views():
+        vb_r1.setGeometry(vb_l1.sceneBoundingRect())
+        vb_r1.linkedViewChanged(p1.vb, vb_l1.XAxis)
+        vb_r2.setGeometry(vb_l1.sceneBoundingRect())
+        vb_r2.linkedViewChanged(p1.vb, vb_l1.XAxis)
+        vb_r3.setGeometry(vb_l1.sceneBoundingRect())
+        vb_r3.linkedViewChanged(p1.vb, vb_l1.XAxis)
+    vb_l1.sigResized.connect(update_views)
+    update_views()
+
+
+    # create legend
+    legend = pw.addLegend(
+        pen=pg.mkPen('black', width=2),
+        labelTextSize='12pt',
+        brush=(240, 240, 255, 150),
+        # distance from right, top
+        offset=(-10, -200)
+    )
+
+
+    # TEMPERATURE expected to always be there get the sub_dataframes and plot
+    d = data['df_pts_30'].reset_index(drop=True)
+    p1.plot(
+        list(d['timestamp']),
+        list(d['temperature_c']),
+        symbol='o', pen=None, size=1, symbolPen='red',
+        symbolSize=5, symbolBrush='red',
+        name='Temperature (C)'
+    )
+    p1.getAxis("left").setLabel('Temperature (C)', color='red')
 
 
 
 
-
-    # ----------------------------------------
-    # CLEAR graph and start from scratch
-    # ----------------------------------------
-    global pw_it
-    global pw_vb
-    if pw_it:
-        pw_it.clear()
-    if pw_vb:
-        pw_vb.clear()
-    pw_it = pw.plotItem
+    # # PRESSURE expected to always be there get the sub_dataframes and plot
+    #         list(d['timestamp']),
+    #         list(d['pressure_bar']),
+    #         symbol='o', pen=None, size=1, symbolPen='blue',
+    #         symbolSize=5, symbolBrush='blue', name='Pressure (bar)'
+    #     )
+    #     p1.getAxis("right").setLabel('Pressure (bar)', color='blue')
 
 
-
-    # this prevents weird things in units when setting axis titles
-    pw_it.getAxis('left').enableAutoSIPrefix(enable=False)
-    pw_it.getAxis('left').autoSIPrefixScale = 1
-    pw_it.getAxis('right').enableAutoSIPrefix(enable=False)
-    pw_it.getAxis('right').autoSIPrefixScale = 1
-
-
-    # patch for bottom ticks, x are floats meaning timestamps
-    # solves the problem of the x-axis ticks changing
-    # pw.setAxisItems({"bottom": pg.DateAxisItem()})
-
-    # grid or not
-    pw.showGrid(x=True, y=True)
-
-
-
-    # ---------------------
-    # 2nd line in the plot
-    # ---------------------
-    pw_vb = pg.ViewBox(enableMenu=True)
-    pw_it.showAxis('right')
-    pw_it.scene().addItem(pw_vb)
-    pw_it.getAxis('right').linkToView(pw_vb)
-    pw_vb.setXLink(pw_it)
+    # axes labels RIGHT, first label
+    p1.showAxis('right')
+    if 'PTS_Bar30' in data['ls_metrics']:
+        d = data['df_pts_30'].reset_index(drop=True)
+        p_di = pg.PlotDataItem(
+            list(d['timestamp']),
+            list(d['pressure_bar']),
+            symbol='o', pen=None, size=1, symbolPen='blue',
+            symbolSize=5, symbolBrush='blue', name='Pressure (bar)'
+        )
+        vb_r1.addItem(p_di)
+        legend.addItem(p_di, name='Pressure (bar)')
+        p1.getAxis('right').linkToView(vb_r1)
+        p1.getAxis("right").setLabel('Pressure (bar)', color='blue')
 
 
-
-    # connect thing when resizing
-    _graph_sondes_update_views()
-    pw_it.vb.sigResized.connect(_graph_sondes_update_views)
-
-
-    # font: TICKS TEXT
-    font = QtGui.QFont()
-    font.setPixelSize(16)
-    font.setBold(True)
-    pw_it.getAxis("bottom").setStyle(tickFont=font)
-    pw_it.getAxis("left").setStyle(tickFont=font)
-    pw_it.getAxis("right").setStyle(tickFont=font)
-
-
-
-    # ==========================
-    # PROCESS folder's CSV data
-    # ==========================
-    csv_sonde_file = '/Users/kaz/PycharmProjects/ddh/dl_files_sondes/SENS_1_1_RDO.csv'
-    data = sonde_get_df_from_csv_files(csv_sonde_file)
-    bn = os.path.basename(csv_sonde_file)
-    if not data:
-        lg.a(f'warning, no SONDES data to plot in file {bn}')
-        raise GraphException(f'no data to plot')
-    if data['error']:
-        e = data['error']
-        lg.a(f'error, plotting SONDEs in file {bn} -> {e}')
-        raise GraphException(f'plot error {e}')
-
-
-    # x: time
-    x_doc = list(data['DOC']['timestamp'])
-    x_dot = list(data['DOT']['timestamp'])
-    y_doc = list(data['DOC']['value'])
-    y_dot = list(data['DOT']['value'])
-
-
-    # time in ms -> time in seconds (I think)
-    # todo: ask this
-    x_doc = [i / 1000000 for i in x_doc]
-    x_dot = [i / 1000000 for i in x_dot]
-
-
-
-    # ----------
-    # colors
-    # ----------
-    clr_0 = 'blue'
-    clr_1 = 'red'
-    pen0 = pg.mkPen(color=clr_0, width=2)
-    pen1 = pg.mkPen(color=clr_1, width=2, style=Qt.PenStyle.DotLine)
-    pw_it.getAxis('left').setTextPen(clr_0)
-    pw_it.getAxis('right').setTextPen(clr_1)
-    pw_it.getAxis('bottom').setTextPen('black')
-
-    # avoids small glitch when re-zooming
-    pw.getPlotItem().enableAutoRange()
-
-
-
-    # -------------------
-    # graph DOX loggers
-    # -------------------
-    if data['metric'] == 'RDO':
-        # draw DO (y1) and T (y2) lines
-        pw_it.setLabel("left", 'mg/l', **_sty(clr_0))
-        pw_it.getAxis('right').setLabel('celsius', **_sty(clr_1))
-        pw_it.plot(x_doc, y_doc, pen=pen0, hoverable=True)
-        pw_vb.addItem(pg.PlotCurveItem(x_dot, y_dot, pen=pen1, hoverable=True, connect='finite'))
-
-        # dynamic upper top of DOX graphs
-        upper_top_do = 10
-        if np.nanmax(y_dot) > upper_top_do:
-            upper_top_do = np.nanmax(y_dot) + 1
-        upper_top_do = int(ceil(upper_top_do))
-
-
-        # y-axis DOX ranges, bottom-axis label
-        pw_it.setYRange(0, upper_top_do, padding=0)
-        pw_vb.setYRange(np.nanmin(y_dot), np.nanmax(y_dot), padding=0)
-        pw_it.getAxis('bottom').setLabel('my title', **_sty('black'))
-
-        # alpha, for zones, the lower, the more transparent
-        alpha = 85
-        pw.addItem(FiniteLinearRegionItem(values=(0, 2),
-                                         limits=4,
-                                         orientation="horizontal",
-                                         brush=(255, 0, 0, alpha),
-                                         movable=False))
-        pw.addItem(FiniteLinearRegionItem(values=(2, 4),
-                                         limits=4,
-                                         orientation="horizontal",
-                                         brush=(255, 170, 6, alpha),
-                                         movable=False))
-        pw.addItem(FiniteLinearRegionItem(values=(4, 6),
-                                         limits=4,
-                                         orientation="horizontal",
-                                         brush=(255, 255, 66, alpha),
-                                         movable=False))
-        pw.addItem(FiniteLinearRegionItem(values=(6, upper_top_do),
-                                         limits=4,
-                                         orientation="horizontal",
-                                         brush=(176, 255, 66, alpha),
-                                         movable=False))
-
-    # if met == 'PH':
-    #     a.cb_g_switch_tp.setVisible(False)
-    #
-    #     # draw pH (y1) and T (y2) lines
-    #     pw_it.setLabel("left", lbl1, **_sty(clr_1))
-    #     pw_it.getAxis('right').setLabel(lbl2, **_sty(clr_2))
-    #     pw_it.plot(x, y1, pen=pen1, hoverable=True)
-    #     pw_vb.addItem(pg.PlotCurveItem(x, y2, pen=pen2, hoverable=True, connect='finite'))
-    #
-    #     # dynamic upper top of PH graphs
-    #     upper_top_ph = 12
-    #
-    #     # y-axis DOX ranges, bottom-axis label
-    #     pw_it.setYRange(0, upper_top_ph, padding=0)
-    #     pw_vb.setYRange(np.nanmin(y2), np.nanmax(y2), padding=0)
-    #     pw_it.getAxis('bottom').setLabel(title, **_sty('black'))
-
-
-    # statistics: benchmark and number of points
-    end_ts = time.perf_counter()
-    el_ts = int((end_ts - start_ts) * 1000)
-    lg.a(f"took {el_ts} ms to DISPLAY {len(data)} {data['metric']} data points")
+    if 'RDO' in data['ls_metrics']:
+        d = data['df_doc'].reset_index(drop=True)
+        p_di = pg.PlotDataItem(
+            list(d['timestamp']),
+            list(d['value']),
+            symbol='o', pen=None, size=1, symbolPen='green',
+            symbolSize=5, symbolBrush='green', name='DOC (mg/l)'
+        )
+        vb_r2.addItem(p_di)
+        legend.addItem(p_di, name='DOC (mg/l)')
+        # row 2, column 3
+        ax_r2.linkToView(vb_r2)
+        ax_r2.setLabel('DOC (mg/l)', color='green')
+        # row 2, column 4
+        p1.layout.addItem(ax_r2, 2, 4)
 
 
 
 
 
-def sondes_graph_process_n_draw(
+
+def sondes_serve_graph_request(
         app,
         plot_reason=''):
     try:
         app.lbl_graph_err_sondes.setVisible(False)
         app.lbl_graph_busy_sondes.setVisible(True)
         QCoreApplication.processEvents()
-        _graph_sondes_process_n_draw(app)
-        # remove any past error
-        app.pw_sondes.setTitle('')
+        app.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
+        app.pw_sondes.setBackground('w')
+        if app.lay_g_h2_5.count() == 0:
+            app.lay_g_h2_5.addWidget(app.pw_sondes)
+        plot_sondes(app)
 
 
     except GraphException as e:
@@ -455,8 +341,6 @@ def sondes_graph_process_n_draw(
         lg.a(f"graph_exception -> {str(e)}")
         app.lbl_graph_err_sondes.setText(str(e))
         app.lbl_graph_err_sondes.setVisible(True)
-        app.pw_sondes.getAxis('bottom').setLabel("")
-        _graph_sondes_clear()
 
 
     except (Exception,) as ex:
@@ -464,14 +348,10 @@ def sondes_graph_process_n_draw(
         lg.a(f"graph_generic_exception -> {str(ex)}")
         app.lbl_graph_err_sondes.setText('error graph_generic, see log')
         app.lbl_graph_err_sondes.setVisible(True)
-        app.pw_sondes.getAxis('bottom').setLabel("")
-        _graph_sondes_clear()
 
     finally:
-        app.lbl_graph_busy.setVisible(False)
+        app.lbl_graph_busy_sondes.setVisible(False)
 
 
 
-def sondes_graph_request(reason='user'):
-    lg.a(f"note, requesting PLOT_SONDES to GUI with reason = {reason}")
-    r.set(RD_DDH_GUI_PLOT_REASON_SONDES, reason)
+

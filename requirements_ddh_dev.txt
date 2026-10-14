@@ -24,7 +24,6 @@ PyQt6-WebEngine~=6.11
 
 # for BRT tool
 simplepyble~=0.7.3
-lsb@git+https://github.com/LowellInstruments/lsb.git
 
 
 
