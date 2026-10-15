@@ -27,6 +27,7 @@ RD_DDH_GUI_SHOW_UPDATED = p + 'gui_show_updated_icon'
 
 p = 'ddh:gui:refresh:'
 RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE = p + 'history_table'
+RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS = p + 'sondes_dropdowns'
 RD_DDH_GUI_PERIODIC_DOWNLOAD_MODELS = p + 'models_update'
 RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING = p + 'processes_present'
 RD_DDH_GUI_PERIODIC_CHECK_ICON_BLE = p + 'ble_icon'

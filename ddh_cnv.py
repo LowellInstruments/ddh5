@@ -20,7 +20,7 @@ from mat.lix import (
 from utils.redis import (
     RD_DDH_CNV_QUEUE,
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER,
-    RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE
+    RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE, RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS
 )
 from utils.ddh_common import (
     TESTMODE_FILENAME_PREFIX,
@@ -241,6 +241,7 @@ def _ddh_cnv():
         # ---------------------------------------
         fol = ddh_get_path_to_folder_dl_files_sondes()
         ls_dat_files = glob.glob(f'{fol}/**/*SENS*.dat', recursive=True)
+        cnv_dat = False
         for p in ls_dat_files:
             bn = os.path.basename(p).replace('.dat', '')
             ls_csv_files = glob.glob(f'{p}/**/{bn}.csv', recursive=True)
@@ -253,6 +254,9 @@ def _ddh_cnv():
             # rv = pr.parse_ac_file(fn_dat, use_int=use_int, export=True, output_dir=fol_dst)
             parsed = {p: pr.parse_sense_file(p)}
             Parser_GUI_Tk.save_csv_callback(parsed, output_dir=fol)
+            cnv_dat = True
+        if cnv_dat:
+            r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS, value=1)
 
 
 

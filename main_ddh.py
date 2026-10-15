@@ -69,7 +69,7 @@ from utils.redis import (
     RD_DDH_GUI_NO_EXPIRE_POWER_HAT_STATUS,
     RD_DDH_GUI_PERIODIC_CPU_TEMPERATURE,
     RD_DDH_GUI_BEACON_FLAG, RD_DDH_GUI_DISPLAY_MODELS, RD_DDH_GUI_WAS_UPDATED, RD_DDH_GUI_SHOW_UPDATED,
-    RD_DDH_GUI_PLOT_REASON_SONDES
+    RD_DDH_GUI_PLOT_REASON_SONDES, RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS
 )
 from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
@@ -130,6 +130,7 @@ from utils.ddh_common import (
     PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
     exp_use_show_fish_website, ddh_get_path_to_db_new_history_file, LI_PATH_PLT_ALSO_OUT_OF_WATER,
     PATH_GUI_DDH_WAS_UPDATED, NAME_EXE_WSS, ddh_config_get_dict_of_monitored_sondes,
+    ddh_get_path_to_folder_dl_files_sondes,
 )
 import datetime
 import os
@@ -497,9 +498,23 @@ def gui_tabs_populate_sondes_dropdown(my_app):
     """fills logger serial number dropdown list in SONDES tab"""
     a = my_app
     a.cb_g_sondes_who.clear()
+    a.cb_g_sondes_when.clear()
+    fol = ddh_get_path_to_folder_dl_files_sondes()
     for i in list(ddh_config_get_dict_of_monitored_sondes().keys()):
         a.cb_g_sondes_who.addItem(i)
-    a.cb_g_sondes_who.setCurrentIndex(-1)
+        ls = glob.glob(f'{fol}/{i}_SENS_*.csv')
+        ls_when_for_this_who = []
+        for j in ls:
+            bn = os.path.basename(j)
+            # bn: sonde1_SENS_1_1_ATLAS.csv
+            x_y = bn.replace(f'{i}_SENS_', '')
+            x_y = '_'.join(x_y.split('_')[:2])
+            if x_y not in ls_when_for_this_who:
+                ls_when_for_this_who.append(x_y)
+                a.cb_g_sondes_when.addItem(x_y)
+
+    # un-select
+    a.cb_g_sondes_when.setCurrentIndex(-1)
 
 
 
@@ -556,7 +571,6 @@ def gui_setup_buttons(my_app):
 
 
     # sondes stuff, they go to the same place
-    a.cb_g_sondes_who.activated.connect(a.click_sondes_who)
     a.cb_g_sondes_when.activated.connect(a.click_sondes_when)
     a.cb_g_sondes_plot.clicked.connect(a.click_sondes_aux_button)
 
@@ -1422,21 +1436,15 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-    def click_sondes_who(self):
-        self.cb_g_sondes_when.setCurrentIndex(-1)
-
-
-    @staticmethod
-    def click_sondes_when(_):
-        # we have 3 things for sondes, lets try to plot
-        # sondes_graph_request(reason='user')
-        pass
+    def click_sondes_when(self):
+        if self.cb_g_sondes_who.currentIndex() != -1 and \
+                self.cb_g_sondes_when.currentIndex() != -1:
+            sondes_graph_request(reason='user')
 
 
 
-    @staticmethod
     def click_sondes_aux_button(self):
-        sondes_graph_request(reason='user')
+        self.click_sondes_when()
 
 
     @staticmethod
@@ -1571,7 +1579,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def _cb_timer_gui_one_second(self):
 
-        # bigger times based on one second
+        # bigger TIME INTERVALS based on one second
         self.g_count_1_second_60_times += 1
         if self.g_count_1_second_60_times >= 60:
             self.g_count_1_second_60_times = 0
@@ -1585,7 +1593,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-        # solves the touch bug
+        # solves the TOUCH DISPLAY after minimizing bug
         if self.isMinimized():
             pathlib.Path(PATH_MIN_BUG).touch()
         else:
@@ -1598,6 +1606,14 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
                     self.showFullScreen()
 
 
+        # refresh stuff for dropdown SONDES
+        k = RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS
+        if r.exists(k):
+            lg.a('note, re-populating sondes plots dropdowns')
+            gui_tabs_populate_sondes_dropdown(self)
+            r.delete(k)
+
+
         # detect any of the DDH processes is not there
         k = RD_DDH_GUI_PERIODIC_CHECK_PROCESSES_ARE_RUNNING
         if not r.exists(k):
@@ -1605,8 +1621,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             r.set(k, value=1, ex=10)
 
 
-        # useful to see the debug output terminal
-        # careful, this screws calibration offset screen until app restart
+        # allows SEEING debug output terminal
         if os.path.exists('/tmp/ddh_minimize'):
             self.showMinimized()
             os.unlink('/tmp/ddh_minimize')
@@ -1634,7 +1649,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             r.delete(RD_DDH_GUI_PLOT_REASON_SONDES)
 
 
-        # update DATE and UPTIME fields, also a COUNTER for incremental stuff
+
+        # update fields DATE and UPTIME, also COUNTER for incremental stuff
         self.lbl_date_txt.setText(datetime.datetime.now().strftime(" %b %d %H:%M:%S"))
         _up = datetime.timedelta(seconds=time.perf_counter() - _g_ts_gui_boot)
         self.lbl_uptime.setText(str(_up).split(".")[0])
@@ -1800,7 +1816,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # -----------------------------
-        # map state code to main_icon
+        # MAP state code to main_icon
         # -----------------------------
         code, text = app_state_get()
         code = code.decode() if code else ''
@@ -1876,8 +1892,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
             print('*1* unknown state text', text)
 
 
-
-        # special case for update
+        # OVERWRITE MAP in the special case for update
         if r.exists(RD_DDH_GUI_WAS_UPDATED):
             r.delete(RD_DDH_GUI_WAS_UPDATED)
             r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=5)
@@ -1906,7 +1921,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-        # show or not STATISTICS box
+        # show or not STATISTICS box for logger downloads
         if t_str(STR_EV_BLE_DL_OK) in self.lbl_main_txt.text():
             s = r.get(RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS)
             s = s.decode() if s else ''
@@ -2054,6 +2069,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.lbl_graph_busy.setVisible(False)
         self.lbl_graph_err.setVisible(False)
         self.cb_g_switch_tp.setVisible(False)
+        self.lbl_graph_busy_sondes.setVisible(False)
+        self.lbl_graph_err_sondes.setVisible(False)
 
 
         # GUI timers

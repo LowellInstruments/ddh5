@@ -196,9 +196,10 @@ def plot_sondes(app):
     # build the dataframe
     data = dict()
     data['ls_metrics'] = []
-    # todo: grab WHEN from GUI dropdown and WHO too
-    who = app.cb_g_sondes_who.currentText() or 'sonde1'
-    when = app.cb_g_sondes_when.currentText() or '1_1'
+    # who: 'sonde1'
+    # when: '1_1'
+    who = app.cb_g_sondes_who.currentText()
+    when = app.cb_g_sondes_when.currentText()
     fol = ddh_get_path_to_folder_dl_files_sondes()
     ls_do = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_RDO.csv')]
     if ls_do:
