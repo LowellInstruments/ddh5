@@ -18,9 +18,12 @@ from utils.ddh_common import (
 from ddh_log import lg_gra as lg
 
 
-
 # to be able to zoom in RPi
 pg.setConfigOption('leftButtonPan', False)
+# so pandas dataframes don't show scientific notation
+pd.set_option('display.float_format', lambda x: '%.5f' % x)
+
+
 
 
 # plot objects
@@ -154,7 +157,33 @@ def _cache_read_csv(filename_csv):
 
 def sonde_get_df_from_csv_files(filename_csv, data):
     df = _cache_read_csv(filename_csv)
+
+    # we need to update timestamp here
+    # filename_csv: /Users/...dl_files_sondes/sonde1_SENS_1_1_ATLAS.csv
     bn = os.path.basename(filename_csv)
+    x_y = bn.split('_SENS_')[1]
+    x_y = '_'.join(x_y.split('_')[:2])
+    bd = os.path.dirname(filename_csv)
+    path_info = f'{bd}/meta_{x_y}.info'
+    with open(path_info, 'rb') as f:
+        ll = f.readlines()
+        ll = [i.replace(b'\r\n', b'') for i in ll if b'Init ' in i]
+        init_time = int(ll[0].decode().split(': ')[1])
+        init_tick = int(ll[1].decode().split(': ')[1])
+        print('\n\nmeta file', path_info)
+        print('\tinit_time =', init_time)
+        print('\tinit_tick =', init_tick)
+        print('\t first ts =', list(df['timestamp'])[0])
+        # from https://drive.google.com/drive/folders/1OSGpvEyPd9a4-gxAv8KecKUjRI7vPyqa
+        # epoch_converted = (timestamp- Init Tick)*10^-8 + Init Time
+        # todo: check this calculation because it gives bad epochs
+        # todo: I think init_time = 1577836808 is a wrong value (1 Jan 2020)
+        df['timestamp'] = ((df['timestamp'] - init_tick) * 1e-8) + init_time
+        df['timestamp'] = df['timestamp'].round(4)
+        print('\t epoch ts =', list(df['timestamp'])[0])
+
+
+
     if 'PTS_Bar30' in bn:
         data['df_pts_30'] = df
         data['ls_metrics'].append('PTS_Bar30')
@@ -166,6 +195,8 @@ def sonde_get_df_from_csv_files(filename_csv, data):
         # C (0) / pH (1) / DO (2) / T (4)
         data['df_ph'] = df[df['sensor_type'] == 1]
         data['ls_metrics'].append('ph')
+    # todo: do salinity and do the .54 conversion from erin email
+
 
 
 
