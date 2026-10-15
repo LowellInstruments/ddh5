@@ -4,31 +4,16 @@ from functools import lru_cache
 
 import pandas as pd
 import redis
-import math
-import time
-from datetime import datetime
 from PyQt6.QtCore import QCoreApplication, Qt
-from math import ceil
 import numpy as np
 import pyqtgraph as pg
+from PyQt6.QtWidgets import QApplication
 from pyqtgraph import LinearRegionItem
-from pyqtgraph.Qt import QtGui
-
-from ddh.graph_utils import (
-    utils_graph_get_abs_fol_list,
-    utils_graph_fetch_csv_data,
-)
 from utils.redis import (
     RD_DDH_GUI_PLOT_REASON_SONDES,
-    RD_DDH_GUI_PLOT_FOLDER,
-    RD_DDH_GUI_DISPLAY_BOX_GRAPH_STATISTICS
 )
 from utils.ddh_common import (
-    calculate_path_to_folder_within_dl_files_from_mac_address,
-    ddh_config_get_logger_mac_from_sn, linux_is_rpi,
-    STR_ERROR_GRAPH_SN_NOT_IN_CONFIG, t_str,
-    calculate_mac_address_from_folder_within_dl_files,
-    ddh_config_get_logger_sn_from_mac, ddh_do_we_graph_out_of_water_data, ddh_get_path_to_folder_dl_files_sondes
+    ddh_get_path_to_folder_dl_files_sondes
 )
 from ddh_log import lg_gra as lg
 
@@ -270,6 +255,10 @@ def plot_sondes(app):
         offset=(-10, -200)
     )
 
+    pw.getPlotItem().enableAutoRange()
+    QApplication.processEvents()
+
+
 
     # TEMPERATURE expected to always be there get the sub_dataframes and plot
     d = data['df_pts_30'].reset_index(drop=True)
@@ -345,6 +334,12 @@ def plot_sondes(app):
         p1.layout.addItem(ax_r3, 2, 5)
 
 
+    # auto-zoom
+    # todo: make x-axis units as time, or we have a bug
+    # todo: or maybe data files are wrong for acbotics
+    pw.getViewBox().enableAutoRange(axis=pg.ViewBox.XYAxes)
+    QApplication.processEvents()
+
 
 
 
@@ -358,8 +353,11 @@ def sondes_serve_graph_request(
         QCoreApplication.processEvents()
         app.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
         app.pw_sondes.setBackground('w')
-        if app.lay_g_h2_5.count() == 0:
-            app.lay_g_h2_5.addWidget(app.pw_sondes)
+        # amazing way to remove previous ones
+        if app.lay_g_h2_5.count() > 0:
+            app.lay_g_h2_5.itemAt(0).widget().setParent(None)
+
+        app.lay_g_h2_5.addWidget(app.pw_sondes)
         plot_sondes(app)
 
 

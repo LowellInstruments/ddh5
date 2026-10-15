@@ -503,15 +503,15 @@ def gui_tabs_populate_sondes_dropdown(my_app):
     for i in list(ddh_config_get_dict_of_monitored_sondes().keys()):
         a.cb_g_sondes_who.addItem(i)
         ls = glob.glob(f'{fol}/{i}_SENS_*.csv')
-        ls_when_for_this_who = []
+        ls_when_for_who = []
         for j in ls:
             bn = os.path.basename(j)
             # bn: sonde1_SENS_1_1_ATLAS.csv
             x_y = bn.replace(f'{i}_SENS_', '')
             x_y = '_'.join(x_y.split('_')[:2])
-            if x_y not in ls_when_for_this_who:
-                ls_when_for_this_who.append(x_y)
-                a.cb_g_sondes_when.addItem(x_y)
+            if x_y not in ls_when_for_who:
+                ls_when_for_who.append(x_y)
+        a.cb_g_sondes_when.addItems(sorted(ls_when_for_who))
 
     # un-select
     a.cb_g_sondes_when.setCurrentIndex(-1)
@@ -1437,9 +1437,13 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
     def click_sondes_when(self):
-        if self.cb_g_sondes_who.currentIndex() != -1 and \
-                self.cb_g_sondes_when.currentIndex() != -1:
-            sondes_graph_request(reason='user')
+        i = self.cb_g_sondes_who.currentIndex()
+        j = self.cb_g_sondes_when.currentIndex()
+        if i != -1 and j != -1:
+            si = self.cb_g_sondes_who.currentText()
+            sj = self.cb_g_sondes_when.currentText()
+            # reason: 'sonde1_2_1'
+            sondes_graph_request(reason=f'{si}_{sj}')
 
 
 
