@@ -237,6 +237,51 @@ def _aws_cp(path):
 
 
 
+def _aws_cp_sondes_file(path):
+
+    # check AWS credentials
+    _k = ddh_config_get_one_aws_credential_value("cred_aws_key_id_sondes")
+    _s = ddh_config_get_one_aws_credential_value("cred_aws_secret_sondes")
+    bkt_name = ddh_config_get_one_aws_credential_value("cred_aws_bucket_sondes")
+    if _k is None or _s is None or bkt_name is None:
+        lg.a("warning, missing credentials for SONDES")
+        return 1
+    if not bkt_name.startswith("bkt-"):
+        lg.a('warning, SONDES bucket name does not start with bkt-')
+
+
+    # cannot do anything without internet access
+    if ddh_net_calculate_via() == 'none':
+        lg.a('error, no sondes AWS copy, no internet access')
+        return 1
+
+
+    # build the SONDES AWS COPY command
+    _bin = _get_path_of_aws_binary()
+    bn = os.path.basename(path)
+    dr = "--dryrun" if dev else ""
+    cmd = (
+        f"AWS_ACCESS_KEY_ID={_k} AWS_SECRET_ACCESS_KEY={_s} "
+        f"timeout 60 {_bin} s3 cp {path} s3://{bkt_name}/{bn} {dr} "
+    )
+
+
+    # run AWS cp command
+    _ddh_aws_set_state('busy')
+    rv = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    if rv.returncode:
+        lg.a(f"error, SONDES S3 copy {bn} -> {rv.stderr}")
+        lg.a('maybe do pip3 install awscli?')
+        _ddh_aws_set_state('error')
+        return 1
+
+    lg.a(f"OK, S3 copy {bn}")
+    _ddh_aws_set_state('OK')
+    return 0
+
+
+
+
 
 def aws_sync(past_year=False):
     try:
@@ -272,8 +317,10 @@ def aws_sync(past_year=False):
 
 
 
-def _ddh_aws(ignore_gui):
 
+
+
+def _ddh_aws(ignore_gui):
 
     # prepare AWS process
     r.delete(RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT)
@@ -321,7 +368,8 @@ def _ddh_aws(ignore_gui):
 
 
         # -------------------------------------------------
-        # AWS COPY individual files inside 'upload' folder
+        # AWS COPY individual files pointed by
+        # symlinks inside 'upload' folder
         # -------------------------------------------------
         did_aws = False
         ls_aws_copy = glob.glob(f'{ddh_get_path_to_root_application_folder()}/upload/*')
@@ -343,8 +391,11 @@ def _ddh_aws(ignore_gui):
             lg.a(f'copying to bucket file {dn}/{bn}')
             did_aws = True
             try:
-                _aws_cp(p)
-                # SYM: delete the link once file uploaded
+                if bn.endswith('.dat'):
+                    _aws_cp_sondes_file(p)
+                else:
+                    _aws_cp(p)
+                # SYM: delete symlink once file uploaded for TRACK and .DAT files
                 if p.endswith('_track.txt'):
                     yyyymmdd = datetime.datetime.now(datetime.UTC)
                     s_yyyymmdd = yyyymmdd.strftime('%Y-%m-%d')
@@ -355,9 +406,16 @@ def _ddh_aws(ignore_gui):
                         lg.a(f'deleting link but NOT today\'s track file {s_yyyymmdd}')
                     os.unlink(link)
                 else:
-                    # delete the rest
+                    # delete only the symlink of rest
                     lg.a(f'deleting link {link}')
                     os.unlink(link)
+
+                if p.endswith('.dat'):
+                    lg.a(f'deleting SONDES file {bn}')
+                    os.unlink(p)
+                    lg.a(f'deleting SONDES file link {link}')
+                    os.unlink(link)
+
             except (Exception,) as ex:
                 lg.a(f'error, aws_cp -> {ex}')
                 _ddh_aws_set_state('error')

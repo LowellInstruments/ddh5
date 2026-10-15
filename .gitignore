@@ -2,6 +2,8 @@
 dl_files/*
 dl_files_sondes/*
 upload/*
+!upload/DESCRIPTION.txt
+!upload/.gitkeep
 logs/*
 .idea/
 .venv/

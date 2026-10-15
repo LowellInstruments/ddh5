@@ -135,7 +135,7 @@ class WSS:
 
 
 
-    def send_cmd_set_filename_to_be_deleted(self, sn, rp):
+    def send_cmd_delete_filename_in_remote(self, sn, rp):
         # remote_path: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
         ip = self.ip
         p_src = rp.split('$')[0]

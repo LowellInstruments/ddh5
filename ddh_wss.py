@@ -1,14 +1,15 @@
+import os
 import time
 import sys
 import redis
 import setproctitle
-
 from ddh.wss import WSS
 from ddh_log import lg_wss as lg
 from utils.ddh_common import (
     ddh_this_process_needs_to_quit,
     NAME_EXE_WSS,
-    ddh_config_get_dict_of_monitored_sondes, ddh_create_needed_folders
+    ddh_config_get_dict_of_monitored_sondes,
+    ddh_get_path_to_root_application_folder
 )
 
 
@@ -46,18 +47,27 @@ def _ddh_wss(ignore_gui):
         for sn, ip in g_d_sondes.items():
             wss = WSS(ip)
             if not wss.send_cmd_is_sonde_there():
-                print('not detected')
+                lg.a(f'error, {sn} with {ip} not detected')
                 continue
             p_dl, p_info = wss.send_cmd_get_filename_to_be_sent()
-            if p_dl:
-                rv_pull = wss.send_cmd_pull_file(sn, p_dl)
-                if rv_pull == 0:
-                    wss.send_cmd_set_filename_to_be_deleted(sn, p_dl)
+            if not p_dl:
+                time.sleep(10)
+                continue
+
+            rv_pull = wss.send_cmd_pull_file(sn, p_dl)
+            if rv_pull == 0:
+                wss.send_cmd_delete_filename_in_remote(sn, p_dl)
+                # symlink files.dat so AWS can upload-copy-delete them
+                fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
+                os.makedirs(fol_upload, exist_ok=True)
+                bn_dl = os.path.basename(p_dl)
+                link_dl = f'{ddh_get_path_to_root_application_folder()}/upload/{bn_dl}'
+                if not os.path.exists(link_dl):
+                    os.symlink(p_dl, link_dl)
+
+            time.sleep(1)
 
 
-            # if p_info:
-            #     print(f'{sn} ({ip}) we need to pull INFO file p_in {p_info}')
-            time.sleep(10)
 
 
 

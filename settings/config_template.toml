@@ -7,6 +7,9 @@ cred_ddh_serial_number = ""
 cred_ddh_project_name = ""
 cred_aws_custom_sqs_key_id = ""
 cred_aws_custom_sqs_access_key = ""
+cred_aws_bucket_sondes = "bkt-abc"
+cred_aws_key_id_sondes = ""
+cred_aws_secret_sondes = ""
 
 
 

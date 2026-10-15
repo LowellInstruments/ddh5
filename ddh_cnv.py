@@ -2,6 +2,9 @@ import glob
 import os
 import time
 import redis
+
+from ddh.acsense_utils._parser.parser import Parser
+from ddh.acsense_utils.parser_gui import Parser_GUI_Tk
 from ddh.graph_draw import graph_request
 from lix.lix import parse_lid_v2_data_file
 from mat.data_converter import (
@@ -24,7 +27,8 @@ from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
     ddh_get_path_to_root_application_folder,
     ddh_get_path_to_db_new_history_file,
-    ddh_calc_stats_of_csv_file_for_history_table, ddh_do_we_graph_out_of_water_data
+    ddh_calc_stats_of_csv_file_for_history_table, ddh_do_we_graph_out_of_water_data,
+    ddh_get_path_to_folder_dl_files_sondes
 )
 from ddh_log import lg_cnv as lg
 
@@ -220,7 +224,7 @@ def _ddh_cnv():
                 lg.a(f'error, file {bn}')
 
 
-        # plot
+        # send logger CSV files to be plotted
         for pb in ls_converted_files:
             mask = pb.replace('.lid', '') + '*.csv'
             ls_csv = glob.glob(mask)
@@ -230,6 +234,27 @@ def _ddh_cnv():
                 lg.a(f'post conversion plot = {bn}')
                 r.set(RD_DDH_GUI_PLOT_REASON, 'BLE')
                 r.set(RD_DDH_GUI_PLOT_FOLDER, dn)
+
+
+        # ---------------------------------------
+        # convert DAT files for acbotics sondes
+        # ---------------------------------------
+        fol = ddh_get_path_to_folder_dl_files_sondes()
+        ls_dat_files = glob.glob(f'{fol}/**/*SENS*.dat', recursive=True)
+        for p in ls_dat_files:
+            bn = os.path.basename(p).replace('.dat', '')
+            ls_csv_files = glob.glob(f'{p}/**/{bn}.csv', recursive=True)
+            if ls_csv_files:
+                # probably already converted
+                continue
+            # convert SENS dat file
+            pr = Parser()
+            # use_int = True
+            # rv = pr.parse_ac_file(fn_dat, use_int=use_int, export=True, output_dir=fol_dst)
+            parsed = {p: pr.parse_sense_file(p)}
+            Parser_GUI_Tk.save_csv_callback(parsed, output_dir=fol)
+
+
 
 
 
