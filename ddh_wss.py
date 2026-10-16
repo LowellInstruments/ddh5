@@ -53,76 +53,79 @@ def _ddh_wss(ignore_gui):
             lg.a(f'OK, detected {sn} on {ip}')
 
 
-            # get the next REMOTE filename within this sonde
-            # prd: path remote dat file
-            # pri: path remote info file
-            prd, pri = wss.wss_cmd_get_next_filename_to_be_pulled()
+            # iterate files within this sonde
+            while 1:
+                # prd: path remote dat file
+                # pri: path remote info file
+                prd, pri = wss.wss_cmd_get_next_filename_to_be_pulled()
 
 
-            if not pri:
-                lg.a(f'warning, {sn} is empty')
-                continue
+                if not pri:
+                    lg.a(f'OK, {sn} is empty')
+                    break
 
 
-            # parse remote path fields
-            fol = ddh_get_path_local_folder_dl_files_sondes()
-            bn_info = os.path.basename(pri)
-            sub_fol_timestamp = pri.split('/')[-3]
-            sub_fol_deploy = pri.split('/')[-2]
+                # parse remote path fields
+                fol = ddh_get_path_local_folder_dl_files_sondes()
+                bn_info = os.path.basename(pri)
+                sub_fol_timestamp = pri.split('/')[-3]
+                sub_fol_deploy = pri.split('/')[-2]
 
 
 
-            # file info, needed for its METADATA
-            # pli: path local info file
-            pli = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_info}'
-            if not os.path.exists(pli):
-                lg.a(f'⬅️ {sn} ({ip}) PULL = {pri}')
-                rv = wss.wss_cmd_pull_remote_file_info(pri, pli)
-                if rv:
-                    lg.a(f'❌ error, cannot pull info file {bn_info}')
-                    # todo: show GUI retries or whatever?
-                    continue
-                lg.a(f'✅ OK, pulled file {bn_info}')
+                # file info, needed for its METADATA
+                # pli: path local info file
+                pli = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_info}'
+                if not os.path.exists(pli):
+                    lg.a(f'⬅️ {sn} ({ip}) PULL = {pri}')
+                    rv = wss.wss_cmd_pull_remote_file_info(pri, pli)
+                    if rv:
+                        lg.a(f'❌ error, cannot pull info file {bn_info}')
+                        # todo: show GUI retries or whatever?
+                        break
+                    lg.a(f'✅ OK, pulled file {bn_info}')
 
 
-            if not prd:
-                # DONE for this sonde
-                continue
+                if not prd:
+                    # DONE for this sonde
+                    break
 
 
-            # get the file data, delete it from remote and upload it to cloud
-            # p_remote_dat: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
-            bn_dat = os.path.basename(prd).split('$')[0]
-            z_dat = int(os.path.basename(prd).split('$')[1])
-            p_local_dat = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_dat}'
-            lg.a(f'⬅️ {sn} ({ip}) PULL = {prd}')
-            if os.path.exists(p_local_dat) and os.path.getsize(p_local_dat) == z_dat:
-                lg.a(f'✅ pull OK, {bn_dat} already exists')
-            else:
-                rv = wss.wss_cmd_pull_remote_file_dat(prd, p_local_dat, z_dat)
-                if rv == 0:
-                    lg.a(f'✅ pull OK, {bn_dat}')
+                # get the file data, delete it from remote and upload it to cloud
+                # p_remote_dat: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
+                prd, z_dat = prd.split('$')
+                bn_dat = os.path.basename(prd)
+                pld = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_dat}'
+                lg.a(f'⬅️ {sn} ({ip}) PULL = {prd}')
+                if os.path.exists(pld) and os.path.getsize(pld) == z_dat:
+                    lg.a(f'✅ pull OK, {bn_dat} already exists')
                 else:
-                    lg.a(f'❌ error, cannot pull file {bn_dat}')
+                    rv = wss.wss_cmd_pull_remote_file_dat(prd, pld, z_dat)
+                    if rv == 0:
+                        lg.a(f'✅ pull OK, {bn_dat}')
+                    else:
+                        lg.a(f'❌ error, cannot pull file {bn_dat}')
 
 
-            # delete the DAT downloaded file
-            lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
-            wss.wss_cmd_delete_remote_filename(prd)
+                # delete the DAT downloaded file
+                lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
+                wss.wss_cmd_delete_remote_filename(prd)
 
-            # symlink files.dat so AWS can upload-copy-delete them
-            fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
-            os.makedirs(fol_upload, exist_ok=True)
-            link = f'{fol_upload}/{os.path.basename(prd)}'
-            if not os.path.exists(link):
-                os.symlink(prd, link)
+                # symlink files.dat so AWS can upload-copy-delete them
+                fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
+                os.makedirs(fol_upload, exist_ok=True)
+                bn_pld = os.path.basename(pld)
+                link = f'{fol_upload}/{bn_pld}'
+                print('prd', prd)
+                print('link', link)
+                if not os.path.exists(link):
+                    os.symlink(pld, link)
 
 
-            # wait between files of same sonde
-            time.sleep(1)
+            # time between sondes
+            time.sleep(5)
 
-
-        # don't hag cpu
+        # don't hag cpu, time between wss loops
         time.sleep(10)
 
 

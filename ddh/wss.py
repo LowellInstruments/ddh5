@@ -105,13 +105,13 @@ class WSS:
 
 
     def wss_cmd_pull_remote_file_dat(self, rp, p_local_dat, z_dat):
-        # rp: remote_path: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1234231'
-        rp = rp.split('$')[0]
+        # rp: remote_path: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat'
         pld = str(p_local_dat)
         os.makedirs(os.path.dirname(pld), exist_ok=True)
         cy = f"rsync -avzP  -e \"ssh -i {self.pk}\" pi@{self.ip}:{rp} {pld}"
+        # print('cy', cy)
         sp.run(cy, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        return 0 if os.path.exists(pld) and os.path.getsize(pld) == z_dat else 1
+        return 0 if os.path.exists(pld) and os.path.getsize(pld) == int(z_dat) else 1
 
 
 
@@ -128,9 +128,7 @@ class WSS:
 
 
     def wss_cmd_delete_remote_filename(self, rp):
-        # rp: '/home/pi/Downloads/20260415_100954/D1/SENS_1_1.dat$10719232'
-        # print(f'\n⬅️ {self.sn} ({ip}) DELETE = {p_src}')
-        rp = rp.split('$')[0]
+        # rp: '/home/pi/Downloads/20260415_100954/D1/SENS_1_1.dat'
         c = f'rm -f {rp}'
         self._send_cmd(c)
         c = f'test -f {rp} || echo "nope"'
