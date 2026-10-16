@@ -9,10 +9,10 @@ from utils.ddh_common import (
     ddh_this_process_needs_to_quit,
     NAME_EXE_WSS,
     ddh_config_get_dict_of_monitored_sondes,
-    ddh_get_path_to_root_application_folder, ddh_get_path_to_folder_dl_files, ddh_get_path_local_folder_dl_files_sondes
+    ddh_get_path_to_root_application_folder, ddh_get_path_to_folder_dl_files, ddh_get_path_local_folder_dl_files_sondes,
+    app_state_set, EV_BLE_DL_PROGRESS, t_str, STR_EV_BLE_DL_PROGRESS
 )
-
-
+from utils.redis import RD_DDH_GUI_STATE_EVENT_ICON_LOCK
 
 # =====================================================
 # ddh_wss
@@ -103,6 +103,8 @@ def _ddh_wss(ignore_gui):
                 if os.path.exists(pld) and os.path.getsize(pld) == z_dat:
                     lg.a(f'✅ pull OK, {bn_dat} already exists')
                 else:
+                    app_state_set(EV_BLE_DL_PROGRESS, t_str(STR_EV_BLE_DL_PROGRESS) + f' {sn}')
+                    r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=1)
                     rv = wss.wss_cmd_pull_remote_file_dat(prd, pld, z_dat)
                     if rv == 0:
                         lg.a(f'✅ pull OK, {bn_dat}')
