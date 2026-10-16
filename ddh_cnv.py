@@ -28,7 +28,7 @@ from utils.ddh_common import (
     ddh_get_path_to_root_application_folder,
     ddh_get_path_to_db_new_history_file,
     ddh_calc_stats_of_csv_file_for_history_table, ddh_do_we_graph_out_of_water_data,
-    ddh_get_path_to_folder_dl_files_sondes
+    ddh_get_path_local_folder_dl_files_sondes
 )
 from ddh_log import lg_cnv as lg
 
@@ -239,7 +239,7 @@ def _ddh_cnv():
         # ---------------------------------------
         # convert DAT files for acbotics sondes
         # ---------------------------------------
-        fol = ddh_get_path_to_folder_dl_files_sondes()
+        fol = ddh_get_path_local_folder_dl_files_sondes()
         ls_dat_files = glob.glob(f'{fol}/**/*SENS*.dat', recursive=True)
         cnv_dat = False
         for p in ls_dat_files:

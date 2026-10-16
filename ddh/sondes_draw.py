@@ -13,7 +13,7 @@ from utils.redis import (
     RD_DDH_GUI_PLOT_REASON_SONDES,
 )
 from utils.ddh_common import (
-    ddh_get_path_to_folder_dl_files_sondes
+    ddh_get_path_local_folder_dl_files_sondes
 )
 from ddh_log import lg_gra as lg
 
@@ -216,7 +216,7 @@ def plot_sondes(app):
     # when: '1_1'
     who = app.cb_g_sondes_who.currentText()
     when = app.cb_g_sondes_when.currentText()
-    fol = ddh_get_path_to_folder_dl_files_sondes()
+    fol = ddh_get_path_local_folder_dl_files_sondes()
     ls_do = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_RDO.csv')]
     if ls_do:
         p = ls_do[0]

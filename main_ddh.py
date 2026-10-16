@@ -130,7 +130,7 @@ from utils.ddh_common import (
     PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
     exp_use_show_fish_website, ddh_get_path_to_db_new_history_file, LI_PATH_PLT_ALSO_OUT_OF_WATER,
     PATH_GUI_DDH_WAS_UPDATED, NAME_EXE_WSS, ddh_config_get_dict_of_monitored_sondes,
-    ddh_get_path_to_folder_dl_files_sondes,
+    ddh_get_path_local_folder_dl_files_sondes,
 )
 import datetime
 import os
@@ -499,7 +499,7 @@ def gui_tabs_populate_sondes_dropdown(my_app):
     a = my_app
     a.cb_g_sondes_who.clear()
     a.cb_g_sondes_when.clear()
-    fol = ddh_get_path_to_folder_dl_files_sondes()
+    fol = ddh_get_path_local_folder_dl_files_sondes()
     for i in list(ddh_config_get_dict_of_monitored_sondes().keys()):
         a.cb_g_sondes_who.addItem(i)
         ls = glob.glob(f'{fol}/{i}_SENS_*.csv')

@@ -2,15 +2,24 @@ import time
 import shlex
 import subprocess as sp
 import os
+from utils.ddh_common import (
+    ddh_get_path_local_folder_dl_files_sondes,
+    ddh_config_get_path_remote_fol_dat_files
+)
 
-from utils.ddh_common import ddh_get_path_to_folder_dl_files_sondes
+
+
+PATH_LOCAL_SSH_PRIVATE_KEY = '/home/kaz/Downloads/id_key'
+FOL_REMOTE_DAT_FILES = ddh_config_get_path_remote_fol_dat_files()
+
+
 
 
 class WSS:
 
     _cmd = "ssh -i {} pi@{} \"{}\""
 
-    def __init__(self, ip, pk="/home/kaz/Downloads/id_key"):
+    def __init__(self, ip, pk=PATH_LOCAL_SSH_PRIVATE_KEY):
         self.ip = ip
         self.pk = pk
         self.cmd = ""
@@ -56,19 +65,13 @@ class WSS:
 
 
 
-    # def send_cmd_get_filename_to_be_sent(self):
-    #     cr = "redis-cli --raw --scan --pattern \"to_be_sent*\" | head -n 1"
-    #     # (0, '') or (0, 'filename\n')
-    #     p = self._send_cmd(cr)
-    #     p = p.replace('\n', '')
-    #     return p
 
 
     def send_cmd_get_filename_to_be_sent(self):
-        fol_ss_root_dat_files = '/home/pi/Downloads/20260415_100954'
+        fol = FOL_REMOTE_DAT_FILES
         # this finds only one file
         # c = f'\"find {fol_ss_root_dat_files} -name *.dat -type f -printf \"%p - %s bytes\\n\" -quit\"'
-        c = f'\"find {fol_ss_root_dat_files} -name *.dat -type f -printf \"%p$%s\" -quit\"'
+        c = f'\"find {fol} -name *.dat -type f -printf \"%p$%s\" -quit\"'
         p = self._send_cmd(c)
         p = p.replace('\n', '')
         p_remote_info = ''
@@ -76,29 +79,18 @@ class WSS:
             # we get the subfolder index to build the meta info file name
             n = os.path.dirname(p)[-1:]
             # see if we already have this file
-            p_local_info = f'{ddh_get_path_to_folder_dl_files_sondes()}/meta_{n}_1.info'
+            p_local_info = f'{ddh_get_path_local_folder_dl_files_sondes()}/meta_{n}_1.info'
             if not os.path.exists(p_local_info):
                 p_remote_info = f'{os.path.dirname(p)}/meta_{n}_1.info'
         return p, p_remote_info
 
 
 
-    # def send_cmd_pull_file(self, bn="100m.bin"):
-    #     p_src = f"/home/pi/li/ddh/dl_files/{bn}"
-    #     p_dst = f"/home/kaz/Downloads/{bn}"
-    #     pk = self.pk
-    #     ip = self.ip
-    #     cy = f"rsync -avzP  -e \"ssh -i {pk}\" pi@{ip}:{p_src} {p_dst}"
-    #     self._send_cmd(cy, timeout=10)
-    #     if os.path.exists(p_dst):
-    #         z = os.path.getsize(p_dst)
-    #         print('z', z)
-
 
 
 
     def send_cmd_pull_file(self, sn, rp):
-        # remote_path: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
+        # rp: remote_path: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
         ip = self.ip
         p_src = rp.split('$')[0]
         print(f'\n⬅️ {sn} ({ip}) PULL = {p_src}')
@@ -111,7 +103,7 @@ class WSS:
             return 1
         z = int(z)
         dst_bn = f'{sn}_{ts}_{z}_{bn}'
-        p_dst = f'{ddh_get_path_to_folder_dl_files_sondes()}/{dst_bn}'
+        p_dst = f'{ddh_get_path_local_folder_dl_files_sondes()}/{dst_bn}'
         pk = self.pk
         ip = self.ip
 
@@ -129,10 +121,6 @@ class WSS:
 
 
 
-    # def send_cmd_set_filename_to_be_deleted(self, p):
-    #     cr = f"redis-cli --raw set to_be_deleted_{p} 1"
-    #     return self._send_cmd(cr)
-
 
 
     def send_cmd_delete_filename_in_remote(self, sn, rp):
@@ -149,6 +137,7 @@ class WSS:
             return 0
         print(f'\t❌ delete error')
         return 1
+
 
 
 

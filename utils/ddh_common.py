@@ -146,7 +146,7 @@ def ddh_get_path_to_folder_dl_files() -> Path:
 
 
 
-def ddh_get_path_to_folder_dl_files_sondes() -> Path:
+def ddh_get_path_local_folder_dl_files_sondes() -> Path:
     p = str(ddh_get_path_to_root_application_folder())
     return Path(f"{p}/dl_files_sondes")
 
@@ -370,6 +370,11 @@ def ddh_config_get_vessel_name():
 
 
 
+def ddh_config_get_path_remote_fol_dat_files():
+    return cfg['behavior']['fol_remote_dat_files']
+
+
+
 def ddh_config_get_is_aws_s3_enabled():
     return cfg['flags']['aws_en']
 
@@ -423,7 +428,7 @@ def ddh_create_needed_folders():
     os.makedirs(fol, exist_ok=True)
     fol = ddh_get_path_to_folder_logs()
     os.makedirs(fol, exist_ok=True)
-    fol = ddh_get_path_to_folder_dl_files_sondes()
+    fol = ddh_get_path_local_folder_dl_files_sondes()
     os.makedirs(fol, exist_ok=True)
 
 

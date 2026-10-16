@@ -18,6 +18,9 @@ ship_name = "nameofboat"
 forget_time = 86400
 fake_gps_position = [ 0, -0,]
 # use [ 41.63, -70.91,] for a known port GPS position
+fol_remote_dat_files = "/home/kaz/Downloads/20260415_100954"
+
+
 
 
 [monitored_macs]
