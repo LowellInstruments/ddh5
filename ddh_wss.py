@@ -41,29 +41,37 @@ def _ddh_wss(ignore_gui):
 
 
         # not hag cpu
-        time.sleep(1)
+        time.sleep(10)
 
 
         for sn, ip in g_d_sondes.items():
-            wss = WSS(ip)
-            if not wss.send_cmd_is_sonde_there():
+
+            # download each Wireless Super Sonde in config.toml
+            wss = WSS(ip, sn)
+            if not wss.wss_cmd_is_sonde_present():
                 lg.a(f'error, {sn} with {ip} not detected')
                 continue
-            p_dl, p_info = wss.send_cmd_get_filename_to_be_sent()
+
+            # get the next filename within this sonde
+            # todo: redo this SO file metainfo is ALWAYS the first one pulled
+            # todo: because we need it for DAT conversion of timestamps
+            p_dl, p_info = wss.wss_cmd_get_next_filename_to_be_pulled()
             if not p_dl:
-                time.sleep(10)
+                time.sleep(1)
                 continue
 
-            rv_pull = wss.send_cmd_pull_file(sn, p_dl)
+            # todo: get FILE p_info too
+
+            # get the file data, delete it from remote and upload it to cloud
+            rv_pull = wss.wss_cmd_pull_remote_filename(p_dl)
             if rv_pull == 0:
-                wss.send_cmd_delete_filename_in_remote(sn, p_dl)
+                wss.wss_cmd_delete_remote_filename(p_dl)
                 # symlink files.dat so AWS can upload-copy-delete them
                 fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
                 os.makedirs(fol_upload, exist_ok=True)
-                bn_dl = os.path.basename(p_dl)
-                link_dl = f'{ddh_get_path_to_root_application_folder()}/upload/{bn_dl}'
-                if not os.path.exists(link_dl):
-                    os.symlink(p_dl, link_dl)
+                link = f'{fol_upload}/{os.path.basename(p_dl)}'
+                if not os.path.exists(link):
+                    os.symlink(p_dl, link)
 
             time.sleep(1)
 
