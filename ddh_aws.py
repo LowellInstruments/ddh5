@@ -227,7 +227,7 @@ def _aws_cp(path):
     rv = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     if rv.returncode:
         lg.a(f"error, S3 copy {os.path.basename(path)}, year {y}, {rv.stderr}")
-        lg.a('maybe do pip3 install awscli?')
+        lg.a('error, maybe do pip3 install awscli?')
         _ddh_aws_set_state('error')
         return 1
 
@@ -237,12 +237,18 @@ def _aws_cp(path):
 
 
 
+
+
 def _aws_cp_sondes_file(path):
+
+    if 'DESCRIPTION.txt' in path:
+        return
 
     # check AWS credentials
     _k = ddh_config_get_one_aws_credential_value("cred_aws_key_id_sondes")
     _s = ddh_config_get_one_aws_credential_value("cred_aws_secret_sondes")
     bkt_name = ddh_config_get_one_aws_credential_value("cred_aws_bucket_sondes")
+    print(_k, _s, bkt_name)
     if _k is None or _s is None or bkt_name is None:
         lg.a("warning, missing credentials for SONDES")
         return 1
@@ -265,13 +271,12 @@ def _aws_cp_sondes_file(path):
         f"timeout 60 {_bin} s3 cp {path} s3://{bkt_name}/{bn} {dr} "
     )
 
-
     # run AWS cp command
     _ddh_aws_set_state('busy')
     rv = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     if rv.returncode:
         lg.a(f"error, SONDES S3 copy {bn} -> {rv.stderr}")
-        lg.a('maybe do pip3 install awscli?')
+        lg.a('error, maybe do pip3 install awscli?')
         _ddh_aws_set_state('error')
         return 1
 
@@ -375,6 +380,8 @@ def _ddh_aws(ignore_gui):
         ls_aws_copy = glob.glob(f'{ddh_get_path_to_root_application_folder()}/upload/*')
         for link in ls_aws_copy:
             if not os.path.islink(link):
+                if 'DESCRIPTION.txt' in link:
+                    continue
                 lg.a(f'error, {link} is not link')
                 continue
             p = os.readlink(link)
@@ -391,30 +398,31 @@ def _ddh_aws(ignore_gui):
             lg.a(f'copying to bucket file {dn}/{bn}')
             did_aws = True
             try:
+                # copying a SONDES file
                 if bn.endswith('.dat'):
-                    _aws_cp_sondes_file(p)
-                else:
-                    _aws_cp(p)
-                # SYM: delete symlink once file uploaded for TRACK and .DAT files
-                if p.endswith('_track.txt'):
-                    yyyymmdd = datetime.datetime.now(datetime.UTC)
-                    s_yyyymmdd = yyyymmdd.strftime('%Y-%m-%d')
-                    if s_yyyymmdd not in os.path.basename(p):
-                        lg.a(f'deleting old track file {bn} AND its link')
+                    rv = _aws_cp_sondes_file(p)
+                    if rv == 0:
+                        lg.a(f'deleting SONDES file {bn}')
                         os.unlink(p)
-                    else:
-                        lg.a(f'deleting link but NOT today\'s track file {s_yyyymmdd}')
-                    os.unlink(link)
+                        lg.a(f'deleting SONDES file link {link}')
+                        os.unlink(link)
                 else:
-                    # delete only the symlink of rest
-                    lg.a(f'deleting link {link}')
-                    os.unlink(link)
-
-                if p.endswith('.dat'):
-                    lg.a(f'deleting SONDES file {bn}')
-                    os.unlink(p)
-                    lg.a(f'deleting SONDES file link {link}')
-                    os.unlink(link)
+                    rv = _aws_cp(p)
+                    if rv == 0:
+                        # SYM: delete symlink once file uploaded for TRACK and .DAT files
+                        if p.endswith('_track.txt'):
+                            yyyymmdd = datetime.datetime.now(datetime.UTC)
+                            s_yyyymmdd = yyyymmdd.strftime('%Y-%m-%d')
+                            if s_yyyymmdd not in os.path.basename(p):
+                                lg.a(f'deleting old track file {bn} AND its link')
+                                os.unlink(p)
+                            else:
+                                lg.a(f'deleting link but NOT today\'s track file {s_yyyymmdd}')
+                            os.unlink(link)
+                        else:
+                            # delete only the symlink of rest
+                            lg.a(f'deleting link {link}')
+                            os.unlink(link)
 
             except (Exception,) as ex:
                 lg.a(f'error, aws_cp -> {ex}')
@@ -456,4 +464,4 @@ if __name__ == '__main__':
     main_ddh_aws(ignore_gui=False)
 
     # for debug on pycharm
-    #main_ddh_aws(ignore_gui=True)
+    # main_ddh_aws(ignore_gui=True)

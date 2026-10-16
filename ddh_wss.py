@@ -116,9 +116,8 @@ def _ddh_wss(ignore_gui):
                 os.makedirs(fol_upload, exist_ok=True)
                 bn_pld = os.path.basename(pld)
                 link = f'{fol_upload}/{bn_pld}'
-                print('prd', prd)
-                print('link', link)
                 if not os.path.exists(link):
+                    lg.a(f'creating symlink {link}')
                     os.symlink(pld, link)
 
 
@@ -145,7 +144,7 @@ def main_ddh_wss(ignore_gui=False):
 if __name__ == '__main__':
 
     # normal run
-    # main_ddh_wss(ignore_gui=False)
+    main_ddh_wss(ignore_gui=False)
 
     # for debug
-    main_ddh_wss(ignore_gui=True)
+    # main_ddh_wss(ignore_gui=True)
