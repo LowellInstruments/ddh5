@@ -155,7 +155,7 @@ def _cache_read_csv(filename_csv):
 
 
 
-def sonde_get_df_from_csv_files(filename_csv, data):
+def _get_df_from_csv_files(filename_csv, sn, data):
     df = _cache_read_csv(filename_csv)
 
     # we need to update timestamp here
@@ -164,7 +164,7 @@ def sonde_get_df_from_csv_files(filename_csv, data):
     x_y = bn.split('_SENS_')[1]
     x_y = '_'.join(x_y.split('_')[:2])
     bd = os.path.dirname(filename_csv)
-    path_info = f'{bd}/meta_{x_y}.info'
+    path_info = f'{bd}/{sn}_meta_{x_y}.info'
     with open(path_info, 'rb') as f:
         ll = f.readlines()
         ll = [i.replace(b'\r\n', b'') for i in ll if b'Init ' in i]
@@ -207,7 +207,7 @@ def sondes_graph_request(reason='user'):
 
 
 
-def plot_sondes(app):
+def _sondes_plot(app):
 
     # build the dataframe
     data = dict()
@@ -220,15 +220,15 @@ def plot_sondes(app):
     ls_do = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_RDO.csv')]
     if ls_do:
         p = ls_do[0]
-        sonde_get_df_from_csv_files(p, data)
+        _get_df_from_csv_files(p, who, data)
     ls_pts = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_External_PTS_Bar30.csv')]
     if ls_pts:
         p = ls_pts[0]
-        sonde_get_df_from_csv_files(p, data)
+        _get_df_from_csv_files(p, who, data)
     ls_cond = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_ATLAS.csv')]
     if ls_cond:
         p = ls_cond[0]
-        sonde_get_df_from_csv_files(p, data)
+        _get_df_from_csv_files(p, who, data)
 
 
 
@@ -374,7 +374,6 @@ def plot_sondes(app):
 
 
 
-
 def sondes_serve_graph_request(
         app,
         plot_reason=''):
@@ -382,14 +381,13 @@ def sondes_serve_graph_request(
         app.lbl_graph_err_sondes.setVisible(False)
         app.lbl_graph_busy_sondes.setVisible(True)
         QCoreApplication.processEvents()
-        app.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
-        app.pw_sondes.setBackground('w')
-        # amazing way to remove previous ones
         if app.lay_g_h2_5.count() > 0:
+            # amazing way to remove previous plot_widgets
             app.lay_g_h2_5.itemAt(0).widget().setParent(None)
-
+            app.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
+        app.pw_sondes.setBackground('w')
         app.lay_g_h2_5.addWidget(app.pw_sondes)
-        plot_sondes(app)
+        _sondes_plot(app)
 
 
     except GraphException as e:

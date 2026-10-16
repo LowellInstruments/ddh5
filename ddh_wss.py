@@ -40,10 +40,6 @@ def _ddh_wss(ignore_gui):
             sys.exit(0)
 
 
-        # not hag cpu
-        time.sleep(10)
-
-
         for sn, ip in g_d_sondes.items():
 
             # download each Wireless Super Sonde in config.toml
@@ -53,45 +49,81 @@ def _ddh_wss(ignore_gui):
                 continue
 
 
+            # debug
+            lg.a(f'OK, detected {sn} on {ip}')
+
+
             # get the next REMOTE filename within this sonde
-            p_dl, p_info = wss.wss_cmd_get_next_filename_to_be_pulled()
+            # prd: path remote dat file
+            # pri: path remote info file
+            prd, pri = wss.wss_cmd_get_next_filename_to_be_pulled()
 
 
-            # we need meta info file because to decode timestamps of DAT files
-            n = os.path.dirname(p_info)[1:]
+            if not pri:
+                lg.a(f'warning, {sn} is empty')
+                continue
+
+
+            # parse remote path fields
             fol = ddh_get_path_local_folder_dl_files_sondes()
-            p_local_info = f'{fol}/D{n}/meta_{n}_1.info'
-            if not os.path.exists(p_local_info):
-                rv_pull = wss.wss_cmd_pull_remote_filename(p_local_info)
-                if rv_pull != 0:
-                    bn = os.path.basename(p_local_info)
-                    lg.a(f'error, we cannot pull file {bn} from sonde {sn}')
-                    # we cannot continue
-                    # todo: show retries or whatever?
+            bn_info = os.path.basename(pri)
+            sub_fol_timestamp = pri.split('/')[-3]
+            sub_fol_deploy = pri.split('/')[-2]
+
+
+
+            # file info, needed for its METADATA
+            # pli: path local info file
+            pli = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_info}'
+            if not os.path.exists(pli):
+                lg.a(f'⬅️ {sn} ({ip}) PULL = {pri}')
+                rv = wss.wss_cmd_pull_remote_file_info(pri, pli)
+                if rv:
+                    lg.a(f'❌ error, cannot pull info file {bn_info}')
+                    # todo: show GUI retries or whatever?
                     continue
+                lg.a(f'✅ OK, pulled file {bn_info}')
 
 
-            if not p_dl:
+            if not prd:
                 # DONE for this sonde
                 continue
 
 
             # get the file data, delete it from remote and upload it to cloud
-            rv_pull = wss.wss_cmd_pull_remote_filename(p_dl)
-            if rv_pull == 0:
-                wss.wss_cmd_delete_remote_filename(p_dl)
-                # symlink files.dat so AWS can upload-copy-delete them
-                fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
-                os.makedirs(fol_upload, exist_ok=True)
-                link = f'{fol_upload}/{os.path.basename(p_dl)}'
-                if not os.path.exists(link):
-                    os.symlink(p_dl, link)
+            # p_remote_dat: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
+            bn_dat = os.path.basename(prd).split('$')[0]
+            z_dat = int(os.path.basename(prd).split('$')[1])
+            p_local_dat = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_dat}'
+            lg.a(f'⬅️ {sn} ({ip}) PULL = {prd}')
+            if os.path.exists(p_local_dat) and os.path.getsize(p_local_dat) == z_dat:
+                lg.a(f'✅ pull OK, {bn_dat} already exists')
+            else:
+                rv = wss.wss_cmd_pull_remote_file_dat(prd, p_local_dat, z_dat)
+                if rv == 0:
+                    lg.a(f'✅ pull OK, {bn_dat}')
+                else:
+                    lg.a(f'❌ error, cannot pull file {bn_dat}')
+
+
+            # delete the DAT downloaded file
+            lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
+            wss.wss_cmd_delete_remote_filename(prd)
+
+            # symlink files.dat so AWS can upload-copy-delete them
+            fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
+            os.makedirs(fol_upload, exist_ok=True)
+            link = f'{fol_upload}/{os.path.basename(prd)}'
+            if not os.path.exists(link):
+                os.symlink(prd, link)
 
 
             # wait between files of same sonde
             time.sleep(1)
 
 
+        # don't hag cpu
+        time.sleep(10)
 
 
 
@@ -112,5 +144,5 @@ if __name__ == '__main__':
     # normal run
     # main_ddh_wss(ignore_gui=False)
 
-    # for debug on pycharm
+    # for debug
     main_ddh_wss(ignore_gui=True)

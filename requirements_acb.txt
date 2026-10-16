@@ -1,4 +1,2 @@
 tqdm
 pynmeagps
-matplotlib
-scipy

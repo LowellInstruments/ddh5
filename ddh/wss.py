@@ -13,6 +13,13 @@ PATH_LOCAL_SSH_PRIVATE_KEY = '/home/kaz/Downloads/id_key'
 FOL_REMOTE_DAT_FILES = ddh_config_get_path_remote_fol_dat_files()
 
 
+# ---------------------------------------------------------------------------------------
+# p_remote: /home/pi/Downloads/20260415_100954/D2/meta_2_1.info
+# p_local:  /home/kaz/.../ddh/dl_files_sondes/20260415_100954/sonde1_meta_2_1.info
+# this code pulls files from remote
+# this code writes Redis in remote to tell about download progress
+# ---------------------------------------------------------------------------------------
+
 
 
 class WSS:
@@ -60,6 +67,7 @@ class WSS:
             s = o + p.stdout.readline()
             all_s += s
             # print(f'.{s}', end='', flush=True)
+            # todo: write redis in remote with progress information
             ts = time.perf_counter()
 
 
@@ -76,14 +84,19 @@ class WSS:
         c = f'\"find {fol_remote} -name *.dat -type f -printf \"%p$%s\" -quit\"'
         p = self._send_cmd(c)
         p = p.replace('\n', '')
+        if not p:
+            return '', ''
+        # p: '/home/pi/Downloads/20260415_100954/D2/AC2_32.dat$7077888'
+        sub_fol_deploy = p.split('/')[-2]
+        sub_fol_timestamp = p.split('/')[-3]
         p_remote_info = ''
+        # get subfolder index (Dx) to build the meta info file name
+        x = sub_fol_deploy[1:]
         if p:
             fol_local = ddh_get_path_local_folder_dl_files_sondes()
-            # we get the subfolder index (Dx) to build the meta info file name
-            n = os.path.dirname(p)[1:]
-            p_local_info = f'{fol_local}/{self.sn}/meta_{n}_1.info'
+            p_local_info = f'{fol_local}/{sub_fol_timestamp}/{self.sn}_meta_{x}_1.info'
             if not os.path.exists(p_local_info):
-                p_remote_info = f'{os.path.dirname(p)}/meta_{n}_1.info'
+                p_remote_info = f'{os.path.dirname(p)}/meta_{x}_1.info'
         return p, p_remote_info
 
 
@@ -91,54 +104,38 @@ class WSS:
 
 
 
-    def wss_cmd_pull_remote_filename(self, rp):
-        # rp: remote_path: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
-        ip = self.ip
-        p_src = rp.split('$')[0]
-        print(f'\n⬅️ {self.sn} ({ip}) PULL = {p_src}')
-        ls = rp.split('/')
-        ts = ls[-3].replace('_', '-')
-        bn_size = ls[-1]
-        bn, z = bn_size.split('$')
-        if not z:
-            print(f'\t❌ pull error, z = {z}')
-            return 1
-        z = int(z)
-        dst_bn = f'{self.sn}_{ts}_{z}_{bn}'
-        p_dst = f'{ddh_get_path_local_folder_dl_files_sondes()}/{dst_bn}'
-        pk = self.pk
-        ip = self.ip
-
-        # check we already have it
-        if os.path.exists(p_dst) and os.path.getsize(p_dst) == z:
-            print(f'\t✅ pull OK (already exists)')
-            return 0
-        cy = f"rsync -avzP  -e \"ssh -i {pk}\" pi@{ip}:{p_src} {p_dst}"
+    def wss_cmd_pull_remote_file_dat(self, rp, p_local_dat, z_dat):
+        # rp: remote_path: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1234231'
+        rp = rp.split('$')[0]
+        pld = str(p_local_dat)
+        os.makedirs(os.path.dirname(pld), exist_ok=True)
+        cy = f"rsync -avzP  -e \"ssh -i {self.pk}\" pi@{self.ip}:{rp} {pld}"
         sp.run(cy, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        if os.path.exists(p_dst) and os.path.getsize(p_dst) == z:
-            print(f'\t✅ pull OK')
-            return 0
-        print(f'\t❌ pull error')
-        return 1
+        return 0 if os.path.exists(pld) and os.path.getsize(pld) == z_dat else 1
+
+
+
+    def wss_cmd_pull_remote_file_info(self, rp, p_local_info):
+        # rp: remote_path: '/home/pi/Downloads/20260415_100954/D2/meta_2_1.info'
+        pli = str(p_local_info)
+        os.makedirs(os.path.dirname(pli), exist_ok=True)
+        cy = f"rsync -avzP  -e \"ssh -i {self.pk}\" pi@{self.ip}:{rp} {pli}"
+        sp.run(cy, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        return 0 if os.path.exists(pli) else 1
 
 
 
 
 
     def wss_cmd_delete_remote_filename(self, rp):
-        # remote_path: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
-        ip = self.ip
-        p_src = rp.split('$')[0]
-        print(f'\n⬅️ {self.sn} ({ip}) DELETE = {p_src}')
-        c = f'rm -f {p_src}'
+        # rp: '/home/pi/Downloads/20260415_100954/D1/SENS_1_1.dat$10719232'
+        # print(f'\n⬅️ {self.sn} ({ip}) DELETE = {p_src}')
+        rp = rp.split('$')[0]
+        c = f'rm -f {rp}'
         self._send_cmd(c)
-        c = f'test -f {p_src} || echo "nope"'
+        c = f'test -f {rp} || echo "nope"'
         s = self._send_cmd(c)
-        if 'nope' in s:
-            print(f'\t✅ delete OK')
-            return 0
-        print(f'\t❌ delete error')
-        return 1
+        return 0 if 'nope' in s else 1
 
 
 

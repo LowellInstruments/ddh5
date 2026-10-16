@@ -15,7 +15,7 @@ import pandas as pd  # type: ignore
 from tqdm.auto import tqdm  # type: ignore
 
 from ddh.acsense_utils._parser.parser import Parser  # type: ignore
-from ddh.acsense_utils.plotter import run_plotter  # type: ignore
+#from ddh.acsense_utils.plotter import run_plotter  # type: ignore
 
 
 
@@ -152,12 +152,13 @@ class MenuBar(tk.Menu):
                 return
 
         if parsed_dir != "" and len(files) > 0:
-            run_plotter(
-                parsed_dir=parsed_dir,
-                plot_ac=plot_ac,
-                plot_cam=plot_cam,
-                img_dir=img_dir,
-            )
+            print('run plotter')
+            # run_plotter(
+            #     parsed_dir=parsed_dir,
+            #     plot_ac=plot_ac,
+            #     plot_cam=plot_cam,
+            #     img_dir=img_dir,
+            # )
         else:
             logger.error(
                 "No valid data files located! Please check your path contains"

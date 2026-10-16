@@ -371,7 +371,11 @@ def ddh_config_get_vessel_name():
 
 
 def ddh_config_get_path_remote_fol_dat_files():
-    return cfg['behavior']['fol_remote_dat_files']
+    try:
+        return cfg['behavior']['fol_remote_dat_files']
+    except (Exception, ):
+        print('error, ddh_config_get_path_remote_fol_dat_files()')
+        return "/home/pi/Downloads/20260415_100954"
 
 
 

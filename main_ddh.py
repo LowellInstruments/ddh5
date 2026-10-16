@@ -1439,11 +1439,16 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
     def click_sondes_when(self):
         i = self.cb_g_sondes_who.currentIndex()
         j = self.cb_g_sondes_when.currentIndex()
+        if i == self.last_sondes_who_i and j == self.last_sondes_when_j:
+            return
         if i != -1 and j != -1:
             si = self.cb_g_sondes_who.currentText()
             sj = self.cb_g_sondes_when.currentText()
             # reason: 'sonde1_2_1'
             sondes_graph_request(reason=f'{si}_{sj}')
+            self.last_sondes_who_i = i
+            self.last_sondes_when_j = j
+
 
 
 
@@ -1976,10 +1981,10 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.d_processes[NAME_EXE_WSS].readyReadStandardOutput.connect(self.handle_stdout_wss)
         self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
         self.d_processes[NAME_EXE_WSS].stateChanged.connect(self.handle_state_wss)
-        if platform.system == 'Linux':
-            self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
-            self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
-            self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
+        if platform.system() == 'Linux':
+            # self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
+            #self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
+            #self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
             self.d_processes[NAME_EXE_WSS].start('python3', [f'{NAME_EXE_WSS}.py'])
 
 
@@ -1990,7 +1995,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.th_net = Thread(target=main_ddh_net)
         self.th_net.start()
         self.th_cnv = Thread(target=main_ddh_cnv)
-        self.th_cnv.start()
+        # self.th_cnv.start()
 
 
 
@@ -2011,6 +2016,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.gif_map = None
         self.n_good_models = 0
         self.filename_model = None
+        self.last_sondes_who_i = -1
+        self.last_sondes_when_j = -1
 
 
 
@@ -2067,7 +2074,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.lay_g_h2.addWidget(self.pw)
         self.pw.setBackground('w')
         self.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
-        # self.lay_g_h2_5.addWidget(self.pw_sondes)
         self.btn_g_next_haul.setEnabled(False)
         self.btn_g_next_haul.setVisible(False)
         self.lbl_graph_busy.setVisible(False)
