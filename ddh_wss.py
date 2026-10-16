@@ -72,8 +72,9 @@ def _ddh_wss(ignore_gui):
                 sub_fol_deploy = pri.split('/')[-2]
 
 
-
-                # file info, needed for its METADATA
+                # -----------------------------------------
+                # pull file info, needed for its METADATA
+                # -----------------------------------------
                 # pli: path local info file
                 pli = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_info}'
                 if not os.path.exists(pli):
@@ -91,7 +92,9 @@ def _ddh_wss(ignore_gui):
                     break
 
 
-                # get the file data, delete it from remote and upload it to cloud
+                # -------------------------------------------------------------
+                # pull file data, delete it from remote and upload it to cloud
+                # -------------------------------------------------------------
                 # p_remote_dat: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
                 prd, z_dat = prd.split('$')
                 bn_dat = os.path.basename(prd)
@@ -103,15 +106,19 @@ def _ddh_wss(ignore_gui):
                     rv = wss.wss_cmd_pull_remote_file_dat(prd, pld, z_dat)
                     if rv == 0:
                         lg.a(f'✅ pull OK, {bn_dat}')
+                        lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
+                        rv = wss.wss_cmd_delete_remote_filename(prd)
+                        if rv == 0:
+                            lg.a(f'✅ delete OK, {bn_dat}')
+                        else:
+                            lg.a(f'❌ error, cannot delete file {bn_dat}')
+                            break
                     else:
                         lg.a(f'❌ error, cannot pull file {bn_dat}')
 
 
-                # delete the DAT downloaded file
-                lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
-                wss.wss_cmd_delete_remote_filename(prd)
 
-                # symlink files.dat so AWS can upload-copy-delete them
+                # create symlink files.dat so AWS can upload-copy-delete them
                 fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
                 os.makedirs(fol_upload, exist_ok=True)
                 bn_pld = os.path.basename(pld)

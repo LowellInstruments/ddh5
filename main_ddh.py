@@ -1985,8 +1985,8 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         if platform.system() == 'Linux':
             #self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
             #self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
-            self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
-            # self.d_processes[NAME_EXE_WSS].start('python3', [f'{NAME_EXE_WSS}.py'])
+            # self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
+            self.d_processes[NAME_EXE_WSS].start('python3', [f'{NAME_EXE_WSS}.py'])
 
 
 

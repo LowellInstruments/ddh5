@@ -107,10 +107,39 @@ class WSS:
     def wss_cmd_pull_remote_file_dat(self, rp, p_local_dat, z_dat):
         # rp: remote_path: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat'
         pld = str(p_local_dat)
+        bn_pld = os.path.basename(pld)
         os.makedirs(os.path.dirname(pld), exist_ok=True)
         cy = f"rsync -avzP  -e \"ssh -i {self.pk}\" pi@{self.ip}:{rp} {pld}"
-        # print('cy', cy)
-        sp.run(cy, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        # sp.run(cy, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+        pr = sp.Popen(
+            shlex.split(cy),
+            stdout=sp.PIPE,
+            stderr=sp.PIPE,
+            text=True,
+            # USEFUL when child process is buffering
+            bufsize=1
+        )
+
+        timeout = 3
+        ts = time.perf_counter()
+        while True:
+            if time.perf_counter() > ts + timeout:
+                # print('_cmd end')
+                break
+            # useful, this does NOT block
+            o = pr.stdout.readline()
+            if not o:
+                # do not hag CPU
+                time.sleep(.1)
+                continue
+            # todo: write redis in remote with progress information
+            if '%' in o:
+                o = o.replace('\n', '')
+                print(o)
+            ts = time.perf_counter()
+
+
         return 0 if os.path.exists(pld) and os.path.getsize(pld) == int(z_dat) else 1
 
 
