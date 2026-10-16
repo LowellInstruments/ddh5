@@ -9,7 +9,7 @@ from utils.ddh_common import (
     ddh_this_process_needs_to_quit,
     NAME_EXE_WSS,
     ddh_config_get_dict_of_monitored_sondes,
-    ddh_get_path_to_root_application_folder
+    ddh_get_path_to_root_application_folder, ddh_get_path_to_folder_dl_files, ddh_get_path_local_folder_dl_files_sondes
 )
 
 
@@ -52,15 +52,29 @@ def _ddh_wss(ignore_gui):
                 lg.a(f'error, {sn} with {ip} not detected')
                 continue
 
-            # get the next filename within this sonde
-            # todo: redo this SO file metainfo is ALWAYS the first one pulled
-            # todo: because we need it for DAT conversion of timestamps
+
+            # get the next REMOTE filename within this sonde
             p_dl, p_info = wss.wss_cmd_get_next_filename_to_be_pulled()
+
+
+            # we need meta info file because to decode timestamps of DAT files
+            n = os.path.dirname(p_info)[1:]
+            fol = ddh_get_path_local_folder_dl_files_sondes()
+            p_local_info = f'{fol}/D{n}/meta_{n}_1.info'
+            if not os.path.exists(p_local_info):
+                rv_pull = wss.wss_cmd_pull_remote_filename(p_local_info)
+                if rv_pull != 0:
+                    bn = os.path.basename(p_local_info)
+                    lg.a(f'error, we cannot pull file {bn} from sonde {sn}')
+                    # we cannot continue
+                    # todo: show retries or whatever?
+                    continue
+
+
             if not p_dl:
-                time.sleep(1)
+                # DONE for this sonde
                 continue
 
-            # todo: get FILE p_info too
 
             # get the file data, delete it from remote and upload it to cloud
             rv_pull = wss.wss_cmd_pull_remote_filename(p_dl)
@@ -73,6 +87,8 @@ def _ddh_wss(ignore_gui):
                 if not os.path.exists(link):
                     os.symlink(p_dl, link)
 
+
+            # wait between files of same sonde
             time.sleep(1)
 
 

@@ -70,8 +70,6 @@ class WSS:
 
 
 
-    # todo: redo this SO file metainfo is ALWAYS the first one pulled
-    # todo: because we need it for DAT conversion of timestamps
     def wss_cmd_get_next_filename_to_be_pulled(self):
         fol_remote = FOL_REMOTE_DAT_FILES
         # this finds only one file
@@ -82,7 +80,7 @@ class WSS:
         if p:
             fol_local = ddh_get_path_local_folder_dl_files_sondes()
             # we get the subfolder index (Dx) to build the meta info file name
-            n = os.path.dirname(p)[-1:]
+            n = os.path.dirname(p)[1:]
             p_local_info = f'{fol_local}/{self.sn}/meta_{n}_1.info'
             if not os.path.exists(p_local_info):
                 p_remote_info = f'{os.path.dirname(p)}/meta_{n}_1.info'
