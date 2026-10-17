@@ -376,6 +376,7 @@ def _ddh_aws(ignore_gui):
         # AWS COPY individual files pointed by
         # symlinks inside 'upload' folder
         # -------------------------------------------------
+
         did_aws = False
         ls_aws_copy = glob.glob(f'{ddh_get_path_to_root_application_folder()}/upload/*')
         for link in ls_aws_copy:
@@ -386,19 +387,21 @@ def _ddh_aws(ignore_gui):
                 continue
             p = os.readlink(link)
             if not os.path.exists(p):
-                lg.a(f'deleting link to non-existing file {p}')
+                lg.a(f'note, deleting link to non-existing file {p}')
                 os.unlink(link)
                 continue
             if 'MAT.cfg' in p:
-                lg.a(f'deleting link to MAT.cfg file {p}')
+                lg.a(f'note, deleting link to MAT.cfg file {p}')
                 os.unlink(link)
                 continue
+
+            # uploading them
             bn = os.path.basename(p)
             dn = os.path.dirname(p).split('/')[-1]
             lg.a(f'copying to bucket file {dn}/{bn}')
             did_aws = True
             try:
-                # copying a SONDES file
+                # AWS-copying copying a SONDES file
                 if bn.endswith('.dat'):
                     rv = _aws_cp_sondes_file(p)
                     if rv == 0:
@@ -406,6 +409,10 @@ def _ddh_aws(ignore_gui):
                         os.unlink(p)
                         lg.a(f'deleting SONDES file link {link}')
                         os.unlink(link)
+                    else:
+                        lg.a(f'error, could not upload SONDES file {bn}')
+
+                # AWS-copying BLE logger files
                 else:
                     rv = _aws_cp(p)
                     if rv == 0:
@@ -420,7 +427,7 @@ def _ddh_aws(ignore_gui):
                                 lg.a(f'deleting link but NOT today\'s track file {s_yyyymmdd}')
                             os.unlink(link)
                         else:
-                            # delete only the symlink of rest
+                            # delete only symlink of BLE logger files which are NOT tracking-type
                             lg.a(f'deleting link {link}')
                             os.unlink(link)
 
@@ -437,7 +444,7 @@ def _ddh_aws(ignore_gui):
             aws_sync()
 
 
-        # helps update GUI
+        # this displays status GUI cloud icon
         if did_aws:
             r.set(RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD, 1)
 

@@ -14,9 +14,12 @@ from utils.ddh_common import (
 )
 from utils.redis import RD_DDH_GUI_STATE_EVENT_ICON_LOCK
 
+
+
+
 # =====================================================
 # ddh_wss
-# downloads wireless super sondes
+# downloads wireless super sondes and deletes files
 # =====================================================
 
 
@@ -45,7 +48,7 @@ def _ddh_wss(ignore_gui):
             # download each Wireless Super Sonde in config.toml
             wss = WSS(ip, sn)
             if not wss.wss_cmd_is_sonde_present():
-                lg.a(f'error, {sn} with {ip} not detected')
+                # lg.a(f'error, {sn} with {ip} not detected')
                 continue
 
 
@@ -74,8 +77,9 @@ def _ddh_wss(ignore_gui):
 
                 # -----------------------------------------
                 # pull file info, needed for its METADATA
-                # -----------------------------------------
                 # pli: path local info file
+                # -----------------------------------------
+
                 pli = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_info}'
                 if not os.path.exists(pli):
                     lg.a(f'⬅️ {sn} ({ip}) PULL = {pri}')
@@ -92,49 +96,44 @@ def _ddh_wss(ignore_gui):
                     break
 
 
-                # -------------------------------------------------------------
-                # pull file data, delete it from remote and upload it to cloud
-                # -------------------------------------------------------------
-                # p_remote_dat: '/home/pi/Downloads/20260415_100954/D2/AC2_39.dat$1839104'
+
+                # --------------------------------------------------------------------------
+                # pull remote data (prd) file: '/home/pi/.../<date>/D2/AC2_39.dat$1839104'
+                # --------------------------------------------------------------------------
+
                 prd, z_dat = prd.split('$')
                 bn_dat = os.path.basename(prd)
                 pld = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_dat}'
                 lg.a(f'⬅️ {sn} ({ip}) PULL = {prd}')
+                rv = 0
                 if os.path.exists(pld) and os.path.getsize(pld) == z_dat:
                     lg.a(f'✅ pull OK, {bn_dat} already exists')
                 else:
                     app_state_set(EV_BLE_DL_PROGRESS, t_str(STR_EV_BLE_DL_PROGRESS) + f' {sn}')
                     r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=1)
                     rv = wss.wss_cmd_pull_remote_file_dat(prd, pld, z_dat)
-                    if rv == 0:
-                        lg.a(f'✅ pull OK, {bn_dat}')
-                        lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
-                        rv = wss.wss_cmd_delete_remote_filename(prd)
-                        if rv == 0:
-                            lg.a(f'✅ delete OK, {bn_dat}')
-                        else:
-                            lg.a(f'❌ error, cannot delete file {bn_dat}')
-                            break
-                    else:
+                    if rv:
                         lg.a(f'❌ error, cannot pull file {bn_dat}')
+                        break
+                    lg.a(f'✅ pull OK, {bn_dat}')
 
 
-                # todo: creating symlink has to be moved AFTER DAT conversion
+                    # ------------------------------------------
+                    # delete remote file .dat from super sonde
+                    # ------------------------------------------
 
-                # create symlink files.dat so AWS can upload-copy-delete them
-                fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
-                os.makedirs(fol_upload, exist_ok=True)
-                bn_pld = os.path.basename(pld)
-                link = f'{fol_upload}/{bn_pld}'
-                if not os.path.exists(link):
-                    lg.a(f'creating symlink {link}')
-                    os.symlink(pld, link)
+                    lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
+                    rv = wss.wss_cmd_delete_remote_filename(prd)
+                    if rv:
+                        lg.a(f'❌ error, cannot delete file {bn_dat}')
+                        break
+                    lg.a(f'✅ delete OK, {bn_dat}')
 
 
-            # time between sondes
-            time.sleep(5)
+            # time between sondes within same WSS loop
+            time.sleep(2)
 
-        # don't hag cpu, time between wss loops
+        # don't hag cpu, time between different WSS loops
         time.sleep(10)
 
 

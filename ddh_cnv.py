@@ -2,7 +2,6 @@ import glob
 import os
 import time
 import redis
-
 from ddh.acsense_utils._parser.parser import Parser
 from ddh.acsense_utils.parser_gui import Parser_GUI_Tk
 from ddh.graph_draw import graph_request
@@ -19,15 +18,17 @@ from mat.lix import (
 )
 from utils.redis import (
     RD_DDH_CNV_QUEUE,
-    RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER,
-    RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE, RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS
+    RD_DDH_GUI_PLOT_REASON,
+    RD_DDH_GUI_PLOT_FOLDER,
+    RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE,
+    RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS
 )
 from utils.ddh_common import (
     TESTMODE_FILENAME_PREFIX,
     ddh_get_path_to_folder_dl_files,
     ddh_get_path_to_root_application_folder,
     ddh_get_path_to_db_new_history_file,
-    ddh_calc_stats_of_csv_file_for_history_table, ddh_do_we_graph_out_of_water_data,
+    ddh_calc_stats_of_csv_file_for_history_table,
     ddh_get_path_local_folder_dl_files_sondes
 )
 from ddh_log import lg_cnv as lg
@@ -47,6 +48,8 @@ r = redis.Redis('localhost', port=6379)
 PERIOD_CNV_SECS = 3600 * 12
 BAROMETRIC_PRESSURE_SEA_LEVEL_IN_DECIBAR = 10.1
 DDH_BPSL = BAROMETRIC_PRESSURE_SEA_LEVEL_IN_DECIBAR
+PATH_FOL_DL_SONDES = ddh_get_path_local_folder_dl_files_sondes()
+PATH_FOL_UPLOAD = str(ddh_get_path_to_root_application_folder()) + '/upload'
 
 
 
@@ -94,7 +97,6 @@ def _convert_lid_file_v2(f, suf):
     rv = parse_lid_v2_data_file(f, create_csf=True)
     lg.a(f"OK, converted LID file v2 {dn}/{bn} suffix {suf}")
     return rv
-
 
 
 
@@ -236,25 +238,40 @@ def _ddh_cnv():
                 r.set(RD_DDH_GUI_PLOT_FOLDER, dn)
 
 
+
         # ---------------------------------------
         # convert DAT files for acbotics sondes
         # ---------------------------------------
-        fol = ddh_get_path_local_folder_dl_files_sondes()
-        ls_dat_files = glob.glob(f'{fol}/**/*SENS*.dat', recursive=True)
+        ls_dat_files = glob.glob(f'{PATH_FOL_DL_SONDES}/**/*SENS*.dat', recursive=True)
         cnv_dat = False
-        for p in ls_dat_files:
+        for pld in ls_dat_files:
             bn = os.path.basename(p).replace('.dat', '')
-            ls_csv_files = glob.glob(f'{p}/**/{bn}.csv', recursive=True)
+            ls_csv_files = glob.glob(f'{pld}/**/{bn}.csv', recursive=True)
             if ls_csv_files:
-                # probably already converted
+                # already converted
                 continue
             # convert SENS dat file
             pr = Parser()
             # use_int = True
             # rv = pr.parse_ac_file(fn_dat, use_int=use_int, export=True, output_dir=fol_dst)
             parsed = {p: pr.parse_sense_file(p)}
-            Parser_GUI_Tk.save_csv_callback(parsed, output_dir=fol)
+            Parser_GUI_Tk.save_csv_callback(parsed, output_dir=PATH_FOL_DL_SONDES)
             cnv_dat = True
+
+
+            # -------------------------------------------------------------
+            # create symlink files.dat so AWS can upload-copy-delete them
+            # AWS will then delete file.dat from local DDH file-system
+            # -------------------------------------------------------------
+            bn = os.path.basename(p).replace('.dat', '')
+            os.makedirs(PATH_FOL_UPLOAD, exist_ok=True)
+            bn_pld = os.path.basename(pld)
+            link = f'{PATH_FOL_UPLOAD}/{bn_pld}'
+            if not os.path.exists(link):
+                lg.a(f'creating symlink {link}')
+                os.symlink(pld, link)
+
+
         if cnv_dat:
             r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS, value=1)
 
@@ -275,6 +292,5 @@ def main_ddh_cnv():
 
 if __name__ == '__main__':
     main_ddh_cnv()
-
     # _convert_lid_file('/home/kaz/PycharmProjects/ddh/dl_files/f0-5e-cd-25-a0-3d/2699991_BIL_20260903_163804.lid')
 
