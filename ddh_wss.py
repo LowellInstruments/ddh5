@@ -119,6 +119,7 @@ def _ddh_wss(ignore_gui):
                         lg.a(f'❌ error, cannot pull file {bn_dat}')
 
 
+                # todo: creating symlink has to be moved AFTER DAT conversion
 
                 # create symlink files.dat so AWS can upload-copy-delete them
                 fol_upload = str(ddh_get_path_to_root_application_folder()) + '/upload'
