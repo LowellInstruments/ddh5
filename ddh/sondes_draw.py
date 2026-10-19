@@ -1,5 +1,6 @@
 import os
 import glob
+import time
 from functools import lru_cache
 
 import pandas as pd
@@ -206,7 +207,24 @@ def sondes_graph_request(reason='user'):
 
 
 
+
+
+
+
+
+
+
 def _sondes_plot(app):
+
+    if app.lay_g_h2_5.count() > 0:
+        # amazing way to remove previous plot_widgets
+        app.lay_g_h2_5.itemAt(0).widget().setParent(None)
+
+    app.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
+    app.pw_sondes.setBackground('w')
+    app.lay_g_h2_5.addWidget(app.pw_sondes)
+
+
 
     # build the dataframe
     data = dict()
@@ -231,49 +249,19 @@ def _sondes_plot(app):
 
 
 
-    # get plot layout, create MAIN plot item and main view_box
-    p_l = pg.GraphicsLayout()
+
+    # variables
+    # lay_g_h2_5
+    # pw_sondes
+    # todo; update timestamp
+
+
+
+    # variables
     pw = app.pw_sondes
-    pw.setCentralWidget(p_l)
     p1 = pw.plotItem
-    # row is 2 because 0 and 1 are plot labels
-    # column is 1 because 0 is left-axis label
-    p_l.addItem(p1, row=2, col=1, rowspan=1, colspan=1)
-    vb_l1 = p1.vb
+    p1.setLabels(left='axis 1')
 
-
-
-    # create additional y-axis and view_boxes
-    ax_r1 = pg.AxisItem("right")
-    ax_r2 = pg.AxisItem("right")
-    ax_r3 = pg.AxisItem("right")
-    vb_r1 = pg.ViewBox()
-    vb_r2 = pg.ViewBox()
-    vb_r3 = pg.ViewBox()
-    # add view_boxes to layout
-    p_l.scene().addItem(vb_r1)
-    p_l.scene().addItem(vb_r2)
-    p_l.scene().addItem(vb_r3)
-    # link y-axis to view_boxes
-    ax_r1.linkToView(vb_r1)
-    ax_r2.linkToView(vb_r2)
-    ax_r3.linkToView(vb_r3)
-    # link x-axis of all of them
-    vb_r1.setXLink(vb_l1)
-    vb_r2.setXLink(vb_l1)
-    vb_r3.setXLink(vb_l1)
-
-
-    # re-plot
-    def update_views():
-        vb_r1.setGeometry(vb_l1.sceneBoundingRect())
-        vb_r1.linkedViewChanged(p1.vb, vb_l1.XAxis)
-        vb_r2.setGeometry(vb_l1.sceneBoundingRect())
-        vb_r2.linkedViewChanged(p1.vb, vb_l1.XAxis)
-        vb_r3.setGeometry(vb_l1.sceneBoundingRect())
-        vb_r3.linkedViewChanged(p1.vb, vb_l1.XAxis)
-    vb_l1.sigResized.connect(update_views)
-    update_views()
 
 
     # create legend
@@ -285,11 +273,57 @@ def _sondes_plot(app):
         offset=(-10, -200)
     )
 
-    pw.getPlotItem().enableAutoRange()
-    QApplication.processEvents()
 
 
 
+
+    ## create a new ViewBox, link the right axis to its coordinate system
+    p2 = pg.ViewBox()
+    p1.showAxis('right')
+    p1.scene().addItem(p2)
+    p1.getAxis('right').linkToView(p2)
+    p2.setXLink(p1)
+    p1.getAxis('right').setLabel('axis2', color='#0000ff')
+
+
+
+    # create third ViewBox, this time we need to create a new axis as well
+    p3 = pg.ViewBox()
+    ax3 = pg.AxisItem('right')
+    p1.layout.addItem(ax3, 2, 3)
+    p1.scene().addItem(p3)
+    ax3.linkToView(p3)
+    p3.setXLink(p1)
+    ax3.setLabel('axis 3', color='#ff0000')
+
+
+
+    # create fourth ViewBox, this time we need to create a new axis as well
+    p4 = pg.ViewBox()
+    ax4 = pg.AxisItem('right')
+    p1.layout.addItem(ax4, 2, 4)
+    p1.scene().addItem(p4)
+    ax4.linkToView(p4)
+    p4.setXLink(p1)
+    ax4.setLabel('axis 4', color='#ff0000')
+
+
+
+
+    # view has resized; update auxiliary views to match
+    def updateViews():
+        p2.setGeometry(p1.vb.sceneBoundingRect())
+        p3.setGeometry(p1.vb.sceneBoundingRect())
+        p4.setGeometry(p1.vb.sceneBoundingRect())
+        p2.linkedViewChanged(p1.vb, p2.XAxis)
+        p3.linkedViewChanged(p1.vb, p3.XAxis)
+        p4.linkedViewChanged(p1.vb, p4.XAxis)
+    updateViews()
+    p1.vb.sigResized.connect(updateViews)
+
+
+
+    # plot the data
     # TEMPERATURE expected to always be there get the sub_dataframes and plot
     d = data['df_pts_30'].reset_index(drop=True)
     p1.plot(
@@ -299,22 +333,9 @@ def _sondes_plot(app):
         symbolSize=5, symbolBrush='red',
         name='Temperature (C)'
     )
-    p1.getAxis("left").setLabel('Temperature (C)', color='red')
 
 
 
-
-    # # PRESSURE expected to always be there get the sub_dataframes and plot
-    #         list(d['timestamp']),
-    #         list(d['pressure_bar']),
-    #         symbol='o', pen=None, size=1, symbolPen='blue',
-    #         symbolSize=5, symbolBrush='blue', name='Pressure (bar)'
-    #     )
-    #     p1.getAxis("right").setLabel('Pressure (bar)', color='blue')
-
-
-    # axes labels RIGHT, first label
-    p1.showAxis('right')
     if 'PTS_Bar30' in data['ls_metrics']:
         d = data['df_pts_30'].reset_index(drop=True)
         p_di = pg.PlotDataItem(
@@ -323,10 +344,9 @@ def _sondes_plot(app):
             symbol='o', pen=None, size=1, symbolPen='blue',
             symbolSize=5, symbolBrush='blue', name='Pressure (bar)'
         )
-        vb_r1.addItem(p_di)
+        p2.addItem(p_di)
         legend.addItem(p_di, name='Pressure (bar)')
-        p1.getAxis('right').linkToView(vb_r1)
-        p1.getAxis("right").setLabel('Pressure (bar)', color='blue')
+
 
 
     if 'RDO' in data['ls_metrics']:
@@ -339,12 +359,8 @@ def _sondes_plot(app):
             symbol='o', pen=None, size=1, symbolPen=color,
             symbolSize=5, symbolBrush=color, name='DOC (mg/l)'
         )
-        vb_r2.addItem(p_di)
+        p3.addItem(p_di)
         legend.addItem(p_di, name='DOC (mg/l)')
-        ax_r2.linkToView(vb_r2)
-        ax_r2.setLabel('DOC (mg/l)', color=color)
-        # row 2, column 4
-        p1.layout.addItem(ax_r2, 2, 4)
 
 
     if 'ph' in data['ls_metrics']:
@@ -356,19 +372,10 @@ def _sondes_plot(app):
             symbol='o', pen=None, size=1, symbolPen=color,
             symbolSize=5, symbolBrush=color, name='pH'
         )
-        vb_r3.addItem(p_di)
+        p4.addItem(p_di)
         legend.addItem(p_di, name='pH')
-        ax_r3.linkToView(vb_r3)
-        ax_r3.setLabel('pH', color=color)
-        # row 2, column 5
-        p1.layout.addItem(ax_r3, 2, 5)
 
 
-    # auto-zoom
-    # todo: make x-axis units as time, or we have a bug
-    # todo: or maybe data files are wrong for acbotics
-    pw.getViewBox().enableAutoRange(axis=pg.ViewBox.XYAxes)
-    QApplication.processEvents()
 
 
 
@@ -380,12 +387,6 @@ def sondes_serve_graph_request(
         app.lbl_graph_err_sondes.setVisible(False)
         app.lbl_graph_busy_sondes.setVisible(True)
         QCoreApplication.processEvents()
-        if app.lay_g_h2_5.count() > 0:
-            # amazing way to remove previous plot_widgets
-            app.lay_g_h2_5.itemAt(0).widget().setParent(None)
-            app.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
-        app.pw_sondes.setBackground('w')
-        app.lay_g_h2_5.addWidget(app.pw_sondes)
         _sondes_plot(app)
 
 
