@@ -2,6 +2,8 @@ import glob
 import os
 import time
 import redis
+
+from acsense_utils.acsense_gps import get_start_unix_time_from_gps_file
 from ddh.acsense_utils._parser.parser import Parser
 from ddh.acsense_utils.parser_gui import Parser_GUI_Tk
 from ddh.graph_draw import graph_request
@@ -184,7 +186,7 @@ def _ddh_cnv():
         for i in range(r.llen(q)):
             _, p = r.blpop([q])
             p = p.decode()
-            bn = os.path.basename(p)
+            bn_lid = os.path.basename(p)
             sn = ''
             dt_s = ''
             e = ''
@@ -221,9 +223,8 @@ def _ddh_cnv():
                     finally:
                         r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE, 1)
 
-
             else:
-                lg.a(f'error, file {bn}')
+                lg.a(f'error, converting file {bn}')
 
 
         # send logger CSV files to be plotted
@@ -245,12 +246,12 @@ def _ddh_cnv():
         ls_dat_files = glob.glob(f'{PATH_FOL_DL_SONDES}/**/*SENS*.dat', recursive=True)
         cnv_dat = False
         for pld in ls_dat_files:
-            bn = os.path.basename(p).replace('.dat', '')
+            bn = os.path.basename(pld).replace('.dat', '')
             ls_csv_files = glob.glob(f'{pld}/**/{bn}.csv', recursive=True)
             if ls_csv_files:
                 # already converted
                 continue
-            # convert SENS dat file
+            # convert SENS.dat file
             pr = Parser()
             # use_int = True
             # rv = pr.parse_ac_file(fn_dat, use_int=use_int, export=True, output_dir=fol_dst)
@@ -259,11 +260,29 @@ def _ddh_cnv():
             cnv_dat = True
 
 
+            # see if we have a GPS file from the conversion
+            p_gps = p.replace('.dat', '_gps.csv')
+            if os.path.exists(p_gps):
+                start_time = get_start_unix_time_from_gps_file(p_gps)
+                if start_time == 0:
+                    lg.a(f'error, conversion of {bn} generated no good start_time')
+                    continue
+                p_gps_li = p_gps.replace('_gps.csv', '_gps_li.csv')
+                # this will be the file we will use to plot
+                with open(p_gps_li, 'w') as f:
+                    f.write(str(start_time))
+            else:
+                lg.a(f'error, conversion of {bn} generated no GPS file')
+                continue
+
+
+
+
+
             # -------------------------------------------------------------
             # create symlink files.dat so AWS can upload-copy-delete them
             # AWS will then delete file.dat from local DDH file-system
             # -------------------------------------------------------------
-            bn = os.path.basename(p).replace('.dat', '')
             os.makedirs(PATH_FOL_UPLOAD, exist_ok=True)
             bn_pld = os.path.basename(pld)
             link = f'{PATH_FOL_UPLOAD}/{bn_pld}'

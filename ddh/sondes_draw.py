@@ -18,6 +18,8 @@ from utils.ddh_common import (
 from ddh_log import lg_gra as lg
 
 
+
+
 # to be able to zoom in RPi
 pg.setConfigOption('leftButtonPan', False)
 # so pandas dataframes don't show scientific notation
@@ -155,35 +157,28 @@ def _cache_read_csv(filename_csv):
 
 
 
-def _get_df_from_csv_files(filename_csv, sn, data):
-    df = _cache_read_csv(filename_csv)
+def _get_df_from_csv_files(p_csv, data):
 
-    # we need to update timestamp here
     # filename_csv: /Users/...dl_files_sondes/sonde1_SENS_1_1_ATLAS.csv
-    bn = os.path.basename(filename_csv)
-    x_y = bn.split('_SENS_')[1]
-    x_y = '_'.join(x_y.split('_')[:2])
-    bd = os.path.dirname(filename_csv)
-    path_info = f'{bd}/{sn}_meta_{x_y}.info'
-    with open(path_info, 'rb') as f:
-        ll = f.readlines()
-        ll = [i.replace(b'\r\n', b'') for i in ll if b'Init ' in i]
-        init_time = int(ll[0].decode().split(': ')[1])
-        init_tick = int(ll[1].decode().split(': ')[1])
-        print('\n\nmeta file', path_info)
-        print('\tinit_time =', init_time)
-        print('\tinit_tick =', init_tick)
-        print('\t first ts =', list(df['timestamp'])[0])
-        # from https://drive.google.com/drive/folders/1OSGpvEyPd9a4-gxAv8KecKUjRI7vPyqa
-        # epoch_converted = (timestamp- Init Tick)*10^-8 + Init Time
-        # todo: check this calculation because it gives bad epochs
-        # todo: I think init_time = 1577836808 is a wrong value (1 Jan 2020)
-        df['timestamp'] = ((df['timestamp'] - init_tick) * 1e-8) + init_time
-        df['timestamp'] = df['timestamp'].round(4)
-        print('\t epoch ts =', list(df['timestamp'])[0])
+    df = _cache_read_csv(p_csv)
+
+
+    # read file li_gps.csv containing GPS timestamp to be added to data
+    when = '_'.join(p_csv.split('_SENS_')[1].split('_')[0:2])
+    who = p_csv.split('_SENS_')[0].split('/')[-1]
+    mask_gps_li = f'{who}*{when}_gps_li.csv'
+    ls = glob.glob(f'{os.path.dirname(p_csv)}/{mask_gps_li}')
+    if not ls:
+        raise FileNotFoundError(f'error, cannot find GPS file {mask_gps_li}')
+    with open(ls[0], 'r') as f:
+        start_ts = float(f.readline())
+    print(f'adding GPS offset = {start_ts}')
+    df['timestamp'] = df['timestamp'] + start_ts
 
 
 
+    # build DICTIONARY of data
+    bn = os.path.basename(p_csv)
     if 'PTS_Bar30' in bn:
         data['df_pts_30'] = df
         data['ls_metrics'].append('PTS_Bar30')
@@ -195,7 +190,11 @@ def _get_df_from_csv_files(filename_csv, sn, data):
         # C (0) / pH (1) / DO (2) / T (4)
         data['df_ph'] = df[df['sensor_type'] == 1]
         data['ls_metrics'].append('ph')
-    # todo: do salinity and do the .54 conversion from erin email
+        df_cond = df[df['sensor_type'] == 0]
+        # email: conductivity to salinity in PSU = multiply by 0.54/1000
+        df_cond = df_cond * (.54/1000)
+        data['df_cond'] = df_cond
+
 
 
 
@@ -220,15 +219,15 @@ def _sondes_plot(app):
     ls_do = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_RDO.csv')]
     if ls_do:
         p = ls_do[0]
-        _get_df_from_csv_files(p, who, data)
+        _get_df_from_csv_files(p, data)
     ls_pts = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_External_PTS_Bar30.csv')]
     if ls_pts:
         p = ls_pts[0]
-        _get_df_from_csv_files(p, who, data)
+        _get_df_from_csv_files(p, data)
     ls_cond = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_ATLAS.csv')]
     if ls_cond:
         p = ls_cond[0]
-        _get_df_from_csv_files(p, who, data)
+        _get_df_from_csv_files(p, data)
 
 
 
