@@ -171,7 +171,7 @@ def _get_df_from_csv_files(p_csv, data):
     if not ls:
         raise FileNotFoundError(f'error, cannot find GPS file {mask_gps_li}')
     with open(ls[0], 'r') as f:
-        start_ts = float(f.readline())
+        start_ts = int(float(f.readline()))
     print(f'adding GPS offset = {start_ts}')
     df['timestamp'] = df['timestamp'] + start_ts
 
