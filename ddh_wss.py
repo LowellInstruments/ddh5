@@ -3,14 +3,16 @@ import time
 import sys
 import redis
 import setproctitle
-from ddh.wss import WSS
+from ddh.wss import WSS, RD_ACB_SS_GUI_STATE
 from ddh_log import lg_wss as lg
 from utils.ddh_common import (
     ddh_this_process_needs_to_quit,
     NAME_EXE_WSS,
     ddh_config_get_dict_of_monitored_sondes,
-    ddh_get_path_to_root_application_folder, ddh_get_path_to_folder_dl_files, ddh_get_path_local_folder_dl_files_sondes,
-    app_state_set, EV_BLE_DL_PROGRESS, t_str, STR_EV_BLE_DL_PROGRESS
+    ddh_get_path_to_root_application_folder,
+    ddh_get_path_local_folder_dl_files_sondes,
+    app_state_set, EV_BLE_DL_PROGRESS,
+    t_str, STR_EV_BLE_DL_PROGRESS
 )
 from utils.redis import RD_DDH_GUI_STATE_EVENT_ICON_LOCK
 
@@ -56,6 +58,11 @@ def _ddh_wss(ignore_gui):
             lg.a(f'OK, detected {sn} on {ip}')
 
 
+            # debug
+            lg.a('error, remember to delete this line')
+            os.system('rm $HOME/PycharmProjects/ddh/dl_files_sondes/D2/*')
+
+
             # iterate files within this sonde
             while 1:
                 # prd: path remote dat file
@@ -65,6 +72,7 @@ def _ddh_wss(ignore_gui):
 
                 if not pri:
                     lg.a(f'OK, {sn} is empty')
+                    wss.wss_cmd_redis_set(RD_ACB_SS_GUI_STATE, 'ready')
                     break
 
 

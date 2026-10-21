@@ -1,15 +1,11 @@
 import os
 import glob
-import time
 from functools import lru_cache
 
 import pandas as pd
 import redis
 from PyQt6.QtCore import QCoreApplication, Qt
-import numpy as np
 import pyqtgraph as pg
-from PyQt6.QtWidgets import QApplication
-from pyqtgraph import LinearRegionItem
 from utils.redis import (
     RD_DDH_GUI_PLOT_REASON_SONDES,
 )
@@ -44,114 +40,6 @@ class GraphException(Exception):
 
 
 
-def _axis_room(v: list):
-    return .1 * np.nanmax(v)
-
-
-
-def _sty(color):
-    return {"color": color, "font-size": "20px", "font-weight": "bold"}
-
-
-
-def _graph_sondes_get_color_by_label(lbl):
-    # google for SVG 1.0 color names
-    # if 'Temperature' in lbl:
-    #     return 'red'
-    # if 'Pressure' in lbl:
-    #     return 'blue'
-    # if 'Depth' in lbl:
-    #     return 'blue'
-    # if 'DO Concentration' in lbl:
-    #     return 'blue'
-    # if 'Ax' in lbl:
-    #     return 'limegreen'
-    # if 'Conductivity' in lbl:
-    #     return 'green'
-    # if 'pH' in lbl:
-    #     return 'green'
-    return 'green'
-
-
-
-
-class LimitsTypeError(Exception):
-    def __init__(self, err='Limits type must be type int or tuple of ints', *args, **kwargs):
-        super().__init__(self, err, *args, **kwargs)
-
-
-
-
-class FiniteLinearRegionItem(LinearRegionItem):
-    def __init__(self, limits=None, *args, **kwargs):
-        super(FiniteLinearRegionItem, self).__init__(*args, **kwargs)
-        """Create a new LinearRegionItem.
-
-            Now you can define the shading area. Enjoy!
-
-        ==============  =====================================================================
-        **Arguments:**
-        limits          A tuple containing the upper and lower bounds prependicular to the orientation.
-                        Or a int/float containing the lower bounds prependicular to the orientation.
-                        The default value is None.
-        ==============  =====================================================================
-        """
-        self.limit = limits
-
-    def boundingRect(self):
-        br = self.viewRect()
-        rng = self.getRegion()
-
-        # Infinite with one end close
-        if isinstance(self.limit, int):
-            if self.orientation in ('vertical', LinearRegionItem.Vertical):
-                br.setLeft(rng[0])
-                br.setRight(rng[1])
-                length = br.height()
-                br.setBottom(self.limit)
-                br.setTop(br.top() + length * self.span[0])
-            else:
-                br.setTop(rng[0])
-                br.setBottom(rng[1])
-                length = br.width()
-                br.setRight(br.left() + length * self.span[1])
-                br.setLeft(self.limit)
-        # Finite
-        elif isinstance(self.limit, tuple):
-            if self.orientation in ('vertical', LinearRegionItem.Vertical):
-                br.setLeft(rng[0])
-                br.setRight(rng[1])
-                length = br.height()
-                br.setBottom(self.limit[0])
-                br.setTop(self.limit[1])
-            else:
-                br.setTop(rng[0])
-                br.setBottom(rng[1])
-                length = br.width()
-                br.setRight(self.limit[1])
-                br.setLeft(self.limit[0])
-        elif self.limit is None:
-            if self.orientation in ('vertical', LinearRegionItem.Vertical):
-                br.setLeft(rng[0])
-                br.setRight(rng[1])
-                length = br.height()
-                br.setBottom(br.top() + length * self.span[1])
-                br.setTop(br.top() + length * self.span[0])
-            else:
-                br.setTop(rng[0])
-                br.setBottom(rng[1])
-                length = br.width()
-                br.setRight(br.left() + length * self.span[1])
-                br.setLeft(br.left() + length * self.span[0])
-        else:
-            raise LimitsTypeError
-
-        br = br.normalized()
-        return br
-
-
-
-
 @lru_cache
 def _cache_read_csv(filename_csv):
     return pd.read_csv(filename_csv)
@@ -172,9 +60,10 @@ def _get_df_from_csv_files(p_csv, data):
     if not ls:
         raise FileNotFoundError(f'error, cannot find GPS file {mask_gps_li}')
     with open(ls[0], 'r') as f:
-        start_ts = int(float(f.readline()))
-    print(f'adding GPS offset = {start_ts}')
-    df['timestamp'] = df['timestamp'] + start_ts
+        start_gps_ts = float(f.readline())
+
+    # timestamp in SENS.dat files is in tens of ns
+    df['timestamp_adjusted'] = (df['timestamp'] * 1e-8) + start_gps_ts
 
 
 
@@ -208,19 +97,15 @@ def sondes_graph_request(reason='user'):
 
 
 
-
-
-
-
-
-
 def _sondes_plot(app):
 
     if app.lay_g_h2_5.count() > 0:
         # amazing way to remove previous plot_widgets
         app.lay_g_h2_5.itemAt(0).widget().setParent(None)
 
-    app.pw_sondes = pg.PlotWidget(axisItems={'bottom': pg.DateAxisItem()})
+    date_axis = pg.DateAxisItem(orientation='bottom')
+    app.pw_sondes = pg.PlotWidget(axisItems={'bottom': date_axis})
+    date_axis.linkToView(app.pw_sondes.getViewBox())
     app.pw_sondes.setBackground('w')
     app.lay_g_h2_5.addWidget(app.pw_sondes)
 
@@ -248,19 +133,9 @@ def _sondes_plot(app):
         _get_df_from_csv_files(p, data)
 
 
-
-
-    # variables
-    # lay_g_h2_5
-    # pw_sondes
-    # todo; update timestamp
-
-
-
     # variables
     pw = app.pw_sondes
     p1 = pw.plotItem
-    p1.setLabels(left='axis 1')
 
 
 
@@ -274,16 +149,26 @@ def _sondes_plot(app):
     )
 
 
+    # color names
+    color1 = 'red'
+    color2 = 'blue'
+    color3 = 'green'
+    color4 = 'orange'
+    name1 = 'Temperature (C)'
+    name2 = 'Pressure (bar)'
+    name3 = 'DOC (mg/l)'
+    name4 = 'pH'
+    p1.getAxis('left').setLabel(name1, color=color1)
 
 
 
-    ## create a new ViewBox, link the right axis to its coordinate system
+    # create a new ViewBox, link the right axis to its coordinate system
     p2 = pg.ViewBox()
     p1.showAxis('right')
     p1.scene().addItem(p2)
     p1.getAxis('right').linkToView(p2)
     p2.setXLink(p1)
-    p1.getAxis('right').setLabel('axis2', color='#0000ff')
+    p1.getAxis('right').setLabel(name2, color=color2)
 
 
 
@@ -294,7 +179,7 @@ def _sondes_plot(app):
     p1.scene().addItem(p3)
     ax3.linkToView(p3)
     p3.setXLink(p1)
-    ax3.setLabel('axis 3', color='#ff0000')
+    ax3.setLabel(name3, color=color3)
 
 
 
@@ -305,7 +190,7 @@ def _sondes_plot(app):
     p1.scene().addItem(p4)
     ax4.linkToView(p4)
     p4.setXLink(p1)
-    ax4.setLabel('axis 4', color='#ff0000')
+    ax4.setLabel(name4, color=color4)
 
 
 
@@ -327,11 +212,11 @@ def _sondes_plot(app):
     # TEMPERATURE expected to always be there get the sub_dataframes and plot
     d = data['df_pts_30'].reset_index(drop=True)
     p1.plot(
-        list(d['timestamp']),
+        list(d['timestamp_adjusted']),
         list(d['temperature_c']),
-        symbol='o', pen=None, size=1, symbolPen='red',
-        symbolSize=5, symbolBrush='red',
-        name='Temperature (C)'
+        symbol='o', pen=None, size=1, symbolPen=color1,
+        symbolSize=5, symbolBrush=color1,
+        name=name1
     )
 
 
@@ -339,41 +224,39 @@ def _sondes_plot(app):
     if 'PTS_Bar30' in data['ls_metrics']:
         d = data['df_pts_30'].reset_index(drop=True)
         p_di = pg.PlotDataItem(
-            list(d['timestamp']),
+            list(d['timestamp_adjusted']),
             list(d['pressure_bar']),
-            symbol='o', pen=None, size=1, symbolPen='blue',
-            symbolSize=5, symbolBrush='blue', name='Pressure (bar)'
+            symbol='o', pen=None, size=1, symbolPen=color2,
+            symbolSize=5, symbolBrush=color2, name=name2
         )
         p2.addItem(p_di)
-        legend.addItem(p_di, name='Pressure (bar)')
+        legend.addItem(p_di, name=name2)
 
 
 
     if 'RDO' in data['ls_metrics']:
         # green pistaccio
-        color = '#a3c41b'
         d = data['df_doc'].reset_index(drop=True)
         p_di = pg.PlotDataItem(
-            list(d['timestamp']),
+            list(d['timestamp_adjusted']),
             list(d['value']),
-            symbol='o', pen=None, size=1, symbolPen=color,
-            symbolSize=5, symbolBrush=color, name='DOC (mg/l)'
+            symbol='o', pen=None, size=1, symbolPen=color3,
+            symbolSize=5, symbolBrush=color3, name=name3
         )
         p3.addItem(p_di)
-        legend.addItem(p_di, name='DOC (mg/l)')
+        legend.addItem(p_di, name=name3)
 
 
     if 'ph' in data['ls_metrics']:
-        color = '#f1b929'
         d = data['df_ph'].reset_index(drop=True)
         p_di = pg.PlotDataItem(
-            list(d['timestamp']),
+            list(d['timestamp_adjusted']),
             list(d['sensor_val']),
-            symbol='o', pen=None, size=1, symbolPen=color,
-            symbolSize=5, symbolBrush=color, name='pH'
+            symbol='o', pen=None, size=1, symbolPen=color4,
+            symbolSize=5, symbolBrush=color4, name=name4
         )
         p4.addItem(p_di)
-        legend.addItem(p_di, name='pH')
+        legend.addItem(p_di, name=name4)
 
 
 
@@ -405,7 +288,4 @@ def sondes_serve_graph_request(
 
     finally:
         app.lbl_graph_busy_sondes.setVisible(False)
-
-
-
 

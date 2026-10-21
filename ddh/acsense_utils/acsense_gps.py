@@ -28,7 +28,8 @@ def get_start_unix_time_from_gps_file(fn_gps) -> float:
 
 
 def main():
-    p = f'{h}/Downloads/SENS_32_25_gps.csv'
+    # p = f'{h}/Downloads/SENS_32_25_gps.csv'
+    p = '/Users/kaz/PycharmProjects/ddh/dl_files_sondes/sonde1_SENS_32_25_gps.csv'
     ut = get_start_unix_time_from_gps_file(p)
     print('started at unix_secs', ut)
 
