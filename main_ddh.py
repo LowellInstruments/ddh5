@@ -495,25 +495,28 @@ def gui_tabs_populate_graph_dropdown_sn(my_app):
 
 
 def gui_tabs_populate_sondes_dropdown(my_app):
-    """fills logger serial number dropdown list in SONDES tab"""
+
+    """ fills logger serial number dropdown list in SONDES tab """
     a = my_app
     a.cb_g_sondes_who.clear()
     a.cb_g_sondes_when.clear()
-    fol = ddh_get_path_local_folder_dl_files_sondes()
-    for i in list(ddh_config_get_dict_of_monitored_sondes().keys()):
-        a.cb_g_sondes_who.addItem(i)
-        ls = glob.glob(f'{fol}/{i}_SENS_*.csv')
+
+    ls_who = []
+    for sn in list(ddh_config_get_dict_of_monitored_sondes().keys()):
+        if sn in ls_who:
+            continue
+        a.cb_g_sondes_who.addItem(sn)
+        ls_who.append(sn)
         ls_when_for_who = []
-        for j in ls:
-            bn = os.path.basename(j)
+        for j in glob.glob(f'{ddh_get_path_local_folder_dl_files_sondes()}/{sn}_SENS_*.csv'):
             # bn: sonde1_SENS_1_1_ATLAS.csv
-            x_y = bn.replace(f'{i}_SENS_', '')
+            x_y = os.path.basename(j).replace(f'{sn}_SENS_', '')
             x_y = '_'.join(x_y.split('_')[:2])
             if x_y not in ls_when_for_who:
                 ls_when_for_who.append(x_y)
         a.cb_g_sondes_when.addItems(sorted(ls_when_for_who))
 
-    # un-select
+    # un-select dropdown WHEN
     a.cb_g_sondes_when.setCurrentIndex(-1)
 
 

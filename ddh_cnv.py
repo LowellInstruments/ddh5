@@ -52,6 +52,7 @@ BAROMETRIC_PRESSURE_SEA_LEVEL_IN_DECIBAR = 10.1
 DDH_BPSL = BAROMETRIC_PRESSURE_SEA_LEVEL_IN_DECIBAR
 PATH_FOL_DL_SONDES = ddh_get_path_local_folder_dl_files_sondes()
 PATH_FOL_UPLOAD = str(ddh_get_path_to_root_application_folder()) + '/upload'
+os.makedirs(PATH_FOL_UPLOAD, exist_ok=True)
 
 
 
@@ -177,7 +178,7 @@ def _ddh_cnv():
     while 1:
 
         # prevent CPU hog
-        time.sleep(1)
+        time.sleep(2)
 
 
         # dequeue messages that may contain '&SN' or not
@@ -202,6 +203,7 @@ def _ddh_cnv():
 
             # --------------------------------
             # convert LID file from queue
+            # no super-sonde files here
             # --------------------------------
 
             rv, path_csv = _convert_lid_file(p)
@@ -240,18 +242,21 @@ def _ddh_cnv():
 
 
 
-        # ---------------------------------------
-        # convert DAT files for acbotics sondes
-        # ---------------------------------------
-        ls_dat_files = glob.glob(f'{PATH_FOL_DL_SONDES}/**/*SENS*.dat', recursive=True)
+        # ----------------------------------------------------
+        # PERIODICALLY convert DAT files for acbotics sondes
+        # ----------------------------------------------------
+
+        ls_sens_dat_files = glob.glob(f'{PATH_FOL_DL_SONDES}/**/*SENS*.dat', recursive=True)
         cnv_dat = False
-        for pld in ls_dat_files:
+        for pld in ls_sens_dat_files:
             bn = os.path.basename(pld).replace('.dat', '')
-            ls_csv_files = glob.glob(f'{pld}/**/{bn}.csv', recursive=True)
+            # bn: SENS_32_25.dat
+            ls_csv_files = glob.glob(f'{pld}/**/{bn}*.csv', recursive=True)
             if ls_csv_files:
-                # already converted
+                # PROBABLY already converted
                 continue
-            # convert SENS.dat file
+
+            # otherwise, convert SENS.dat file
             pr = Parser()
             # use_int = True
             # rv = pr.parse_ac_file(fn_dat, use_int=use_int, export=True, output_dir=fol_dst)
@@ -260,41 +265,50 @@ def _ddh_cnv():
             cnv_dat = True
 
 
-            # see if we have a GPS file from the conversion
+            # read ACBOTICS GPS file
             p_gps = p.replace('.dat', '_gps.csv')
-            if os.path.exists(p_gps):
-                start_time = get_start_unix_time_from_gps_file(p_gps)
-                if start_time == 0:
-                    lg.a(f'error, conversion of {bn} generated no good start_time')
-                    continue
-                p_gps_li = p_gps.replace('_gps.csv', '_gps_li.csv')
-                # this will be the file we will use to plot
-                with open(p_gps_li, 'w') as f:
-                    f.write(str(start_time))
-            else:
-                lg.a(f'error, conversion of {bn} generated no GPS file')
+            if not os.path.exists(p_gps):
+                lg.a(f'error, conversion of {bn} generated no Acbotics GPS file')
+                continue
+            start_time = get_start_unix_time_from_gps_file(p_gps)
+            if start_time == 0:
+                lg.a(f'error, GPS conversion of {bn} generated no good start_time')
                 continue
 
+            # write LOWELL GPS file w/ base timestamp that we use to plot
+            p_gps_li = p_gps.replace('_gps.csv', '_gps_li.csv')
+            with open(p_gps_li, 'w') as f:
+                f.write(str(start_time))
 
 
+            # -----------------------------------------------------------------
+            # write symlink SENS_files.dat so AWS can upload-copy-delete them
+            # -----------------------------------------------------------------
 
-
-            # -------------------------------------------------------------
-            # create symlink files.dat so AWS can upload-copy-delete them
-            # AWS will then delete file.dat from local DDH file-system
-            # -------------------------------------------------------------
-            os.makedirs(PATH_FOL_UPLOAD, exist_ok=True)
             bn_pld = os.path.basename(pld)
             link = f'{PATH_FOL_UPLOAD}/{bn_pld}'
             if not os.path.exists(link):
-                lg.a(f'creating symlink {link}')
+                lg.a(f'creating SENS.dat symlink {link}')
                 os.symlink(pld, link)
 
 
+        # update GUI sondes plot dropdowns if something got converted
         if cnv_dat:
             r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS, value=1)
 
 
+
+        # ---------------------------------------------------------------
+        # write symlink AC_files.dat so AWS can upload-copy-delete them
+        # ---------------------------------------------------------------
+
+        ls_ac_dat_files = glob.glob(f'{PATH_FOL_DL_SONDES}/**/*AC*.dat', recursive=True)
+        for pld in ls_ac_dat_files:
+            bn_pld = os.path.basename(pld)
+            link = f'{PATH_FOL_UPLOAD}/{bn_pld}'
+            if not os.path.exists(link):
+                lg.a(f'creating AC.dat symlink {link}')
+                os.symlink(pld, link)
 
 
 

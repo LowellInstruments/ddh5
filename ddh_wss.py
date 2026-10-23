@@ -9,10 +9,10 @@ from utils.ddh_common import (
     ddh_this_process_needs_to_quit,
     NAME_EXE_WSS,
     ddh_config_get_dict_of_monitored_sondes,
-    ddh_get_path_to_root_application_folder,
     ddh_get_path_local_folder_dl_files_sondes,
     app_state_set, EV_BLE_DL_PROGRESS,
-    t_str, STR_EV_BLE_DL_PROGRESS
+    t_str, STR_EV_BLE_DL_PROGRESS,
+    ddh_not_enough_space_to_run_super_sonde
 )
 from utils.redis import RD_DDH_GUI_STATE_EVENT_ICON_LOCK
 
@@ -32,6 +32,7 @@ g_d_sondes = ddh_config_get_dict_of_monitored_sondes()
 
 
 
+
 def _ddh_wss(ignore_gui):
 
     setproctitle.setproctitle(p_name)
@@ -43,6 +44,12 @@ def _ddh_wss(ignore_gui):
 
         if ddh_this_process_needs_to_quit(ignore_gui, p_name):
             sys.exit(0)
+
+
+        if ddh_not_enough_space_to_run_super_sonde():
+            lg.a('error, not enough space to run DDH for super-sondes')
+            time.sleep(60)
+            continue
 
 
         for sn, ip in g_d_sondes.items():
@@ -59,48 +66,20 @@ def _ddh_wss(ignore_gui):
 
 
             # debug
+            # todo: delete this line
             lg.a('error, remember to delete this line')
             os.system('rm $HOME/PycharmProjects/ddh/dl_files_sondes/D2/*')
 
 
             # iterate files within this sonde
             while 1:
+
                 # prd: path remote dat file
-                # pri: path remote info file
-                prd, pri = wss.wss_cmd_get_next_filename_to_be_pulled()
-
-
-                if not pri:
-                    lg.a(f'OK, {sn} is empty')
-                    wss.wss_cmd_redis_set(RD_ACB_SS_GUI_STATE, 'ready')
-                    break
-
-
-                # parse remote path fields
-                fol = ddh_get_path_local_folder_dl_files_sondes()
-                bn_info = os.path.basename(pri)
-                sub_fol_timestamp = pri.split('/')[-3]
-                sub_fol_deploy = pri.split('/')[-2]
-
-
-                # -----------------------------------------
-                # pull file info, needed for its METADATA
-                # pli: path local info file
-                # -----------------------------------------
-
-                pli = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_info}'
-                if not os.path.exists(pli):
-                    lg.a(f'⬅️ {sn} ({ip}) PULL = {pri}')
-                    rv = wss.wss_cmd_pull_remote_file_info(pri, pli)
-                    if rv:
-                        lg.a(f'❌ error, cannot pull info file {bn_info}')
-                        # todo: show GUI retries or whatever?
-                        break
-                    lg.a(f'✅ OK, pulled file {bn_info}')
-
-
+                prd = wss.wss_cmd_get_next_filename_to_be_pulled()
                 if not prd:
                     # DONE for this sonde
+                    lg.a(f'OK, {sn} is empty')
+                    wss.wss_cmd_redis_set(RD_ACB_SS_GUI_STATE, 'ready')
                     break
 
 
@@ -109,11 +88,13 @@ def _ddh_wss(ignore_gui):
                 # pull remote data (prd) file: '/home/pi/.../<date>/D2/AC2_39.dat$1839104'
                 # --------------------------------------------------------------------------
 
+                fol = ddh_get_path_local_folder_dl_files_sondes()
+                sub_fol_deploy = prd.split('/')[-2]
+                sub_fol_timestamp = prd.split('/')[-3]
                 prd, z_dat = prd.split('$')
                 bn_dat = os.path.basename(prd)
                 pld = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_dat}'
                 lg.a(f'⬅️ {sn} ({ip}) PULL = {prd}')
-                rv = 0
                 if os.path.exists(pld) and os.path.getsize(pld) == z_dat:
                     lg.a(f'✅ pull OK, {bn_dat} already exists')
                 else:
@@ -126,20 +107,21 @@ def _ddh_wss(ignore_gui):
                     lg.a(f'✅ pull OK, {bn_dat}')
 
 
-                    # ------------------------------------------
-                    # delete remote file .dat from super sonde
-                    # ------------------------------------------
 
-                    lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
-                    rv = wss.wss_cmd_delete_remote_filename(prd)
-                    if rv:
-                        lg.a(f'❌ error, cannot delete file {bn_dat}')
-                        break
-                    lg.a(f'✅ delete OK, {bn_dat}')
+                # ------------------------------------------
+                # delete remote file .dat from super sonde
+                # ------------------------------------------
+
+                lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
+                rv = wss.wss_cmd_delete_remote_filename(prd)
+                if rv:
+                    lg.a(f'❌ error, cannot delete file {bn_dat}')
+                    break
+                lg.a(f'✅ delete OK, {bn_dat}')
 
 
             # time between sondes within same WSS loop
-            time.sleep(2)
+            time.sleep(1)
 
         # don't hag cpu, time between different WSS loops
         time.sleep(10)
@@ -148,7 +130,6 @@ def _ddh_wss(ignore_gui):
 
 
 def main_ddh_wss(ignore_gui=False):
-
     while 1:
         try:
             _ddh_wss(ignore_gui)

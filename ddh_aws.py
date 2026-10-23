@@ -374,7 +374,7 @@ def _ddh_aws(ignore_gui):
 
         # -------------------------------------------------
         # AWS COPY individual files pointed by
-        # symlinks inside 'upload' folder
+        # symlinks inside folder 'ddh/upload'
         # -------------------------------------------------
 
         did_aws = False
@@ -395,13 +395,14 @@ def _ddh_aws(ignore_gui):
                 os.unlink(link)
                 continue
 
-            # uploading them
+            # uploading p, the real file pointed by the link
             bn = os.path.basename(p)
             dn = os.path.dirname(p).split('/')[-1]
             lg.a(f'copying to bucket file {dn}/{bn}')
             did_aws = True
             try:
-                # AWS-copying copying a SONDES file
+
+                # AWS-copying a SONDES file
                 if bn.endswith('.dat'):
                     rv = _aws_cp_sondes_file(p)
                     if rv == 0:
@@ -442,6 +443,7 @@ def _ddh_aws(ignore_gui):
             r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
             r.set(RD_DDH_AWS_SYNC_PERIODIC_FLAG, value=1, ex=12*3600)
             aws_sync()
+            # todo: maybe create a aws_sync_dat_files here
 
 
         # this displays status GUI cloud icon

@@ -2,9 +2,8 @@ import json
 import os
 import asyncio
 import copy
-import glob
 import pathlib
-
+import shutil
 import numpy as np
 import pandas as pd
 import redis
@@ -72,6 +71,16 @@ def ddh_this_process_needs_to_quit(ignore_gui, p_name):
         return False
     print(f"debug, process '{p_name}' ends because no GUI")
     return True
+
+
+
+def ddh_not_enough_space_to_run_super_sonde():
+    path = "/home/pi/li"
+    if not linux_is_rpi():
+        path = pathlib.Path().home()
+    total_bytes, used_bytes, free_bytes = shutil.disk_usage(path)
+    free_bytes_in_gb = free_bytes *  1024 * 1024 * 1024
+    return free_bytes_in_gb < 1.0
 
 
 
