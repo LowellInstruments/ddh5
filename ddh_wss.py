@@ -12,7 +12,7 @@ from utils.ddh_common import (
     ddh_get_path_local_folder_dl_files_sondes,
     app_state_set, EV_BLE_DL_PROGRESS,
     t_str, STR_EV_BLE_DL_PROGRESS,
-    ddh_not_enough_space_to_run_super_sonde
+    ddh_not_enough_space_to_run_super_sonde, EV_BLE_SCAN, STR_EV_BLE_SCAN
 )
 from utils.redis import RD_DDH_GUI_STATE_EVENT_ICON_LOCK
 
@@ -46,6 +46,10 @@ def _ddh_wss(ignore_gui):
             sys.exit(0)
 
 
+        # update GUI
+        app_state_set(EV_BLE_SCAN, t_str(STR_EV_BLE_SCAN))
+
+
         if ddh_not_enough_space_to_run_super_sonde():
             lg.a('error, not enough space to run DDH for super-sondes')
             time.sleep(60)
@@ -71,7 +75,7 @@ def _ddh_wss(ignore_gui):
             os.system('rm $HOME/PycharmProjects/ddh/dl_files_sondes/D2/*')
 
 
-            # iterate files within this sonde
+            # iterate files WITHIN THIS sonde
             while 1:
 
                 # prd: path remote dat file
