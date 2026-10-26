@@ -139,10 +139,10 @@ class WSS:
             ts = time.perf_counter()
 
         if not os.path.exists(pld):
-            print(f'error PULL, file {pld} does not exist')
+            print(f'error PULL, LOCAL file {pld} does not exist')
             return 1
         if os.path.getsize(pld) != int(z_dat):
-            print(f'error PULL, size {os.path.getsize(pld)} != z_dat {z_dat}')
+            print(f'error PULL, LOCAL size {os.path.getsize(pld)} != z_dat {z_dat}')
             return 1
 
 

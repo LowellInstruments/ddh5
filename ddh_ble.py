@@ -58,7 +58,8 @@ from utils.ddh_common import (
     EV_BLE_DL_PROGRESS, STR_EV_BLE_DL_PROGRESS,
     STR_EV_BLE_DL_RETRY, EV_GPS_HW_ERROR, STR_EV_GPS_HW_ERROR,
     EV_NO_ASSIGNED_LOGGERS,
-    STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit, linux_is_rpi, ddh_get_path_to_root_application_folder
+    STR_NO_ASSIGNED_LOGGERS, ddh_this_process_needs_to_quit, linux_is_rpi, ddh_get_path_to_root_application_folder,
+    ddh_config_get_dict_of_monitored_sondes
 )
 from ddh_log import lg_ble as lg
 
@@ -78,6 +79,7 @@ skip_1st_gps_notif = 1
 using_dummy_gps = ddh_gps_know_we_are_using_dummy()
 g_prev_ble = 0
 g_ls_macs_mon = [i.upper() for i in ddh_config_get_list_of_monitored_macs()]
+g_d_sondes_mon = ddh_config_get_dict_of_monitored_sondes()
 _g_logger_errors = {}
 
 
@@ -662,7 +664,7 @@ def _ddh_ble(ignore_gui):
 
 
         # case: forgot to assign loggers
-        if not g_ls_macs_mon:
+        if not g_ls_macs_mon and not g_d_sondes_mon:
             app_state_set(EV_NO_ASSIGNED_LOGGERS, t_str(STR_NO_ASSIGNED_LOGGERS))
             continue
 
