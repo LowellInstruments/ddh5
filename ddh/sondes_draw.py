@@ -119,15 +119,18 @@ def _sondes_plot(app):
     who = app.cb_g_sondes_who.currentText()
     when = app.cb_g_sondes_when.currentText()
     fol = ddh_get_path_local_folder_dl_files_sondes()
-    ls_do = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_RDO.csv')]
+    mask_csv_do = f'{fol}/**/{who}_SENS_{when}_RDO.csv'
+    ls_do = [i for i in glob.glob(mask_csv_do, recursive=True)]
     if ls_do:
         p = ls_do[0]
         _get_df_from_csv_files(p, data)
-    ls_pts = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_External_PTS_Bar30.csv')]
+    mask_csv_pts = f'{fol}/**/{who}_SENS_{when}_External_PTS_Bar30.csv'
+    ls_pts = [i for i in glob.glob(mask_csv_pts, recursive=True)]
     if ls_pts:
         p = ls_pts[0]
         _get_df_from_csv_files(p, data)
-    ls_cond = [i for i in glob.glob(f'{fol}/{who}_SENS_{when}_ATLAS.csv')]
+    mask_csv_atlas = f'{fol}/**/{who}_SENS_{when}_ATLAS.csv'
+    ls_cond = [i for i in glob.glob(mask_csv_atlas, recursive=True)]
     if ls_cond:
         p = ls_cond[0]
         _get_df_from_csv_files(p, data)
@@ -208,8 +211,10 @@ def _sondes_plot(app):
 
 
 
+    # -------------------------------------------------------------------------
     # plot the data
     # TEMPERATURE expected to always be there get the sub_dataframes and plot
+    # -------------------------------------------------------------------------
     d = data['df_pts_30'].reset_index(drop=True)
     p1.plot(
         list(d['timestamp_adjusted']),
@@ -275,7 +280,7 @@ def sondes_serve_graph_request(
 
     except GraphException as e:
         # errors such as "no data files to graph"
-        lg.a(f"graph_exception -> {str(e)}")
+        lg.a(f"graph_exception sondes -> {str(e)}")
         app.lbl_graph_err_sondes.setText(str(e))
         app.lbl_graph_err_sondes.setVisible(True)
 
