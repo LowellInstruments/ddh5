@@ -2,7 +2,6 @@ import glob
 import os
 import time
 import redis
-
 from acsense_utils.acsense_gps import get_start_unix_time_from_gps_file
 from ddh.acsense_utils._parser.parser import Parser
 from ddh.acsense_utils.parser_gui import Parser_GUI_Tk
@@ -251,7 +250,7 @@ def _ddh_cnv():
         for pld in ls_sens_dat_files:
             bn = os.path.basename(pld).replace('.dat', '')
             # bn: SENS_32_25.dat
-            ls_csv_files = glob.glob(f'{pld}/**/{bn}*.csv', recursive=True)
+            ls_csv_files = glob.glob(f'{PATH_FOL_DL_SONDES}/**/{bn}*.csv', recursive=True)
             if ls_csv_files:
                 # PROBABLY already converted
                 continue
@@ -260,13 +259,13 @@ def _ddh_cnv():
             pr = Parser()
             # use_int = True
             # rv = pr.parse_ac_file(fn_dat, use_int=use_int, export=True, output_dir=fol_dst)
-            parsed = {p: pr.parse_sense_file(p)}
+            parsed = {pld: pr.parse_sense_file(pld)}
             Parser_GUI_Tk.save_csv_callback(parsed, output_dir=PATH_FOL_DL_SONDES)
             cnv_dat = True
 
 
             # read ACBOTICS GPS file
-            p_gps = p.replace('.dat', '_gps.csv')
+            p_gps = pld.replace('.dat', '_gps.csv')
             if not os.path.exists(p_gps):
                 lg.a(f'error, conversion of {bn} generated no Acbotics GPS file')
                 continue
@@ -289,6 +288,8 @@ def _ddh_cnv():
             link = f'{PATH_FOL_UPLOAD}/{bn_pld}'
             if not os.path.exists(link):
                 lg.a(f'creating SENS.dat symlink {link}')
+                if os.path.islink(link):
+                    os.unlink(link)
                 os.symlink(pld, link)
 
 
@@ -297,18 +298,10 @@ def _ddh_cnv():
             r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS, value=1)
 
 
-
         # ---------------------------------------------------------------
-        # write symlink AC_files.dat so AWS can upload-copy-delete them
+        # symlink AC_files.dat is done in WSS to prevent race condition
         # ---------------------------------------------------------------
-
-        ls_ac_dat_files = glob.glob(f'{PATH_FOL_DL_SONDES}/**/*AC*.dat', recursive=True)
-        for pld in ls_ac_dat_files:
-            bn_pld = os.path.basename(pld)
-            link = f'{PATH_FOL_UPLOAD}/{bn_pld}'
-            if not os.path.exists(link):
-                lg.a(f'creating AC.dat symlink {link}')
-                os.symlink(pld, link)
+        continue
 
 
 

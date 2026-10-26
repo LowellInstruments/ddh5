@@ -242,13 +242,13 @@ def _aws_cp(path):
 def _aws_cp_sondes_file(path):
 
     if 'DESCRIPTION.txt' in path:
-        return
+        return 0
+
 
     # check AWS credentials
     _k = ddh_config_get_one_aws_credential_value("cred_aws_key_id_sondes")
     _s = ddh_config_get_one_aws_credential_value("cred_aws_secret_sondes")
     bkt_name = ddh_config_get_one_aws_credential_value("cred_aws_bucket_sondes")
-    print(_k, _s, bkt_name)
     if _k is None or _s is None or bkt_name is None:
         lg.a("warning, missing credentials for SONDES")
         return 1
@@ -266,12 +266,18 @@ def _aws_cp_sondes_file(path):
     _bin = _get_path_of_aws_binary()
     bn = os.path.basename(path)
     dr = "--dryrun" if dev else ""
+
+
+    # debug
+    dr = ''
+
     cmd = (
         f"AWS_ACCESS_KEY_ID={_k} AWS_SECRET_ACCESS_KEY={_s} "
-        f"timeout 60 {_bin} s3 cp {path} s3://{bkt_name}/{bn} {dr} "
+        f"timeout 60 {_bin} s3 cp {path} s3://{bkt_name}/dl_files_sondes/{bn} {dr} "
     )
 
     # run AWS cp command
+    lg.a(f'upload-cp local file {bn} to bucket {bkt_name}')
     _ddh_aws_set_state('busy')
     rv = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     if rv.returncode:
@@ -386,8 +392,9 @@ def _ddh_aws(ignore_gui):
                 lg.a(f'error, {link} is not link')
                 continue
             p = os.readlink(link)
+            # here we are sure link is link
             if not os.path.exists(p):
-                lg.a(f'note, deleting link to non-existing file {p}')
+                lg.a(f'note, deleting bad link {link}')
                 os.unlink(link)
                 continue
             if 'MAT.cfg' in p:
@@ -398,7 +405,6 @@ def _ddh_aws(ignore_gui):
             # uploading p, the real file pointed by the link
             bn = os.path.basename(p)
             dn = os.path.dirname(p).split('/')[-1]
-            lg.a(f'copying to bucket file {dn}/{bn}')
             did_aws = True
             try:
 
@@ -406,12 +412,12 @@ def _ddh_aws(ignore_gui):
                 if bn.endswith('.dat'):
                     rv = _aws_cp_sondes_file(p)
                     if rv == 0:
-                        lg.a(f'deleting SONDES file {bn}')
+                        lg.a(f'deleting LOCAL sondes file {bn}')
                         os.unlink(p)
-                        lg.a(f'deleting SONDES file link {link}')
+                        lg.a(f'deleting LOCAL sondes file upload link {bn}')
                         os.unlink(link)
                     else:
-                        lg.a(f'error, could not upload SONDES file {bn}')
+                        lg.a(f'error, could not upload LOCAL sondes file {bn}')
 
                 # AWS-copying BLE logger files
                 else:

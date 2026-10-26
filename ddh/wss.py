@@ -1,11 +1,14 @@
+import glob
+
 import time
 import shlex
 import subprocess as sp
 import os
 from ble.li_cmds import DEV_SHM_DL_PROGRESS
+from ddh_cnv import PATH_FOL_UPLOAD
 from utils.ddh_common import (
     ddh_config_get_path_remote_fol_dat_files,
-    ddh_config_get_box_sn
+    ddh_config_get_box_sn, ddh_get_path_local_folder_dl_files_sondes
 )
 
 
@@ -20,6 +23,7 @@ RD_ACB_SS_GUI_UPLOAD_PROGRESS = rg + 'upload_progress'
 RD_ACB_SS_GUI_UPLOAD_FILENAME = rg + 'upload_filename'
 RD_ACB_SS_GUI_UPLOAD_DDH = rg + 'upload_ddh'
 my_ddh_sn = ddh_config_get_box_sn()
+PATH_FOL_DL_SONDES = ddh_get_path_local_folder_dl_files_sondes()
 
 
 
@@ -127,14 +131,36 @@ class WSS:
                 # o: 1,269,760 100%    1.18GB/s    0:00:00 (xfr#1, to-chk=0/1)
                 v = o.split('%')[0].rsplit(' ')[-1]
                 self.wss_cmd_redis_set(RD_ACB_SS_GUI_UPLOAD_PROGRESS, v)
-                print(f'\t{v} %')
+                # print(f'\t{v} %')
 
                 # update progress bar in DDH GUI
                 with open(DEV_SHM_DL_PROGRESS, 'w') as f:
                     f.write(str(v))
             ts = time.perf_counter()
 
-        return 0 if os.path.exists(pld) and os.path.getsize(pld) == int(z_dat) else 1
+        if not os.path.exists(pld):
+            print(f'error PULL, file {pld} does not exist')
+            return 1
+        if os.path.getsize(pld) != int(z_dat):
+            print(f'error PULL, size {os.path.getsize(pld)} != z_dat {z_dat}')
+            return 1
+
+
+        # ---------------------------------------------------------------
+        # write symlink AC_files.dat so AWS can upload-copy-delete them
+        # ---------------------------------------------------------------
+
+        if 'AC' in pld:
+            bn_pld = os.path.basename(pld)
+            link = f'{PATH_FOL_UPLOAD}/{bn_pld}'
+            if os.path.islink(link):
+                os.unlink(link)
+            if not os.path.exists(link):
+                # print(f'creating AC.dat symlink {link}')
+                os.symlink(pld, link)
+
+
+        return 0
 
 
 

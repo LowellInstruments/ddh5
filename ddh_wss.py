@@ -65,24 +65,13 @@ def _ddh_wss(ignore_gui):
                 continue
 
 
-            # debug
-            lg.a(f'OK, detected {sn} on {ip}')
-
-
-            # debug
-            # todo: delete this line
-            lg.a('error, remember to delete this line')
-            os.system('rm $HOME/PycharmProjects/ddh/dl_files_sondes/D2/*')
-
-
             # iterate files WITHIN THIS sonde
             while 1:
 
                 # prd: path remote dat file
                 prd = wss.wss_cmd_get_next_filename_to_be_pulled()
                 if not prd:
-                    # DONE for this sonde
-                    lg.a(f'OK, {sn} is empty')
+                    # lg.a(f'{sn} is empty of files')
                     wss.wss_cmd_redis_set(RD_ACB_SS_GUI_STATE, 'ready')
                     break
 
@@ -92,23 +81,24 @@ def _ddh_wss(ignore_gui):
                 # pull remote data (prd) file: '/home/pi/.../<date>/D2/AC2_39.dat$1839104'
                 # --------------------------------------------------------------------------
 
+                lg.a(f'working with sonde {sn} ip = {ip}')
                 fol = ddh_get_path_local_folder_dl_files_sondes()
                 sub_fol_deploy = prd.split('/')[-2]
                 sub_fol_timestamp = prd.split('/')[-3]
                 prd, z_dat = prd.split('$')
                 bn_dat = os.path.basename(prd)
                 pld = f'{fol}/{sub_fol_timestamp}/{sub_fol_deploy}/{sn}_{bn_dat}'
-                lg.a(f'⬅️ {sn} ({ip}) PULL = {prd}')
+                lg.a(f'⬅️ {sn} PULL = {prd}')
                 if os.path.exists(pld) and os.path.getsize(pld) == z_dat:
-                    lg.a(f'✅ pull OK, {bn_dat} already exists')
+                    lg.a(f'✅ pull OK, REMOTE sonde {bn_dat} already exists LOCALLY')
                 else:
                     app_state_set(EV_BLE_DL_PROGRESS, t_str(STR_EV_BLE_DL_PROGRESS) + f' {sn}')
                     r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=1)
                     rv = wss.wss_cmd_pull_remote_file_dat(prd, pld, z_dat)
                     if rv:
-                        lg.a(f'❌ error, cannot pull file {bn_dat}')
+                        lg.a(f'❌ error, cannot pull REMOTE sonde file {bn_dat}')
                         break
-                    lg.a(f'✅ pull OK, {bn_dat}')
+                    lg.a(f'✅ pull OK for REMOTE sonde file {bn_dat}')
 
 
 
@@ -116,12 +106,12 @@ def _ddh_wss(ignore_gui):
                 # delete remote file .dat from super sonde
                 # ------------------------------------------
 
-                lg.a(f'⬅️ {sn} ({ip}) DELETE = {prd}')
+                lg.a(f'⬅️ {sn} DELETE = {prd}')
                 rv = wss.wss_cmd_delete_remote_filename(prd)
                 if rv:
-                    lg.a(f'❌ error, cannot delete file {bn_dat}')
+                    lg.a(f'❌ error, cannot delete REMOTE sonde file {bn_dat}')
                     break
-                lg.a(f'✅ delete OK, {bn_dat}')
+                lg.a(f'✅ delete OK for REMOTE sonde file {bn_dat}')
 
 
             # time between sondes within same WSS loop

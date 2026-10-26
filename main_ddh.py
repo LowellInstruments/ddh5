@@ -500,6 +500,7 @@ def gui_tabs_populate_sondes_dropdown(my_app):
     a = my_app
     a.cb_g_sondes_who.clear()
     a.cb_g_sondes_when.clear()
+    fol_dl_sondes = ddh_get_path_local_folder_dl_files_sondes()
 
     ls_who = []
     for sn in list(ddh_config_get_dict_of_monitored_sondes().keys()):
@@ -508,7 +509,11 @@ def gui_tabs_populate_sondes_dropdown(my_app):
         a.cb_g_sondes_who.addItem(sn)
         ls_who.append(sn)
         ls_when_for_who = []
-        for j in glob.glob(f'{ddh_get_path_local_folder_dl_files_sondes()}/{sn}_SENS_*.csv'):
+        ls_csv = glob.glob(f'{fol_dl_sondes}/**/{sn}_SENS_*.csv', recursive=True)
+        if not ls_csv:
+            lg.a(f'note, no CSV files to populate dropdown for {sn}')
+            continue
+        for j in ls_csv:
             # bn: sonde1_SENS_1_1_ATLAS.csv
             x_y = os.path.basename(j).replace(f'{sn}_SENS_', '')
             x_y = '_'.join(x_y.split('_')[:2])
@@ -1454,9 +1459,9 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
 
-
-    def click_sondes_aux_button(self):
-        self.click_sondes_when()
+    @staticmethod
+    def click_sondes_aux_button():
+        r.set(RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS, value=1)
 
 
     @staticmethod
@@ -1621,7 +1626,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         # refresh stuff for dropdown SONDES
         k = RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_SONDES_DROPDOWNS
         if r.exists(k):
-            lg.a('note, re-populating sondes plots dropdowns')
+            lg.a('re-populating sondes plots dropdowns')
             gui_tabs_populate_sondes_dropdown(self)
             r.delete(k)
 
@@ -1988,7 +1993,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         if platform.system() == 'Linux':
             #self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
             #self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
-            # self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
+            self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
             self.d_processes[NAME_EXE_WSS].start('python3', [f'{NAME_EXE_WSS}.py'])
 
 
@@ -1999,7 +2004,7 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.th_net = Thread(target=main_ddh_net)
         self.th_net.start()
         self.th_cnv = Thread(target=main_ddh_cnv)
-        # self.th_cnv.start()
+        self.th_cnv.start()
 
 
 
