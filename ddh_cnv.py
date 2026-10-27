@@ -287,7 +287,7 @@ def _ddh_cnv():
             bn_pld = os.path.basename(pld)
             link = f'{PATH_FOL_UPLOAD}/{bn_pld}'
             if not os.path.exists(link):
-                lg.a(f'creating SENS.dat symlink {link}')
+                lg.a(f'note, creating SENS.dat upload symlink to {bn_pld}')
                 if os.path.islink(link):
                     os.unlink(link)
                 os.symlink(pld, link)

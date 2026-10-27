@@ -412,9 +412,9 @@ def _ddh_aws(ignore_gui):
                 if bn.endswith('.dat'):
                     rv = _aws_cp_sondes_file(p)
                     if rv == 0:
-                        lg.a(f'deleting LOCAL sondes file {bn}')
+                        lg.a(f'deleting after AWS-cp LOCAL sondes file {bn}')
                         os.unlink(p)
-                        lg.a(f'deleting LOCAL sondes file upload link {bn}')
+                        lg.a(f'deleting after AWS-cp LOCAL sondes file upload link {bn}')
                         os.unlink(link)
                     else:
                         lg.a(f'error, could not upload LOCAL sondes file {bn}')

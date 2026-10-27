@@ -104,14 +104,18 @@ class WSS:
         )
 
 
-        # note: a value of 1 here is too demanding
-        timeout_download = 2
-        ts = time.perf_counter()
+        # prepare to start the download
         bn_pld = os.path.basename(pld)
         self.wss_cmd_redis_set(RD_ACB_SS_GUI_STATE, 'upload')
         self.wss_cmd_redis_set(RD_ACB_SS_GUI_UPLOAD_FILENAME, bn_pld)
         with open(DEV_SHM_DL_PROGRESS, 'w') as f:
             f.write('0')
+
+
+        # note, a timeout value of 1 is too demanding
+        got_file = False
+        timeout_download = 2
+        ts = time.perf_counter()
         while True:
             if time.perf_counter() > ts + timeout_download:
                 # print('_cmd end')
@@ -136,13 +140,16 @@ class WSS:
                 # update progress bar in DDH GUI
                 with open(DEV_SHM_DL_PROGRESS, 'w') as f:
                     f.write(str(v))
+
+                # fast break
+                if int(v) == 100:
+                    got_file = True
+                    break
+
             ts = time.perf_counter()
 
-        if not os.path.exists(pld):
+        if not got_file:
             print(f'error PULL, LOCAL file {pld} does not exist')
-            return 1
-        if os.path.getsize(pld) != int(z_dat):
-            print(f'error PULL, LOCAL size {os.path.getsize(pld)} != z_dat {z_dat}')
             return 1
 
 
