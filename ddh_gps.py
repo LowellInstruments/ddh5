@@ -109,7 +109,8 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
 
 
     # CHECK when we are in port
-    cached_we_in_port = r.get(RD_DDH_GPS_ARE_WE_IN_PORT).decode() == '1'
+    k = RD_DDH_GPS_ARE_WE_IN_PORT
+    cached_we_in_port = r.exists(k) and r.get(k).decode() == '1'
     if cached_we_in_port:
         app_state_set(EV_GPS_IN_PORT, t_str(STR_EV_GPS_IN_PORT))
         r.set(RD_DDH_GUI_STATE_EVENT_ICON_LOCK, value=1, ex=10)
@@ -118,7 +119,7 @@ def ddh_gps_check_app_operational_conditions(gps_pos):
 
 
     # CACHE says not in port
-    cached_not_in_port = r.get(RD_DDH_GPS_ARE_WE_IN_PORT).decode() == '0'
+    cached_not_in_port = r.exists(k) and r.get(k).decode() == '0'
     if cached_not_in_port:
         # True means proceed to download BLE logger
         return True
