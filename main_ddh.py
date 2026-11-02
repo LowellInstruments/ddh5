@@ -1889,7 +1889,6 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
 
         # prints of subprocesses are handled by pyqt
-        # note, on Pycharm and using PYENV, ensure main_ddh RUN configuration points to your PYTHON
         self.d_processes[NAME_EXE_AWS].readyReadStandardOutput.connect(self.handle_stdout_aws)
         self.d_processes[NAME_EXE_BLE].readyReadStandardOutput.connect(self.handle_stdout_ble)
         self.d_processes[NAME_EXE_GPS].readyReadStandardOutput.connect(self.handle_stdout_gps)
