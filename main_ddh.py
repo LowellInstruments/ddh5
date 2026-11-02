@@ -1887,14 +1887,18 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
         self.d_processes[NAME_EXE_BLE] = QProcess()
         self.d_processes[NAME_EXE_GPS] = QProcess()
 
+
         # prints of subprocesses are handled by pyqt
+        # note, on Pycharm and using PYENV, ensure main_ddh RUN configuration points to your PYTHON
         self.d_processes[NAME_EXE_AWS].readyReadStandardOutput.connect(self.handle_stdout_aws)
         self.d_processes[NAME_EXE_BLE].readyReadStandardOutput.connect(self.handle_stdout_ble)
         self.d_processes[NAME_EXE_GPS].readyReadStandardOutput.connect(self.handle_stdout_gps)
         self.d_processes[NAME_EXE_BLE].stateChanged.connect(self.handle_state_ble)
-        self.d_processes[NAME_EXE_AWS].start('python3', [f'{NAME_EXE_AWS}.py'])
-        self.d_processes[NAME_EXE_BLE].start('python3', [f'{NAME_EXE_BLE}.py'])
-        self.d_processes[NAME_EXE_GPS].start('python3', [f'{NAME_EXE_GPS}.py'])
+        path_bin_python = str(sys.executable)
+        self.d_processes[NAME_EXE_AWS].start(path_bin_python, [f'{NAME_EXE_AWS}.py'])
+        self.d_processes[NAME_EXE_BLE].start(path_bin_python, [f'{NAME_EXE_BLE}.py'])
+        self.d_processes[NAME_EXE_GPS].start(path_bin_python, [f'{NAME_EXE_GPS}.py'])
+
 
 
         # GUI threads

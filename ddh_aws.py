@@ -11,7 +11,7 @@ import subprocess as sp
 from ddh.emolt import ddh_this_box_has_grouped_s3_uplink
 from ddh.notifications_v2 import notify_error_sw_aws_s3
 from ddh_net import ddh_net_calculate_via
-from ddh_sqs import main_ddh_sqs
+from ddh_sqs import ddh_aws_sqs
 
 from utils.redis import (
     RD_DDH_BLE_SEMAPHORE,
@@ -19,7 +19,7 @@ from utils.redis import (
     RD_DDH_AWS_NO_EXPIRES_RV,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
     RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST,
-    RD_DDH_AWS_SYNC_PERIODIC_FLAG
+    RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_SQS_PERIODIC_SEND
 )
 from utils.ddh_common import (
     NAME_EXE_AWS,
@@ -52,7 +52,8 @@ vessel = (ddh_config_get_vessel_name()
           .replace("'", "").replace(" ", "_").upper())
 dev = not linux_is_rpi()
 this_box_has_grouped_s3_uplink = ddh_this_box_has_grouped_s3_uplink()
-g_counter_sqs = 0
+
+
 
 
 
@@ -303,6 +304,7 @@ def _ddh_aws(ignore_gui):
         # prevent CPU hog
         time.sleep(1)
 
+
         if r.exists(RD_DDH_BLE_SEMAPHORE):
             lg.a('waiting a bit for BLE to finish ...')
             while r.exists(RD_DDH_BLE_SEMAPHORE):
@@ -310,19 +312,28 @@ def _ddh_aws(ignore_gui):
 
 
         # do SQS from time to time
-        global g_counter_sqs
-        g_counter_sqs += 1
-        if g_counter_sqs == 300:
-            g_counter_sqs = 0
-            main_ddh_sqs()
+        if not r.exists(RD_DDH_SQS_PERIODIC_SEND):
+            r.set(RD_DDH_SQS_PERIODIC_SEND, value=1, ex=600)
+            # internet via checked inside this function we call next
+            ddh_aws_sqs()
+
+
+
+        # user asked for one AWS sync via GUI
+        did_aws = False
+        if r.exists(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST):
+            did_aws = True
+            r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
+            r.set(RD_DDH_AWS_SYNC_PERIODIC_FLAG, value=1, ex=12*3600)
+            aws_sync()
 
 
 
         # -------------------------------------------------
         # AWS COPY individual files inside 'upload' folder
         # -------------------------------------------------
-        did_aws = False
         ls_aws_copy = glob.glob(f'{ddh_get_path_to_root_application_folder()}/upload/*')
+        error_aws_copy = 0
         for link in ls_aws_copy:
             if not os.path.islink(link):
                 lg.a(f'error, {link} is not link')
@@ -341,7 +352,11 @@ def _ddh_aws(ignore_gui):
             lg.a(f'copying to bucket file {dn}/{bn}')
             did_aws = True
             try:
-                _aws_cp(p)
+                error_aws_copy = _aws_cp(p)
+                if error_aws_copy:
+                    lg.a('note, AWS-cp not available, skipping rest of upload links, sleep more')
+                    break
+
                 # SYM: delete the link once file uploaded
                 if p.endswith('_track.txt'):
                     yyyymmdd = datetime.datetime.now(datetime.UTC)
@@ -359,14 +374,8 @@ def _ddh_aws(ignore_gui):
             except (Exception,) as ex:
                 lg.a(f'error, aws_cp -> {ex}')
                 _ddh_aws_set_state('error')
+                error_aws_copy = 1
 
-
-        # user asked for one AWS sync via GUI
-        if r.exists(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST):
-            did_aws = True
-            r.delete(RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST)
-            r.set(RD_DDH_AWS_SYNC_PERIODIC_FLAG, value=1, ex=12*3600)
-            aws_sync()
 
 
         # helps update GUI
@@ -374,12 +383,15 @@ def _ddh_aws(ignore_gui):
             r.set(RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD, 1)
 
 
+        if error_aws_copy:
+            # do not attempt so often
+            time.sleep(180)
+            lg.a('note, finished extra sleep after bad AWS-cp')
+
 
 
 
 def main_ddh_aws(ignore_gui=False):
-
-
     while 1:
         try:
             _ddh_aws(ignore_gui)

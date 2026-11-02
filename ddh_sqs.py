@@ -153,8 +153,8 @@ def _sqs_serve():
 
 
 
-# no loop, called by AWS
-def main_ddh_sqs():
+# no loop, this function IS CALLED by AWS
+def ddh_aws_sqs():
     try:
         if g_sqs_error_credentials == 0:
             _sqs_serve()
@@ -165,4 +165,4 @@ def main_ddh_sqs():
 
 
 if __name__ == '__main__':
-    main_ddh_sqs()
+    ddh_aws_sqs()

@@ -92,6 +92,8 @@ RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST = p + 'user'
 RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT = p + 'process_state'
 # counts the number of bad AWS interactions
 RD_DDH_AWS_NO_EXPIRES_RV = p + 'rv'
+# time to do SQS
+RD_DDH_SQS_PERIODIC_SEND = p + 'sqs_periodic_send'
 
 
 

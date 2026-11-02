@@ -256,3 +256,11 @@
     main_ddh.py -> support metric / imperial units in new table
     pop_ddh.sh ->  done CSF conversion once upon DDU
     run_ddh.sh ->  check starlink upon boot and stop ppp service if so
+
+
+6.0.10  11/02/26
+
+    ddh_gps.py -> improved in_port constants and queries for DATA CELL saves
+    ddh_sqs.py -> improved periodical check
+    ddh_aws.py -> quit if first AWS-cp fails
+
