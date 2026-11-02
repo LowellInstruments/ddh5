@@ -263,4 +263,4 @@
     ddh_gps.py -> improved in_port constants and queries for DATA CELL saves
     ddh_sqs.py -> improved periodical check
     ddh_aws.py -> quit if first AWS-cp fails
-
+    new GUI icons with outline for better visualization
