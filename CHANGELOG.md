@@ -264,3 +264,8 @@
     ddh_sqs.py -> improved periodical check
     ddh_aws.py -> quit if first AWS-cp fails
     new GUI icons with outline for better visualization
+
+6.0.11  11/03/26
+
+    ddh_aws.py -> delay if AWS-cp fails
+    .flag_need_csf better management on DDU

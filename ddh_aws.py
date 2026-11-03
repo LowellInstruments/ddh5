@@ -19,7 +19,7 @@ from utils.redis import (
     RD_DDH_AWS_NO_EXPIRES_RV,
     RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD,
     RD_DDH_AWS_NO_EXPIRES_SYNC_USER_REQUEST,
-    RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_SQS_PERIODIC_SEND
+    RD_DDH_AWS_SYNC_PERIODIC_FLAG, RD_DDH_SQS_PERIODIC_SEND, RD_DDH_AWS_SKIP_CP_FOR_A_WHILE
 )
 from utils.ddh_common import (
     NAME_EXE_AWS,
@@ -335,6 +335,8 @@ def _ddh_aws(ignore_gui):
         ls_aws_copy = glob.glob(f'{ddh_get_path_to_root_application_folder()}/upload/*')
         error_aws_copy = 0
         for link in ls_aws_copy:
+            if r.exists(RD_DDH_AWS_SKIP_CP_FOR_A_WHILE):
+                continue
             if not os.path.islink(link):
                 lg.a(f'error, {link} is not link')
                 continue
@@ -354,7 +356,6 @@ def _ddh_aws(ignore_gui):
             try:
                 error_aws_copy = _aws_cp(p)
                 if error_aws_copy:
-                    lg.a('note, AWS-cp not available, skipping rest of upload links, sleep more')
                     break
 
                 # SYM: delete the link once file uploaded
@@ -383,10 +384,10 @@ def _ddh_aws(ignore_gui):
             r.set(RD_DDH_GUI_ON_DEMAND_CHECK_ICON_CLOUD, 1)
 
 
-        if error_aws_copy:
-            # do not attempt so often
-            time.sleep(180)
-            lg.a('note, finished extra sleep after bad AWS-cp')
+        # do not attempt AWS-cp so often
+        if error_aws_copy and not r.exists(RD_DDH_AWS_SKIP_CP_FOR_A_WHILE):
+            lg.a('note, AWS-cp not available, skipping for a while')
+            r.set(RD_DDH_AWS_SKIP_CP_FOR_A_WHILE, value=1, ex=180)
 
 
 

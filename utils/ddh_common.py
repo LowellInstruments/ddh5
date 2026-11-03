@@ -563,9 +563,11 @@ def exp_get_custom_side_buttons_debounce_time():
 
 
 
-# feature has-been-in-water
+# feature has-been-in-water, always ON
 def exp_get_skip_hbw():
-    return _get_exp_key_from_cfg('use_skip_hbw')
+    # return _get_exp_key_from_cfg('use_skip_hbw')
+    print('warning, SKIP_HBW hardcoded = 0 so EFFECTIVELY USING instruction has-been-in-water')
+    return 0
 
 
 
