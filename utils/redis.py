@@ -94,6 +94,7 @@ RD_DDH_AWS_NO_EXPIRES_PROCESS_OUTPUT = p + 'process_state'
 RD_DDH_AWS_NO_EXPIRES_RV = p + 'rv'
 # time to do SQS
 RD_DDH_SQS_PERIODIC_SEND = p + 'sqs_periodic_send'
+RD_DDH_AWS_SKIP_CP_FOR_A_WHILE = p + 'aws_skip_cp_for_a_while'
 
 
 
