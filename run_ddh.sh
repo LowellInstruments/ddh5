@@ -115,6 +115,7 @@ fi
 
 
 
+# this grep Starlink is NOT a wi-fi essid but the boat's Starlink web portal
 (curl --silent --connect-timeout 1 --max-time 1 192.168.100.1 | grep Starlink) > /dev/null
 RV=$?
 if [ $RV -eq 0 ]; then
