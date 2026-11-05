@@ -6,9 +6,11 @@ Application to download Bluetooth-enabled data loggers in fishing and research v
 
 ## Hardware
 
-[Assembly Procedure](https://htmlpreview.github.io/?https://github.com/LowellInstruments/ddh_hw/blob/e4120b69d66ee81a78b2924d65ed4c71b20136a8/rev_f_index.html)
+[Assembly Procedure](https://htmlpreview.github.io/?https://github.com/LowellInstruments/ddh_hw/blob/91e01659affcd95536847c9be099e16bbb30bf6c/rev_f_index.html)
+
 [Bill of Materials](https://github.com/LowellInstruments/ddh_hw/blob/main/rev_f_bom.csv)
-[Step File](https://github.com/LowellInstruments/ddh_hw/blob/main/rev_f_step.zip)
+
+[Step File](https://github.com/LowellInstruments/ddh_hw/raw/refs/heads/main/rev_f_step.zip)
 
 
 ## License
