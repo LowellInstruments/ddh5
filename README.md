@@ -1,10 +1,14 @@
 # Deck Data Hub
 
-Application to download Bluetooth-enabled data loggers in fishing and research vessels.
+## Software
+
+The DDH GUI is an application to download Bluetooth-enabled data loggers in fishing and research vessels.
 
 ![alt text](ddh/gui/res/screenshot.png)
 
 ## Hardware
+
+The following links contain instructions to build your own DDH hardware.
 
 [Assembly Procedure](https://htmlpreview.github.io/?https://github.com/LowellInstruments/ddh_hw/blob/91e01659affcd95536847c9be099e16bbb30bf6c/rev_f_index.html)
 
