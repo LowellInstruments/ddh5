@@ -81,6 +81,11 @@ def ddh_do_we_graph_out_of_water_data():
 
 
 
+def ddh_gui_requested_style_sheet_dark():
+    return os.path.exists(LI_PATH_DARK_STYLESHEET)
+
+
+
 def ddh_get_path_to_app_override_flag_file() -> str:
     # set this with the clear-lockout physical button
     # to force at least one execution even with
@@ -774,6 +779,7 @@ LI_PATH_TEST_MODE = f'{d}/.ddh_test_mode.flag'
 LI_PATH_PLT_ALSO_OUT_OF_WATER = f'{d}/.ddh_plt_also_out_of_water'
 # when present, DDH simulates latitude and longitude values from config.toml
 LI_PATH_GPS_DUMMY = f'{d}/.gps_dummy_mode.json'
+LI_PATH_DARK_STYLESHEET = f'{d}/.ddh_gui_dark_style_sheet'
 
 
 

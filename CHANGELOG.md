@@ -269,3 +269,8 @@
 
     ddh_aws.py -> delay if AWS-cp fails
     .flag_need_csf better management on DDU
+
+
+6.0.12  11/05/26
+
+    added button to switch light <-> dark theme on "advanced" tab

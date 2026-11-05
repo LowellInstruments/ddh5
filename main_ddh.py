@@ -1,5 +1,4 @@
 import threading
-
 import signal
 import sys
 from pathlib import Path
@@ -10,7 +9,7 @@ import pathlib
 import setproctitle
 from PyQt6 import QtCore
 from PyQt6.QtCore import QProcess, QTimer, QCoreApplication, Qt, QPoint, QUrl, QEvent
-from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie
+from PyQt6.QtGui import QIcon, QPixmap, QScreen, QMovie, QPalette, QColor
 from PyQt6.QtWidgets import (
     QApplication,
     QTableWidgetItem, QTableWidget,
@@ -38,7 +37,6 @@ from ddh.notifications_v2 import (
 )
 from ddh.slo import slo_delete, slo_delete_all
 from ddh_net import main_ddh_net
-from lix.lix import _parse_lid_v2_data_file_and_newer
 from utils.redis import (
     RD_DDH_GUI_PLOT_REASON,
     RD_DDH_GUI_NO_EXPIRES_PERIODIC_REFRESH_HISTORY_TABLE,
@@ -120,13 +118,13 @@ from utils.ddh_common import (
     STR_TAB_NAME_NOTE, STR_QUESTION_SAVE_EMPTY_LOGGER_LIST, STR_QUESTION_PURGE_HISTORY,
     STR_EV_GPS_SEARCHING, STR_TAB_NAME_INFORMATION,
     STR_TAB_NAME_MORE_INFO, STR_TAB_NAME_MAPS_NEW, STR_DESC_INTERNAL,
-    STR_DESC_BUSY, STR_DESC_RESULT, STR_DESC_RESET,
+    STR_DESC_BUSY, STR_DESC_RESET,
     STR_DESC_HAULS, STR_DESC_HAULS_LAST, STR_DESC_HAULS_ALL,
     STR_DESC_HAULS_SINGLE, PATH_POWER_ICON_ERROR, PATH_POWER_ICON_OK,
     exp_get_skip_hbw, exp_get_skip_slo, PATH_MIN_BUG,
     PATH_FLAG_DDH_GPS_ERR, ddh_get_path_to_root_application_folder,
     exp_use_show_fish_website, ddh_get_path_to_db_new_history_file, LI_PATH_PLT_ALSO_OUT_OF_WATER,
-    PATH_GUI_DDH_WAS_UPDATED,
+    PATH_GUI_DDH_WAS_UPDATED, ddh_gui_requested_style_sheet_dark, LI_PATH_DARK_STYLESHEET,
 )
 import datetime
 import os
@@ -152,6 +150,8 @@ from utils.ddh_common import (
     ddh_get_local_software_version,
 )
 from ddh_log import lg_gui as lg, main_ddh_log
+
+
 
 
 if exp_use_show_fish_website() == 1:
@@ -303,6 +303,14 @@ def gui_setup_view(my_win):
 
     # advanced tab graphs choice to include out of water data
     a.chk_ow.setChecked(os.path.exists(LI_PATH_PLT_ALSO_OUT_OF_WATER))
+
+
+    # when file exists
+    if ddh_gui_requested_style_sheet_dark():
+        a.btn_dark_light.setText("light")
+    else:
+        a.btn_dark_light.setText("dark")
+
 
     return a
 
@@ -522,6 +530,7 @@ def gui_setup_buttons(my_app):
     a.line_sn.textChanged.connect(a.cb_line_sn_text_changed)
     a.cbox_table_his.activated.connect(a.click_cbox_table_his_changed)
     a.btn_close_advanced_tab.clicked.connect(a.click_btn_close_advanced_tab)
+    a.btn_dark_light.clicked.connect(a.click_btn_dark_light)
 
 
     # graph stuff
@@ -914,6 +923,31 @@ class DDH(QMainWindow, d_m.Ui_MainWindow):
 
     def click_btn_close_advanced_tab(self):
         gui_tabs_hide_advanced(self)
+
+
+
+    def click_btn_dark_light(self):
+        p = LI_PATH_DARK_STYLESHEET
+        s = self.btn_dark_light.text().lower()
+        if s == 'dark':
+            pathlib.Path(p).touch()
+        else:
+            if os.path.exists(p):
+                os.unlink(p)
+        self.btn_dark_light.setEnabled(False)
+        QApplication.processEvents()
+
+
+        lg.a("restarting DDH due to change in dark / light mode...")
+
+        # also kill the DDH API so crontab restarts it
+        lg.a("kill API by changing dark / light mode")
+        c = f'killall {NAME_EXE_API}'
+        sp.run(c, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+        # bye, bye DDH
+        self.close_my_ddh()
+
 
 
 
@@ -2088,9 +2122,29 @@ def main_ddh_gui():
 
 
     app = QApplication(sys.argv)
+    # dark vs light mode
+    if ddh_gui_requested_style_sheet_dark():
+        # Fusion style responds best to custom palettes
+        app.setStyle("Fusion")
+        dp = QPalette()
+        dp.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+        dp.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+        dp.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
+        dp.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+        dp.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+        dp.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
+        dp.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+        dp.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+        dp.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+        dp.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
+        dp.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+        dp.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+        dp.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+        app.setPalette(dp)
     ex = DDH()
     ex.show()
     rv = app.exec()
+
 
 
     # create a timestamped entry when GUI is NOT doing well
