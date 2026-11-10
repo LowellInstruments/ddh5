@@ -969,8 +969,11 @@ def _graph_process_n_draw_non_ctd(
 
 
             # separate upward from downward
-            pen_pt_down = pg.mkPen(color='blue', width=2)
-            pen_pt_up = pg.mkPen(color='red', width=2)
+            # pen_pt_down = pg.mkPen(color='blue', width=2)
+            # pen_pt_up = pg.mkPen(color='red', width=2)
+            # George asked changing this on 11/10/26
+            pen_pt_down = pg.mkPen(color='red', width=2)
+            pen_pt_up = pg.mkPen(color='blue', width=2)
             pw_it.addLegend(labelTextSize="14pt", offset=(10, 10))
 
 

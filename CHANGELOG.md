@@ -274,3 +274,7 @@
 6.0.12  11/05/26
 
     added button to switch light <-> dark theme on "advanced" tab
+
+6.0.13  11/10/26
+
+    changed colors in TDO graph separate upward from downward
