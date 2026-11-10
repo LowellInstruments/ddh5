@@ -278,3 +278,5 @@
 6.0.13  11/10/26
 
     changed colors in TDO graph separate upward from downward
+    set smart-lock-out SLO enabled by default
+    set has-been-in-water HBW command usage enabled by default

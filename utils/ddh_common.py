@@ -572,7 +572,8 @@ def exp_get_custom_side_buttons_debounce_time():
 def exp_get_skip_hbw():
     # return _get_exp_key_from_cfg('use_skip_hbw')
     print('warning, SKIP_HBW hardcoded = 0 so EFFECTIVELY USING instruction has-been-in-water')
-    return 0
+    hardcoded_value = 0
+    return hardcoded_value
 
 
 
@@ -589,7 +590,11 @@ def exp_get_use_local_geo_port():
 
 # allows disabling Smart-Lock-Out
 def exp_get_skip_slo():
-    return _get_exp_key_from_cfg('skip_slo')
+    rv = _get_exp_key_from_cfg('skip_slo')
+    if rv == 1:
+        # ONLY disable if EXPLICITLY disabled, o/wise default ON, which is 0
+        return 1
+    return 0
 
 
 
