@@ -358,6 +358,16 @@ def _ddh_aws(ignore_gui):
                 if error_aws_copy:
                     break
 
+
+                # went nicely, record structured log (sl)
+                ts = datetime.datetime.now().strftime('%Y%m%d')
+                path_out_sl = f'/tmp/sl_aws_{ts}.log'
+                with open(path_out_sl, 'a') as f_out_sl:
+                    f_out_sl.write(f'UPLOAD,{bn},{os.path.getsize(p)}\n')
+                    # you can easily sum all the AWS-cp sizes like this
+                    # $ cat <logfile> | cut -d ',' -f 3 | awk '{sum += $1} END {print sum}'
+
+
                 # SYM: delete the link once file uploaded
                 if p.endswith('_track.txt'):
                     yyyymmdd = datetime.datetime.now(datetime.UTC)

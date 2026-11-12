@@ -280,3 +280,7 @@
     changed colors in TDO graph separate upward from downward
     set smart-lock-out SLO enabled by default
     set has-been-in-water HBW command usage enabled by default
+
+6.0.14  11/12/26
+
+    simple structured logging to calculate uploaded file sizes

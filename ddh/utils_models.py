@@ -50,47 +50,66 @@ def th_gui_download_models_from_ddn(r):
 
     # -----------------------------------------------
     # each of these might take 15 seconds to timeout
-    # when an error ccurs
+    # when an error occurs
     # -----------------------------------------------
+
+
+    # nicely, record structured log (sl)
+    ts = datetime.datetime.now().strftime('%Y%m%d')
+    path_out_sl = f'/tmp/sl_aws_{ts}.log'
+    # you can easily sum all the AWS-cp sizes like this
+    # $ cat <logfile> | cut -d ',' -f 3 | awk '{sum += $1} END {print sum}'
 
 
 
     # get DTM map from DDN
     t = 5
     if not os.path.exists(fg_dtm):
-        lg.a(f"requesting today's DTM model file {os.path.basename(fg_dtm)}")
+        bn = os.path.basesname(fg_dtm)
+        lg.a(f"requesting today's DTM model file {bn}")
         url = f'http://{addr_ddn_api}:{port_ddn_api}/dtm?t={now}&deg={deg}'
         try:
             rsp = requests.get(url, timeout=t)
             rsp.raise_for_status()
             with open(fg_dtm, 'wb') as f:
                 f.write(rsp.content)
+            with open(path_out_sl, 'a') as f_out_sl:
+                f_out_sl.write(f'DOWNLOAD,{bn},{len(rsp.content)}\n')
+
         except (Exception,) as err:
             lg.a(f'error, DTM models request -> {err}')
 
 
     # get GOM map from DDN
     if not os.path.exists(fg_gom):
-        lg.a(f"requesting today's GOM model file {os.path.basename(fg_gom)}")
+        bn = os.path.basesname(fg_gom)
+        lg.a(f"requesting today's GOM model file {bn}")
         url = f'http://{addr_ddn_api}:{port_ddn_api}/gom?t={now}&deg={deg}'
         try:
             rsp = requests.get(url, timeout=t)
             rsp.raise_for_status()
             with open(fg_gom, 'wb') as f:
                 f.write(rsp.content)
+            with open(path_out_sl, 'a') as f_out_sl:
+                f_out_sl.write(f'DOWNLOAD,{bn},{len(rsp.content)}\n')
+
         except (Exception,) as err:
             lg.a(f'error, GOM models request -> {err}')
 
 
     # get MAB map from DDN
     if not os.path.exists(fg_mab):
-        lg.a(f"requesting today's MAB model file {os.path.basename(fg_mab)}")
+        bn = os.path.basesname(fg_mab)
+        lg.a(f"requesting today's MAB model file {bn}")
         url = f'http://{addr_ddn_api}:{port_ddn_api}/mab?t={now}&deg={deg}'
         try:
             rsp = requests.get(url, timeout=t)
             rsp.raise_for_status()
             with open(fg_mab, 'wb') as f:
                 f.write(rsp.content)
+            with open(path_out_sl, 'a') as f_out_sl:
+                f_out_sl.write(f'DOWNLOAD,{bn},{len(rsp.content)}\n')
+
         except (Exception,) as err:
             lg.a(f'error, MAB models request -> {err}')
 
