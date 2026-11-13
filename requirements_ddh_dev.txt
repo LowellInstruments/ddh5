@@ -5,13 +5,13 @@ numpy~=2.0
 pyqtgraph
 python-dateutil
 pandas~=2.0
-GitPython
+GitPython>=3.2.1
 toml
 tzlocal
 pyserial
 pynmea2
 gpiozero
-requests
+requests>=2.33.0
 strip.pysondb
 bleak~=1.0
 humanize

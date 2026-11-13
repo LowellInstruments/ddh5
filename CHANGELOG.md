@@ -284,3 +284,8 @@
 6.0.14  11/12/26
 
     simple structured logging to calculate uploaded file sizes
+
+6.0.15  11/13/26
+
+    updated library requests
+    updated library GitPython
