@@ -5,19 +5,14 @@ import pathlib
 import platform
 import shutil
 import subprocess as sp
-import boto3
 import sys
 import time
 from requests.exceptions import HTTPError
 import requests
 import re
 import os
-
 from gps.gps import gps_find_any_usb_port
 from utils.ddh_common import (
-    ddh_config_get_box_project, ddh_config_get_box_sn,
-    ddh_config_get_vessel_name, \
-    ddh_config_get_one_aws_credential_value,
     ddh_get_path_to_root_application_folder, LI_PATH_API_VERSION, \
     LI_PATH_CELL_FW, LI_PATH_DDH_VERSION,
     TMP_PATH_INET_VIA, TMP_PATH_GPS_LAST_JSON, TMP_PATH_BLE_IFACE, \
@@ -603,35 +598,6 @@ def get_files_from_server(pr, sn, ip, addr, port):
 
 
 
-def api_send_email_crash():
-    p = ddh_config_get_box_project()
-    sn = ddh_config_get_box_sn()
-    v = ddh_config_get_vessel_name()
-    _k = ddh_config_get_one_aws_credential_value("cred_aws_key_id")
-    _s = ddh_config_get_one_aws_credential_value("cred_aws_secret")
-    s = f'crashed API on DDH SN: {sn}, name: {v}, organization: {p}'
-
-    cli = boto3.client(
-        "sns",
-        aws_access_key_id=_k,
-        aws_secret_access_key=_s,
-        region_name="us-east-2"
-    )
-
-    # test
-    rsp = cli.publish(
-        TopicArn='arn:aws:sns:us-east-2:727249356285:top_ddh_sys',
-        Message=s,
-        Subject=s
-    )
-
-    # detect errors
-    if rsp['ResponseMetadata']['HTTPStatusCode'] != 200:
-        print(f'error, api_send_email_crash() -> {rsp}')
-
-
-
-
 def _api_get_mac_address(iface: str):
     c = f'cat /sys/class/net/{iface}/address'
     rv = _sh(c)
@@ -657,12 +623,4 @@ def api_get_mac_address_wlan0():
 
 
 if __name__ == '__main__':
-    api_send_email_crash()
-
-
-    # Failed to validate object due to the found value not matching the expected type in the following cases:
-    # $input.last_gps.lat: "+41.610100" != (string & (Integer | Float)),
-    # $input.gps_iface_used: "hat" != ("external" | "internal" | "puck" | null),
-    # $input.running.dds: undefined != ("0" | "1"),
-    # $input.running.ddh_controller: undefined != ("0" | "1"),
-    # $input.running.dds_controller: undefined != ("0" | "1")
+    pass

@@ -3,7 +3,6 @@
 import datetime
 import glob
 import pathlib
-import shutil
 import sys
 import time
 from multiprocessing import Process
@@ -19,7 +18,6 @@ from api.api_utils import (
     api_get_ble_state, api_get_gps,
     api_get_logger_mac_reset_files,
     api_get_commits,
-    api_get_full_ddh_config_file_path,
     api_linux_is_rpi,
     api_get_folder_path_root,
     api_ddt_get_folder_path_root,
@@ -42,7 +40,6 @@ from api.api_utils import (
     api_get_wlan_mbps,
     api_get_internet_via,
     api_get_kernel,
-    api_send_email_crash,
     api_linux_is_process_running,
     api_get_disk_capacity,
     api_dws_start,
@@ -531,17 +528,6 @@ async def ep_api_dws_status():
     return {'dws_status': CTT_API_OK}
 
 
-def _alarm_api_crash(n):
-    if n == 0:
-        return
-    print(f'error, _alarm_api_crash, n = {n}')
-    global g_ts_last_email_api_crash
-    now = time.perf_counter()
-    if g_ts_last_email_api_crash == 0 or \
-       now > g_ts_last_email_api_crash + 300:
-        g_ts_last_email_api_crash = now
-        api_send_email_crash()
-
 
 
 
@@ -569,7 +555,6 @@ def controller_main_api():
         p = Process(target=main_api)
         p.start()
         p.join()
-        _alarm_api_crash(p.exitcode)
         print(f"=== {s} waits child, exitcode {p.exitcode} ===")
         time.sleep(5)
 

@@ -1,8 +1,6 @@
 import redis
 import time
-import setproctitle
 from ddh_log import lg_tst as lg
-from utils.ddh_common import ddh_calc_stats_of_csv_file_for_history_table
 from utils.redis import RD_DDH_BLE_ALL_LAST_OK_DL
 
 

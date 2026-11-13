@@ -14,6 +14,7 @@ from mat.lix import (
     LID_FILE_V1, LID_FILE_V2,
     lid_file_v2_has_sensor_data_type
 )
+from utils.ddh_stats import ddh_calc_stats_of_csv_file_for_history_table
 from utils.redis import (
     RD_DDH_CNV_QUEUE,
     RD_DDH_GUI_PLOT_REASON, RD_DDH_GUI_PLOT_FOLDER,
@@ -24,7 +25,6 @@ from utils.ddh_common import (
     ddh_get_path_to_folder_dl_files,
     ddh_get_path_to_root_application_folder,
     ddh_get_path_to_db_new_history_file,
-    ddh_calc_stats_of_csv_file_for_history_table, ddh_do_we_graph_out_of_water_data
 )
 from ddh_log import lg_cnv as lg
 

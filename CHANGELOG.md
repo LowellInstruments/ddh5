@@ -289,3 +289,7 @@
 
     updated library requests
     updated library GitPython
+
+6.0.16  11/13/26
+
+    API was not running and was creating cell data usage because of constant reboot
